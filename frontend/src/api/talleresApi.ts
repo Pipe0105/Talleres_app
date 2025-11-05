@@ -1,12 +1,18 @@
 import axios from "axios";
+import { NewTaller, Precio, Producto, Taller } from "../types";
 
-const api = axios.create({
-  baseURL: "http://localhost:8000",
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
 });
 
-export const getTalleres = async () => (await api.get("/talleres")).data;
-export const getProductos = async () => (await api.get("/productos")).data;
-export const getArchivos = async (id: number) =>
-  (await api.get(`/archivos?taller_id=${id}`)).data;
-export const createTaller = async (data: any) =>
+export const getTalleres = async (): Promise<Taller[]> =>
+  (await api.get("/talleres")).data;
+
+export const getProductos = async (): Promise<Producto[]> =>
+  (await api.get("/productos")).data;
+
+export const getPrecios = async (): Promise<Precio[]> =>
+  (await api.get("/precios")).data;
+
+export const createTaller = async (data: NewTaller): Promise<Taller> =>
   (await api.post("/talleres", data)).data;
