@@ -5,8 +5,8 @@ except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for loc
         "FastAPI is required to run the backend. Install the Python dependencies with "
         "`python -m pip install -r backend/requirements.txt` and retry."
     ) from exc
-
 from textwrap import dedent
+
 from sqlalchemy import text
 from .config import API_PREFIX
 from .database import Base, engine
