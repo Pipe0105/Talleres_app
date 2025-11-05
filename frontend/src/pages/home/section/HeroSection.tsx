@@ -11,19 +11,14 @@ import {
 
 const heroMetrics = [
   {
-    label: "Órdenes coordinadas",
-    value: "350+",
-    helper: "desde faena a despacho",
+    label: "Talleres realizados",
+    value: "0",
+    helper: "En todas las sedes",
   },
   {
-    label: "Tiempo de respuesta",
-    value: "2.3h",
-    helper: "incidentes resueltos",
-  },
-  {
-    label: "Cumplimiento sanitario",
-    value: "100%",
-    helper: "documentación al día",
+    label: "Porcentaje de Aprovechamiento",
+    value: "0%",
+    helper: "En todas las sedes",
   },
 ];
 
@@ -53,7 +48,7 @@ const HeroSection = () => {
           <Stack spacing={3} position="relative" zIndex={1}>
             <Stack direction="row" spacing={1.5} flexWrap="wrap">
               <Chip
-                label="Plataforma para talleres cárnicos"
+                label="Plataforma para Talleres"
                 color="primary"
                 variant="filled"
                 sx={{
@@ -70,37 +65,22 @@ const HeroSection = () => {
                 }}
               />
             </Stack>
-            <Typography variant="h3" component="h1" fontWeight={800}>
-              Controla calidad, logística y producción desde un solo panel
+            <Typography
+              variant="h3"
+              component="h1"
+              fontSize={76}
+              fontWeight={800}
+            >
+              Talleres Desposte
             </Typography>
             <Typography
               variant="body1"
-              sx={{ maxWidth: 520, color: "rgba(255,255,255,0.85)" }}
+              fontSize={24.5}
+              sx={{ maxWidth: 900, color: "rgba(255,255,255,0.85)" }}
             >
-              Unifica la trazabilidad sanitaria, los equipos de planta y la toma
-              de decisiones con una vista centralizada y dinámica.
+              Ingreso, gestion y Reporte historico de Talleres de Desposte.
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <Button
-                component={RouterLink}
-                to="/talleres"
-                variant="contained"
-                color="secondary"
-                size="large"
-              >
-                Ver tablero en acción
-              </Button>
-              <Button
-                component="a"
-                href="mailto:contacto@talleres360.com"
-                variant="outlined"
-                color="inherit"
-                size="large"
-                sx={{ borderColor: "rgba(255,255,255,0.4)" }}
-              >
-                Hablar con un asesor
-              </Button>
-            </Stack>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}></Stack>
           </Stack>
         </Grid>
         <Grid item xs={12} md={5}>
@@ -119,10 +99,9 @@ const HeroSection = () => {
                 alignItems="center"
               >
                 <Box>
-                  <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                  <Typography variant="h6" color="rgba(255,255,255,0.9)">
                     Estado actual
                   </Typography>
-                  <Typography variant="h6">Taller Las Delicias</Typography>
                 </Box>
                 <Chip
                   label="Operativo"
@@ -135,47 +114,29 @@ const HeroSection = () => {
                   }}
                 />
               </Stack>
-              <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                • Cadena de frío estable • Lotes sanitarios validados • 6
-                alertas resueltas esta semana
+              <Typography variant="body1" color="rgba(255,255,255,0.7)">
+                Resumen de métricas clave
               </Typography>
               <Box>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)">
-                  Avance diario
-                </Typography>
-                <Box
-                  sx={{
-                    mt: 1,
-                    height: 8,
-                    borderRadius: 999,
-                    bgcolor: "rgba(255,255,255,0.16)",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: "82%",
-                      height: "100%",
-                      bgcolor: "primary.main",
-                    }}
-                  />
-                </Box>
                 <Typography
+                  fontSize={20}
                   variant="caption"
-                  color="rgba(255,255,255,0.6)"
-                  display="block"
-                  mt={0.5}
+                  color="rgba(255,255,255,0.7)"
                 >
-                  82% completado hoy
+                  Talleres Mensuales
                 </Typography>
               </Box>
               <Stack direction="row" spacing={2}>
                 {heroMetrics.map((metric) => (
                   <Box key={metric.label} sx={{ flex: 1 }}>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography
+                      variant="h5"
+                      color="rgba(165,200,233,1)"
+                      fontWeight={700}
+                    >
                       {metric.value}
                     </Typography>
-                    <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                    <Typography variant="body2" color="rgba(255,255,255,0.9)">
                       {metric.label}
                     </Typography>
                     <Typography variant="caption" color="rgba(255,255,255,0.5)">
