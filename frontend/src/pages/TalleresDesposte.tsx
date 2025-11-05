@@ -351,7 +351,7 @@ const TalleresDesposte = () => {
                           fontWeight={600}
                           gutterBottom
                         >
-                          Registra el peso del lote (kg)
+                          Registra el peso del corte (kg)
                         </Typography>
                         <Stack
                           direction={{ xs: "column", sm: "row" }}
