@@ -2,17 +2,14 @@ import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Alert,
+  Box,
   Button,
+  MenuItem,
   Paper,
-  Select,
-  SimpleGrid,
   Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+  TextField,
+  Typography,
+} from "@mui/material";
 import { NewTaller, Producto } from "../types";
 
 interface TallerFormProps {
@@ -22,7 +19,7 @@ interface TallerFormProps {
 
 interface FormState {
   productoId: string;
-  fecha: Date | null;
+  fecha: string;
   pesoInicial: string;
   pesoTaller: string;
   grupo: string;
@@ -32,7 +29,7 @@ interface FormState {
 
 const initialState: FormState = {
   productoId: "",
-  fecha: null,
+  fecha: "",
   pesoInicial: "",
   pesoTaller: "",
   grupo: "",
@@ -117,49 +114,58 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
   };
 
   return (
-    <Paper withBorder radius="lg" shadow="sm" p="xl" component="section">
-      <Title order={3} size="h4">
+    <Paper sx={{ p: { xs: 3, md: 4 } }} component="section" elevation={0}>
+      <Typography variant="h5" component="h3">
         Nuevo taller
-      </Title>
-      <Text size="sm" c="dimmed" mt="xs">
+      </Typography>
+      <Typography variant="body2" color="text.secondary" mt={1}>
         Completa el formulario para simular el registro de un nuevo taller en el
         json-server.
-      </Text>
-      <form onSubmit={handleSubmit}>
-        <Stack gap="md" mt="lg">
-          <Select
+      </Typography>
+      <Box component="form" onSubmit={handleSubmit} mt={3}>
+        <Stack spacing={2.5}>
+          <TextField
+            select
             label="Producto"
             placeholder="Selecciona un producto…"
-            data={productosOptions}
             value={formState.productoId}
-            onChange={(value: string | null) =>
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
               setFormState((prev) => ({
                 ...prev,
-                productoId: value ?? "",
+                productoId: event.target.value,
               }))
             }
             required
             disabled={isDisabled}
-            searchable
-            nothingFoundMessage="Sin coincidencias"
-          />
+            helperText={
+              productos.length === 0
+                ? "Cargando listado de productos…"
+                : undefined
+            }
+          >
+            {productosOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
 
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <DateInput
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
               label="Fecha"
-              placeholder="Selecciona una fecha"
+              type="date"
               value={formState.fecha}
-              onChange={(value: Date | null) =>
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setFormState((prev) => ({
                   ...prev,
-                  fecha: value,
+                  fecha: event.target.value,
                 }))
               }
-              valueFormat="DD/MM/YYYY"
               required
               disabled={isDisabled}
+              InputLabelProps={{ shrink: true }}
             />
-            <TextInput
+            <TextField
               label="Grupo"
               placeholder="Ej. Ampolleta_Group"
               value={formState.grupo}
@@ -171,14 +177,13 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               }
               disabled={isDisabled}
             />
-          </SimpleGrid>
+          </Stack>
 
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <TextInput
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
               label="Peso inicial (kg)"
               type="number"
-              min={0}
-              step={0.001}
+              inputProps={{ step: 0.001, min: 0 }}
               placeholder="Ej. 35.2"
               value={formState.pesoInicial}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
@@ -189,11 +194,10 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               }
               disabled={isDisabled}
             />
-            <TextInput
+            <TextField
               label="Peso taller (kg)"
               type="number"
-              min={0}
-              step={0.001}
+              inputProps={{ step: 0.001, min: 0 }}
               placeholder="Ej. 31.8"
               value={formState.pesoTaller}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
@@ -205,14 +209,17 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               required
               disabled={isDisabled}
             />
-          </SimpleGrid>
+          </Stack>
 
-          <Textarea
+          <TextField
             label="Observaciones"
             placeholder="Notas relevantes del taller"
+            multiline
             minRows={3}
             value={formState.observaciones}
-            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+            onChange={(
+              event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+            ) =>
               setFormState((prev) => ({
                 ...prev,
                 observaciones: event.currentTarget.value,
@@ -221,7 +228,7 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
             disabled={isDisabled}
           />
 
-          <TextInput
+          <TextField
             label="Operario"
             placeholder="Ej. operario1"
             value={formState.creadoPor}
@@ -234,37 +241,30 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
             disabled={isDisabled}
           />
 
-          {error && (
-            <Alert color="red" variant="light">
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error">{error}</Alert>}
 
-          {successMessage && (
-            <Alert color="green" variant="light">
-              {successMessage}
-            </Alert>
-          )}
+          {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
           <Button
             type="submit"
-            color="brand"
+            variant="contained"
+            size="large"
             disabled={isDisabled}
-            loading={submitting}
-            fullWidth
           >
-            {productos.length === 0
-              ? "Cargando productos…"
-              : "Registrar taller"}
+            {submitting ? "Registrando taller…" : "Registrar taller"}
           </Button>
           {productos.length === 0 && (
-            <Text ta="center" size="xs" c="dimmed">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              textAlign="center"
+            >
               Espera a que cargue el listado de productos para habilitar el
               formulario.
-            </Text>
+            </Typography>
           )}
         </Stack>
-      </form>
+      </Box>
     </Paper>
   );
 };

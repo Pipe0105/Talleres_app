@@ -1,17 +1,22 @@
 import { ChangeEvent, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Card,
-  Group,
+  CardContent,
   Paper,
-  ScrollArea,
-  SimpleGrid,
   Stack,
   Table,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  Unstable_Grid2 as Grid, // ✅ Usa la versión moderna de Grid compatible con MUI 7.3.5
+} from "@mui/material";
+import { Theme } from "@mui/material/styles";
 import { Precio, Producto, Taller } from "../types";
 
 interface DashboardProps {
@@ -113,157 +118,188 @@ const Dashboard = ({
   }, [filteredTalleres]);
 
   return (
-    <Stack gap="xl">
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+    <Stack spacing={4} mt={4}>
+      {/* ==== RESUMEN POR GRUPO ==== */}
+      <Grid container spacing={3}>
         {resumenPorGrupo.map((grupo) => (
-          <Card key={grupo.grupo} withBorder radius="md" shadow="xs" p="lg">
-            <Text size="xs" c="dimmed" fw={600} tt="uppercase">
-              Grupo
-            </Text>
-            <Title order={3} size="h4" mt={4}>
-              {grupo.grupo.replace(/_/g, " ")}
-            </Title>
-            <Stack gap={4} mt="md">
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  Registros
-                </Text>
-                <Text fw={600}>{grupo.cantidad}</Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  Peso total
-                </Text>
-                <Text fw={600}>{grupo.totalPeso.toFixed(2)} kg</Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  Rendimiento medio
-                </Text>
-                <Text fw={600}>
-                  {grupo.rendimientoPromedio
-                    ? `${(grupo.rendimientoPromedio * 100).toFixed(2)}%`
-                    : "Sin datos"}
-                </Text>
-              </Group>
-            </Stack>
-          </Card>
+          <Grid key={grupo.grupo} xs={12} sm={6}>
+            <Card
+              elevation={0}
+              sx={(theme: Theme) => ({
+                borderRadius: 3,
+                border: `1px solid ${theme.palette.divider}`,
+              })}
+            >
+              <CardContent>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={600}
+                  textTransform="uppercase"
+                >
+                  Grupo
+                </Typography>
+                <Typography variant="h5" mt={1}>
+                  {grupo.grupo.replace(/_/g, " ")}
+                </Typography>
+                <Stack spacing={1.5} mt={2}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Registros
+                    </Typography>
+                    <Typography variant="subtitle1">
+                      {grupo.cantidad}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Peso total
+                    </Typography>
+                    <Typography variant="subtitle1">
+                      {grupo.totalPeso.toFixed(2)} kg
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Rendimiento medio
+                    </Typography>
+                    <Typography variant="subtitle1">
+                      {grupo.rendimientoPromedio
+                        ? `${(grupo.rendimientoPromedio * 100).toFixed(2)}%`
+                        : "Sin datos"}
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-        {resumenPorGrupo.length === 0 && (
-          <Paper withBorder radius="md" p="lg">
-            <Text size="sm" c="dimmed">
-              No se encontraron registros para el filtro aplicado.
-            </Text>
-          </Paper>
-        )}
-      </SimpleGrid>
 
-      <Stack gap="md">
-        <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
-          <Title order={3} size="h4">
+        {resumenPorGrupo.length === 0 && (
+          <Grid xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                No se encontraron registros para el filtro aplicado.
+              </Typography>
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
+
+      {/* ==== DETALLE DE TALLERES ==== */}
+      <Stack spacing={2}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", md: "flex-end" }}
+          spacing={2}
+        >
+          <Typography variant="h5" component="h3">
             Detalle de talleres
-          </Title>
-          <TextInput
+          </Typography>
+          <TextField
             placeholder="Buscar por grupo, producto o código"
             value={search}
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               setSearch(event.currentTarget.value)
             }
-            maw={340}
+            size="small"
+            sx={{ width: { xs: "100%", md: 320 } }}
           />
-        </Group>
-        <Paper withBorder radius="lg" shadow="sm">
-          <ScrollArea>
-            <Table
-              striped
-              highlightOnHover
-              verticalSpacing="sm"
-              horizontalSpacing="md"
-            >
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Fecha</Table.Th>
-                  <Table.Th>Producto</Table.Th>
-                  <Table.Th>Grupo</Table.Th>
-                  <Table.Th>Peso inicial</Table.Th>
-                  <Table.Th>Peso taller</Table.Th>
-                  <Table.Th>Rendimiento</Table.Th>
-                  <Table.Th>Precio unitario</Table.Th>
-                  <Table.Th>Acciones</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {filteredTalleres.map((taller) => {
-                  const producto = productoMap.get(taller.producto_id);
-                  const precio = precioMap.get(taller.producto_id);
-                  const isSelected = selectedTallerId === taller.id;
+        </Stack>
 
-                  return (
-                    <Table.Tr
-                      key={taller.id}
-                      bg={
-                        isSelected ? "var(--mantine-color-brand-0)" : undefined
-                      }
-                    >
-                      <Table.Td fw={500}>
+        <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Producto</TableCell>
+                <TableCell>Grupo</TableCell>
+                <TableCell>Peso inicial</TableCell>
+                <TableCell>Peso taller</TableCell>
+                <TableCell>Rendimiento</TableCell>
+                <TableCell>Precio unitario</TableCell>
+                <TableCell>Acciones</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {filteredTalleres.map((taller) => {
+                const producto = productoMap.get(taller.producto_id);
+                const precio = precioMap.get(taller.producto_id);
+                const isSelected = selectedTallerId === taller.id;
+
+                return (
+                  <TableRow
+                    key={taller.id}
+                    hover
+                    selected={isSelected}
+                    sx={(theme: Theme) => ({
+                      "&.Mui-selected": {
+                        backgroundColor: `${theme.palette.primary.light}22`,
+                      },
+                    })}
+                  >
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>
                         {new Date(taller.fecha).toLocaleDateString("es-CL")}
-                      </Table.Td>
-                      <Table.Td>
-                        <Text fw={600}>
-                          {producto?.nombre ?? "Producto desconocido"}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Código {taller.codigo}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td>{taller.grupo.replace(/_/g, " ")}</Table.Td>
-                      <Table.Td>
-                        {taller.peso_inicial
-                          ? `${taller.peso_inicial} kg`
-                          : "—"}
-                      </Table.Td>
-                      <Table.Td>{taller.peso_taller} kg</Table.Td>
-                      <Table.Td>
-                        {typeof taller.rendimiento === "number"
-                          ? `${(taller.rendimiento * 100).toFixed(2)}%`
-                          : "—"}
-                      </Table.Td>
-                      <Table.Td>
-                        {precio
-                          ? new Intl.NumberFormat("es-CL", {
-                              style: "currency",
-                              currency: "CLP",
-                            }).format(precio.precio_unitario)
-                          : "—"}
-                      </Table.Td>
-                      <Table.Td>
-                        {onSelectTaller && (
-                          <Button
-                            size="xs"
-                            variant={isSelected ? "filled" : "light"}
-                            color="brand"
-                            onClick={() => onSelectTaller(taller.id)}
-                          >
-                            {isSelected ? "Seleccionado" : "Ver detalle"}
-                          </Button>
-                        )}
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })}
-                {filteredTalleres.length === 0 && (
-                  <Table.Tr>
-                    <Table.Td colSpan={8}>
-                      <Text ta="center" size="sm" c="dimmed">
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="subtitle2">
+                        {producto?.nombre ?? "Producto desconocido"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Código {taller.codigo}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{taller.grupo.replace(/_/g, " ")}</TableCell>
+                    <TableCell>
+                      {taller.peso_inicial ? `${taller.peso_inicial} kg` : "—"}
+                    </TableCell>
+                    <TableCell>{taller.peso_taller} kg</TableCell>
+                    <TableCell>
+                      {typeof taller.rendimiento === "number"
+                        ? `${(taller.rendimiento * 100).toFixed(2)}%`
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {precio
+                        ? new Intl.NumberFormat("es-CL", {
+                            style: "currency",
+                            currency: "CLP",
+                          }).format(precio.precio_unitario)
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {onSelectTaller && (
+                        <Button
+                          size="small"
+                          variant={isSelected ? "contained" : "outlined"}
+                          onClick={() => onSelectTaller(taller.id)}
+                        >
+                          {isSelected ? "Seleccionado" : "Ver detalle"}
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {filteredTalleres.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <Box py={3} textAlign="center">
+                      <Typography variant="body2" color="text.secondary">
                         No hay talleres que coincidan con tu búsqueda.
-                      </Text>
-                    </Table.Td>
-                  </Table.Tr>
-                )}
-              </Table.Tbody>
-            </Table>
-          </ScrollArea>
-        </Paper>
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Stack>
     </Stack>
   );

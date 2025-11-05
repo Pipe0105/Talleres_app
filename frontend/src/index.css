@@ -8,18 +8,13 @@
 
 body {
   margin: 0;
-  font-family: var(
-    --mantine-font-family,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif
-  );
-  background-color: var(--mantine-color-gray-0, #f8fafc);
-  color: var(--mantine-color-gray-9, #0f172a);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
 a {
   color: inherit;
+  text-decoration: none;
 }

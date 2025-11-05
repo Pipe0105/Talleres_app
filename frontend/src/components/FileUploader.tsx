@@ -8,17 +8,18 @@ import {
 } from "react";
 import {
   Alert,
+  Avatar,
+  Box,
   Button,
-  FileInput,
-  Group,
+  Grid,
+  IconButton,
   Paper,
-  SimpleGrid,
   Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from "@mantine/core";
+  TextField,
+  Typography,
+} from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { getArchivos } from "../api/archivosApi";
 import { Archivo, Taller } from "../types";
 
@@ -126,135 +127,165 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
 
   if (!taller) {
     return (
-      <Paper
-        withBorder
-        radius="md"
-        p="lg"
-        style={{ borderStyle: "dashed" }}
-        bg="var(--mantine-color-gray-0)"
+      <Box
+        sx={(theme) => ({
+          mt: 3,
+          px: 3,
+          py: 4,
+          borderRadius: 3,
+          border: `1px dashed ${theme.palette.divider}`,
+          textAlign: "center",
+          bgcolor: "background.paper",
+        })}
       >
-        <Text ta="center" size="sm" c="dimmed">
+        <Typography variant="body2" color="text.secondary">
           Selecciona un taller en la tabla para visualizar y simular cargas de
           archivos.
-        </Text>
-      </Paper>
+        </Typography>
+      </Box>
     );
   }
 
   return (
-    <Stack gap="lg" mt="lg">
+    <Stack spacing={3} mt={3}>
       <Paper
-        withBorder
-        radius="md"
-        shadow="xs"
-        p="lg"
         component="form"
         onSubmit={handleSubmit}
+        elevation={0}
+        sx={{ p: { xs: 3, md: 4 } }}
       >
-        <Stack gap="sm">
-          <div>
-            <Title order={4} size="h6">
-              Subir archivo (simulado)
-            </Title>
-            <Text size="xs" c="dimmed" mt={4}>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6">Subir archivo (simulado)</Typography>
+            <Typography variant="body2" color="text.secondary" mt={0.5}>
               Esta acción solo actualiza el estado local de la interfaz para
               fines de prototipado.
-            </Text>
-          </div>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-            <FileInput
-              label="Archivo"
-              placeholder="Selecciona un archivo"
-              value={file}
-              onChange={(selected: File | null) => setFile(selected)}
-              required
-            />
-            <TextInput
-              label="Operario"
-              placeholder="Ej. operario-demo"
-              value={creadoPor}
-              onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                setCreadoPor(event.currentTarget.value)
-              }
-            />
-          </SimpleGrid>
-          <Textarea
+            </Typography>
+          </Box>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Stack spacing={1}>
+                <Typography variant="body2" color="text.secondary">
+                  Archivo
+                </Typography>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<CloudUploadIcon />}
+                >
+                  Seleccionar archivo
+                  <input
+                    type="file"
+                    hidden
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                      const selected = event.target.files?.[0] ?? null;
+                      setFile(selected);
+                    }}
+                  />
+                </Button>
+                {file && (
+                  <Typography variant="caption" color="text.secondary">
+                    {file.name}
+                  </Typography>
+                )}
+              </Stack>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Operario"
+                placeholder="Ej. operario-demo"
+                value={creadoPor}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setCreadoPor(event.currentTarget.value)
+                }
+              />
+            </Grid>
+          </Grid>
+          <TextField
             label="Comentarios"
             placeholder="Detalle o contexto del archivo"
-            minRows={2}
+            multiline
+            minRows={3}
             value={comentarios}
-            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-              setComentarios(event.currentTarget.value)
-            }
+            onChange={(
+              event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+            ) => setComentarios(event.currentTarget.value)}
           />
-          {error && (
-            <Alert color="red" variant="light">
-              {" "}
-              {error}
-            </Alert>
-          )}
-          <Group justify="flex-end">
-            <Button type="submit">Simular subida</Button>
-          </Group>
+          {error && <Alert severity="error">{error}</Alert>}
+          <Stack direction="row" justifyContent="flex-end">
+            <Button type="submit" variant="contained" disabled={!file}>
+              Simular subida
+            </Button>
+          </Stack>
         </Stack>
       </Paper>
 
-      <Paper withBorder radius="md" shadow="sm">
-        <Stack gap={0}>
-          <div
-            style={{
-              padding: "1rem",
-              borderBottom: "1px solid var(--mantine-color-gray-3)",
-            }}
-          >
-            <Title order={4} size="h6">
+      <Paper sx={{ p: { xs: 3, md: 4 } }}>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6">
               Archivos de {taller.observaciones}
-            </Title>
+            </Typography>
             {loading && (
-              <Text size="xs" c="dimmed" mt={4}>
+              <Typography variant="caption" color="text.secondary">
                 Cargando archivos desde el mock…
-              </Text>
+              </Typography>
             )}
-          </div>
-          <Stack gap="xs" p="md">
+          </Box>
+          <Stack spacing={1.5}>
             {archivosOrdenados.map((archivo) => (
-              <Paper key={archivo.id} radius="md" withBorder p="md" shadow="xs">
-                <Group
-                  justify="space-between"
-                  align="flex-start"
-                  wrap="nowrap"
-                  gap="md"
+              <Paper
+                key={archivo.id}
+                variant="outlined"
+                sx={{
+                  p: 2.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  borderRadius: 2,
+                }}
+              >
+                <Avatar
+                  sx={{ bgcolor: "primary.light", color: "primary.main" }}
                 >
-                  <div>
-                    <Text fw={600}>{archivo.ruta}</Text>
-                    <Text size="xs" c="dimmed">
-                      Subido el{" "}
-                      {new Date(archivo.fecha_subida).toLocaleString("es-CL")}
-                      {archivo.esSimulado && " · Simulado"}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      {archivo.creado_por} — {archivo.comentarios}
-                    </Text>
-                  </div>
-                  {archivo.localUrl && (
-                    <Button
-                      component="a"
-                      href={archivo.localUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      variant="light"
-                      size="xs"
-                    >
-                      Ver archivo
-                    </Button>
-                  )}
-                </Group>
+                  {archivo.ruta.slice(0, 2).toUpperCase()}
+                </Avatar>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="subtitle2">{archivo.ruta}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Subido el{" "}
+                    {new Date(archivo.fecha_subida).toLocaleString("es-CL")}
+                    {archivo.esSimulado && " · Simulado"}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    {archivo.creado_por} — {archivo.comentarios}
+                  </Typography>
+                </Box>
+                {archivo.localUrl && (
+                  <IconButton
+                    component="a"
+                    href={archivo.localUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    color="primary"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                )}
               </Paper>
             ))}
             {archivosOrdenados.length === 0 && (
-              <Text ta="center" size="xs" c="dimmed">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                textAlign="center"
+              >
                 Este taller aún no tiene archivos asociados.
-              </Text>
+              </Typography>
             )}
           </Stack>
         </Stack>
