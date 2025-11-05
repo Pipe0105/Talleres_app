@@ -1,27 +1,28 @@
 import { Grid, Paper, Stack, Typography, Chip, useTheme } from "@mui/material";
-import InsightsIcon from "@mui/icons-material/Insights";
-import SensorsIcon from "@mui/icons-material/Sensors";
-import PrecisionManufacturingIcon from "@mui/icons-material/PrecisionManufacturing";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import TextSnippetIcon from "@mui/icons-material/TextSnippet";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import { TextSnippet } from "@mui/icons-material";
 
 const capabilityPillars = [
   {
-    icon: <SensorsIcon fontSize="large" color="primary" />,
-    title: "Monitoreo en vivo",
-    description: "Sensores e IoT conectados para trazabilidad total.",
-    tag: "Tiempo real",
+    icon: <TextSnippet fontSize="large" color="primary" />,
+    title: "Talleres Desposte",
+    description: "Realizar el ingreso de nuevos talleres de desposte.",
+    tag: "Inventario",
   },
   {
-    icon: <PrecisionManufacturingIcon fontSize="large" color="primary" />,
-    title: "Automatización inteligente",
-    description: "Flujos que liberan tareas críticas sin intervención manual.",
-    tag: "Rendimiento",
-  },
-  {
-    icon: <InsightsIcon fontSize="large" color="primary" />,
-    title: "Análisis predictivo",
+    icon: <AssessmentIcon fontSize="large" color="primary" />,
+    title: "Informes Historicos",
     description:
-      "KPIs que anticipan cuellos de botella y optimizan el rendimiento.",
-    tag: "Analytics",
+      "Generar reportes detallados de talleres realizados historicamente.",
+    tag: "Historial",
+  },
+  {
+    icon: <AttachMoneyIcon fontSize="large" color="primary" />,
+    title: "Lista de Precios",
+    description: "Acceder a la lista actualizada de precios para cada item.",
+    tag: "Precios",
   },
 ];
 
