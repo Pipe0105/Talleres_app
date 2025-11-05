@@ -14,10 +14,11 @@ import {
   TableRow,
   TextField,
   Typography,
-  Unstable_Grid2 as Grid, // ✅ Usa la versión moderna de Grid compatible con MUI 7.3.5
 } from "@mui/material";
-import { Theme } from "@mui/material/styles";
+import Grid from "@mui/material/Grid2"; // ✅ Usa la nueva versión
+// ✅ Import explícito para evitar errores de tipo
 import { Precio, Producto, Taller } from "../types";
+import { Theme } from "@mui/material/styles";
 
 interface DashboardProps {
   talleres: Taller[];
@@ -122,7 +123,7 @@ const Dashboard = ({
       {/* ==== RESUMEN POR GRUPO ==== */}
       <Grid container spacing={3}>
         {resumenPorGrupo.map((grupo) => (
-          <Grid key={grupo.grupo} xs={12} sm={6}>
+          <Grid item xs={12} sm={6} key={grupo.grupo}>
             <Card
               elevation={0}
               sx={(theme: Theme) => ({
@@ -176,7 +177,7 @@ const Dashboard = ({
         ))}
 
         {resumenPorGrupo.length === 0 && (
-          <Grid xs={12}>
+          <Grid item xs={12}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 No se encontraron registros para el filtro aplicado.

@@ -11,11 +11,6 @@ const App = () => {
 
   const navItems = [
     { label: "Inicio", to: "/", isActive: location.pathname === "/" },
-    {
-      label: "Talleres",
-      to: "/talleres",
-      isActive: location.pathname.startsWith("/talleres"),
-    },
   ];
 
   return (
