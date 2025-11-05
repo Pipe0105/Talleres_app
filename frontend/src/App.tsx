@@ -17,7 +17,14 @@ const App = () => {
 
   return (
     <AppShell header={{ height: 88 }} padding="xl">
-      <AppShell.Header>
+      <AppShell.Header
+        style={{
+          backdropFilter: "blur(12px)",
+          background: "rgba(255, 255, 255, 0.9)",
+          borderBottom: "1px solid var(--mantine-color-gray-3)",
+        }}
+      >
+        {" "}
         <Container size="lg" h="100%">
           <Group justify="space-between" align="center" h="100%">
             <div>
@@ -45,7 +52,12 @@ const App = () => {
           </Group>
         </Container>
       </AppShell.Header>
-      <AppShell.Main>
+      <AppShell.Main
+        style={{
+          background:
+            "linear-gradient(180deg, var(--mantine-color-gray-1) 0%, var(--mantine-color-white) 40%)",
+        }}
+      >
         <Container size="lg" py="xl">
           <Routes>
             <Route path="/" element={<Home />} />
