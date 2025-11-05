@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  AlertTitle,
   Button,
+  Grid,
   Paper,
-  SimpleGrid,
   Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+  Typography,
+} from "@mui/material";
 import {
   createTaller,
   getPrecios,
@@ -101,38 +101,38 @@ const Talleres = () => {
     setRefreshToken((token) => token + 1);
   };
   return (
-    <Stack gap="xl">
-      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl">
-        <Stack gap="md">
-          <Paper withBorder radius="lg" shadow="sm" p="xl">
-            <Stack gap="xs">
+    <Stack spacing={4}>
+      <Grid container spacing={4}>
+        <Grid item xs={12} lg={7}>
+          <Paper sx={{ p: { xs: 3, md: 4 } }}>
+            <Stack spacing={1.5}>
               <div>
-                <Title order={2} size="h4">
+                <Typography variant="h5" component="h2">
                   Talleres registrados
-                </Title>
-                <Text size="sm" c="dimmed">
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   Información proveniente del archivo <code>mock/db.json</code>.
-                </Text>
+                </Typography>
               </div>
             </Stack>
             {loading ? (
-              <Text mt="lg" size="sm" c="dimmed">
+              <Typography mt={4} variant="body2" color="text.secondary">
                 Cargando datos del servidor mock…
-              </Text>
+              </Typography>
             ) : error ? (
-              <Alert mt="lg" color="red" variant="light">
-                <Stack gap="xs">
-                  <Text size="sm">{error}</Text>
-                  <Button
-                    onClick={handleRetry}
-                    color="red"
-                    variant="filled"
-                    size="xs"
-                    maw={160}
-                  >
-                    Reintentar
-                  </Button>
-                </Stack>
+              <Alert severity="error" sx={{ mt: 4 }}>
+                <AlertTitle>Error al cargar</AlertTitle>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  {error}
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  onClick={handleRetry}
+                >
+                  Reintentar
+                </Button>
               </Alert>
             ) : (
               <Dashboard
@@ -144,18 +144,20 @@ const Talleres = () => {
               />
             )}
           </Paper>
-        </Stack>
-        <TallerForm productos={productos} onCreated={handleTallerCreated} />
-      </SimpleGrid>
-      <Paper withBorder radius="lg" shadow="sm" p="xl">
-        <Title order={3} size="h4">
+        </Grid>
+        <Grid item xs={12} lg={5}>
+          <TallerForm productos={productos} onCreated={handleTallerCreated} />
+        </Grid>
+      </Grid>
+      <Paper sx={{ p: { xs: 3, md: 4 } }}>
+        <Typography variant="h6" component="h3">
           Archivos asociados
-        </Title>
-        <Text size="sm" c="dimmed" mt="xs">
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mt={1}>
           Visualiza documentos o imágenes ligados al taller seleccionado. El
           formulario de subida se comporta de manera local para fines de
           prototipado.
-        </Text>
+        </Typography>
         <FileUploader taller={selectedTaller} />
       </Paper>
     </Stack>
