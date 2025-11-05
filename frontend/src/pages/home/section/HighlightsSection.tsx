@@ -1,7 +1,7 @@
 import { Grid, Paper, Stack, Typography, Chip, useTheme } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import { Link as RouterLink } from "react-router-dom";
 import { TextSnippet } from "@mui/icons-material";
 
 const capabilityPillars = [
@@ -10,6 +10,7 @@ const capabilityPillars = [
     title: "Talleres Desposte",
     description: "Realizar el ingreso de nuevos talleres de desposte.",
     tag: "Inventario",
+    to: "/talleres/desposte",
   },
   {
     icon: <AssessmentIcon fontSize="large" color="primary" />,
@@ -17,12 +18,14 @@ const capabilityPillars = [
     description:
       "Generar reportes detallados de talleres realizados historicamente.",
     tag: "Historial",
+    to: "/informes-historicos",
   },
   {
     icon: <AttachMoneyIcon fontSize="large" color="primary" />,
     title: "Lista de Precios",
     description: "Acceder a la lista actualizada de precios para cada item.",
     tag: "Precios",
+    to: "/lista-precios",
   },
 ];
 
@@ -39,6 +42,8 @@ const HighlightsSection = () => {
           <Grid item xs={12} md={4} key={pillar.title}>
             <Paper
               elevation={0}
+              component={RouterLink}
+              to={pillar.to}
               sx={{
                 p: 3,
                 height: "100%",
@@ -46,6 +51,17 @@ const HighlightsSection = () => {
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
+                textDecoration: "none",
+                transition: theme.transitions.create(
+                  ["box-shadow", "transform"],
+                  {
+                    duration: theme.transitions.duration.short,
+                  }
+                ),
+                "&:hover": {
+                  boxShadow: theme.shadows[4],
+                  transform: "translateY(-4px)",
+                },
               }}
             >
               <Chip
