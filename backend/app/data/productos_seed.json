@@ -1,0 +1,5 @@
+[
+{"sku":"ESP-001","nombre":"Esponja abrasiva 3M","categoria":"Limpieza","precio":5500,"unidad":"und"},
+{"sku":"LJ-250","nombre":"Lija agua #250","categoria":"Abrasivos","precio":1200,"unidad":"hoja"},
+{"sku":"PNT-1GAL","nombre":"Pintura Acrílica 1 Galón","categoria":"Pinturas","precio":78000,"unidad":"gal"}
+]
