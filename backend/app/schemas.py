@@ -1,4 +1,4 @@
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel, ConfigDict, condecimal
 from typing import List, Optional
 from uuid import UUID
 
@@ -9,7 +9,7 @@ class ItemIn(BaseModel):
 
 class ItemOut(ItemIn):
     id: UUID
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CorteIn(BaseModel):
     item_id: UUID
@@ -18,7 +18,7 @@ class CorteIn(BaseModel):
 
 class CorteOut(CorteIn):
     id: UUID
-    class Config: orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TallerIn(BaseModel):
     item_id: UUID
@@ -35,3 +35,4 @@ class TallerCreatePayload(TallerIn):
 class TallerOut(BaseModel):
     id: UUID
     item_id: UUID
+    model_config = ConfigDict(from_attributes=True)
