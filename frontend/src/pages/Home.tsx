@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  Code,
   Group,
   SimpleGrid,
   Stack,
@@ -15,60 +14,60 @@ import {
 
 const featureCards = [
   {
-    title: "Mock API lista para usar",
+    title: "Panel intuitivo",
     description:
-      "Datos listos para pruebas rápidas gracias a json-server y al archivo mock/db.json incluido en el repositorio.",
+      "Visualiza el estado de cada taller con métricas claras, filtros inteligentes y una navegación pensada para equipos operativos.",
+    icon: "📊",
+  },
+  {
+    title: "Gestión centralizada",
+    description:
+      "Concentra fichas de proveedores, pedidos y documentación en un solo lugar para asegurar trazabilidad en cada proceso.",
     icon: "🗂️",
   },
   {
-    title: "UI moderna con Mantine",
+    title: "Alertas oportunas",
     description:
-      "Componentes accesibles, coherentes y fáciles de personalizar para crear vistas profesionales sin esfuerzo.",
-    icon: "🎨",
+      "Recibe recordatorios sobre entregas, vencimientos sanitarios y necesidades de abastecimiento antes de que se conviertan en urgencias.",
+    icon: "🔔",
   },
   {
-    title: "Ruteo con React Router",
+    title: "Colaboración ágil",
     description:
-      "Navega entre el inicio y el tablero de talleres con rutas de cliente simples y fluidas.",
-    icon: "🧭",
-  },
-  {
-    title: "Tipado con TypeScript",
-    description:
-      "Autocompletado y validaciones para mantener la calidad del código durante todo el desarrollo.",
-    icon: "🛡️",
+      "Comparte actualizaciones con tu equipo y coordina acciones en tiempo real para mantener la producción siempre alineada.",
+    icon: "🤝",
   },
 ];
 
 const quickStartSteps = [
   {
-    title: "Instala dependencias",
+    title: "Registra tus talleres",
     description:
-      'Ejecuta "npm install" dentro de la carpeta frontend para descargar todas las dependencias del proyecto.',
+      "Carga la información esencial de cada planta y personaliza los indicadores clave según tu operación.",
   },
   {
-    title: "Levanta el mock de datos",
+    title: "Monitorea la operación",
     description:
-      'Inicia json-server con "npx json-server --watch mock/db.json --port 3001" para exponer los endpoints mockeados.',
+      "Consulta dashboards claros, agenda actividades y mantén a tu equipo informado con actualizaciones constantes.",
   },
   {
-    title: "Inicia la app",
+    title: "Optimiza decisiones",
     description:
-      'Corre "npm run dev" y visita http://localhost:5173 para explorar los talleres desde tu navegador.',
+      "Identifica tendencias de producción, controla el inventario y toma decisiones basadas en datos confiables.",
   },
 ];
 
 const stats = [
-  { label: "Talleres mock", value: "12" },
-  { label: "Categorías cubiertas", value: "6" },
-  { label: "Archivos adjuntos", value: "20+" },
+  { label: "Proyectos gestionados", value: "30+" },
+  { label: "Colaboradores conectados", value: "120" },
+  { label: "Alertas automatizadas", value: "50+" },
 ];
 
 const quickLinks = [
   {
-    label: "Ver talleres",
+    label: "Explora el tablero",
     description:
-      "Explora y filtra los registros disponibles en la tabla interactiva.",
+      "Accede a la vista principal y descubre cómo organizamos la información de cada taller.",
     action: (
       <Button component={Link} to="/talleres" color="brand" fullWidth>
         Ir al tablero
@@ -76,37 +75,34 @@ const quickLinks = [
     ),
   },
   {
-    label: "Documentación",
+    label: "Solicita una demostración",
     description:
-      "Revisa los componentes de Mantine para extender la interfaz a tu medida.",
+      "Coordina una sesión guiada con nuestro equipo para adaptar la plataforma a tus procesos.",
     action: (
       <Button
         component="a"
-        href="https://mantine.dev/"
-        target="_blank"
-        rel="noreferrer"
+        href="mailto:contacto@talleres360.com"
         variant="light"
         color="brand"
         fullWidth
       >
-        Abrir Mantine
+        Escribir ahora
       </Button>
     ),
   },
   {
-    label: "Datos mock",
-    description: "Consulta la estructura y contenido base en mock/db.json.",
+    label: "Recursos para tu equipo",
+    description:
+      "Descarga material de buenas prácticas y casos de éxito de organizaciones similares a la tuya.",
     action: (
       <Button
         component="a"
-        href="/mock/db.json"
-        target="_blank"
-        rel="noreferrer"
+        href="#recursos"
         variant="outline"
         color="brand"
         fullWidth
       >
-        Abrir archivo
+        Ver recursos
       </Button>
     ),
   },
@@ -132,9 +128,9 @@ const Home = () => {
             Gestiona talleres cárnicos con una experiencia cuidada
           </Title>
           <Text size="md" maw={600} c="rgba(255,255,255,0.85)">
-            Centraliza la información de los talleres, prueba flujos de registro
-            y experimenta con datos ficticios en un panel moderno construido con
-            Mantine.
+            Centraliza la información de tus operaciones, acompaña al equipo en
+            cada etapa y toma decisiones informadas con una plataforma diseñada
+            para la industria cárnica.
           </Text>
           <Group gap="sm" wrap="wrap">
             <Button
@@ -145,15 +141,8 @@ const Home = () => {
             >
               Explorar talleres
             </Button>
-            <Button
-              component="a"
-              href="https://mantine.dev/"
-              target="_blank"
-              rel="noreferrer"
-              variant="white"
-              color="dark"
-            >
-              Conocer Mantine
+            <Button component="a" href="#demo" variant="white" color="dark">
+              Solicitar demo
             </Button>
           </Group>
         </Stack>
@@ -181,7 +170,7 @@ const Home = () => {
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
         <Card withBorder radius="lg" padding="xl" shadow="sm">
           <Title order={3} size="h4">
-            Inicia en minutos
+            Cómo funciona
           </Title>
           <Timeline color="brand" active={quickStartSteps.length} mt="lg">
             {quickStartSteps.map((step) => (
@@ -214,15 +203,15 @@ const Home = () => {
             </SimpleGrid>
           </Card>
 
-          <Card withBorder radius="lg" padding="xl" shadow="sm">
+          <Card id="recursos" withBorder radius="lg" padding="xl" shadow="sm">
             <Title order={3} size="h4">
-              Recursos útiles
+              ¿Por qué elegirnos?
             </Title>
             <Text size="sm" mt="sm" c="dimmed">
-              Consulta los endpoints disponibles en{" "}
-              <Code>frontend/mock/db.json</Code>, explora los componentes
-              compartidos en <Code>src/components</Code> y continúa el
-              desarrollo siguiendo el estilo del tema global.
+              Somos aliados de productores que buscan estandarizar procesos,
+              asegurar la trazabilidad sanitaria y potenciar la productividad de
+              sus equipos. Contáctanos para recibir un plan adaptado a tu
+              operación.
             </Text>
           </Card>
         </Stack>
