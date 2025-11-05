@@ -125,142 +125,146 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
         Completa el formulario para simular el registro de un nuevo taller en el
         json-server.
       </Text>
-      <Stack component="form" gap="md" mt="lg" onSubmit={handleSubmit}>
-        <Select
-          label="Producto"
-          placeholder="Selecciona un producto…"
-          data={productosOptions}
-          value={formState.productoId}
-          onChange={(value: string | null) =>
-            setFormState((prev) => ({
-              ...prev,
-              productoId: value ?? "",
-            }))
-          }
-          required
-          disabled={isDisabled}
-          searchable
-          nothingFoundMessage="Sin coincidencias"
-        />
-
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-          <DateInput
-            label="Fecha"
-            placeholder="Selecciona una fecha"
-            value={formState.fecha}
-            onChange={(value: Date | null) =>
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md" mt="lg">
+          <Select
+            label="Producto"
+            placeholder="Selecciona un producto…"
+            data={productosOptions}
+            value={formState.productoId}
+            onChange={(value: string | null) =>
               setFormState((prev) => ({
                 ...prev,
-                fecha: value,
-              }))
-            }
-            valueFormat="DD/MM/YYYY"
-            required
-            disabled={isDisabled}
-          />
-          <TextInput
-            label="Grupo"
-            placeholder="Ej. Ampolleta_Group"
-            value={formState.grupo}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setFormState((prev) => ({
-                ...prev,
-                grupo: event.currentTarget.value,
-              }))
-            }
-            disabled={isDisabled}
-          />
-        </SimpleGrid>
-
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-          <TextInput
-            label="Peso inicial (kg)"
-            type="number"
-            min={0}
-            step="0.001"
-            placeholder="Ej. 35.2"
-            value={formState.pesoInicial}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setFormState((prev) => ({
-                ...prev,
-                pesoInicial: event.currentTarget.value,
-              }))
-            }
-            disabled={isDisabled}
-          />
-          <TextInput
-            label="Peso taller (kg)"
-            type="number"
-            min={0}
-            step="0.001"
-            placeholder="Ej. 31.8"
-            value={formState.pesoTaller}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setFormState((prev) => ({
-                ...prev,
-                pesoTaller: event.currentTarget.value,
+                productoId: value ?? "",
               }))
             }
             required
             disabled={isDisabled}
+            searchable
+            nothingFoundMessage="Sin coincidencias"
           />
-        </SimpleGrid>
 
-        <Textarea
-          label="Observaciones"
-          placeholder="Notas relevantes del taller"
-          minRows={3}
-          value={formState.observaciones}
-          onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-            setFormState((prev) => ({
-              ...prev,
-              observaciones: event.currentTarget.value,
-            }))
-          }
-          disabled={isDisabled}
-        />
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <DateInput
+              label="Fecha"
+              placeholder="Selecciona una fecha"
+              value={formState.fecha}
+              onChange={(value: Date | null) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  fecha: value,
+                }))
+              }
+              valueFormat="DD/MM/YYYY"
+              required
+              disabled={isDisabled}
+            />
+            <TextInput
+              label="Grupo"
+              placeholder="Ej. Ampolleta_Group"
+              value={formState.grupo}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  grupo: event.currentTarget.value,
+                }))
+              }
+              disabled={isDisabled}
+            />
+          </SimpleGrid>
 
-        <TextInput
-          label="Operario"
-          placeholder="Ej. operario1"
-          value={formState.creadoPor}
-          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-            setFormState((prev) => ({
-              ...prev,
-              creadoPor: event.currentTarget.value,
-            }))
-          }
-          disabled={isDisabled}
-        />
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <TextInput
+              label="Peso inicial (kg)"
+              type="number"
+              min={0}
+              step={0.001}
+              placeholder="Ej. 35.2"
+              value={formState.pesoInicial}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  pesoInicial: event.currentTarget.value,
+                }))
+              }
+              disabled={isDisabled}
+            />
+            <TextInput
+              label="Peso taller (kg)"
+              type="number"
+              min={0}
+              step={0.001}
+              placeholder="Ej. 31.8"
+              value={formState.pesoTaller}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setFormState((prev) => ({
+                  ...prev,
+                  pesoTaller: event.currentTarget.value,
+                }))
+              }
+              required
+              disabled={isDisabled}
+            />
+          </SimpleGrid>
 
-        {error && (
-          <Alert color="red" variant="light">
-            {error}
-          </Alert>
-        )}
+          <Textarea
+            label="Observaciones"
+            placeholder="Notas relevantes del taller"
+            minRows={3}
+            value={formState.observaciones}
+            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+              setFormState((prev) => ({
+                ...prev,
+                observaciones: event.currentTarget.value,
+              }))
+            }
+            disabled={isDisabled}
+          />
 
-        {successMessage && (
-          <Alert color="green" variant="light">
-            {successMessage}
-          </Alert>
-        )}
+          <TextInput
+            label="Operario"
+            placeholder="Ej. operario1"
+            value={formState.creadoPor}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setFormState((prev) => ({
+                ...prev,
+                creadoPor: event.currentTarget.value,
+              }))
+            }
+            disabled={isDisabled}
+          />
 
-        <Button
-          type="submit"
-          color="brand"
-          disabled={isDisabled}
-          loading={submitting}
-          fullWidth
-        >
-          {productos.length === 0 ? "Cargando productos…" : "Registrar taller"}
-        </Button>
-        {productos.length === 0 && (
-          <Text ta="center" size="xs" c="dimmed">
-            Espera a que cargue el listado de productos para habilitar el
-            formulario.
-          </Text>
-        )}
-      </Stack>
+          {error && (
+            <Alert color="red" variant="light">
+              {error}
+            </Alert>
+          )}
+
+          {successMessage && (
+            <Alert color="green" variant="light">
+              {successMessage}
+            </Alert>
+          )}
+
+          <Button
+            type="submit"
+            color="brand"
+            disabled={isDisabled}
+            loading={submitting}
+            fullWidth
+          >
+            {productos.length === 0
+              ? "Cargando productos…"
+              : "Registrar taller"}
+          </Button>
+          {productos.length === 0 && (
+            <Text ta="center" size="xs" c="dimmed">
+              Espera a que cargue el listado de productos para habilitar el
+              formulario.
+            </Text>
+          )}
+        </Stack>
+      </form>
     </Paper>
   );
 };

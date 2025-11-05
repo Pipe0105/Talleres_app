@@ -38,7 +38,6 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
   const [creadoPor, setCreadoPor] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const localUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -113,9 +112,6 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
     setComentarios("");
     setCreadoPor("");
     setError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const archivosOrdenados = useMemo(
@@ -171,7 +167,6 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
               placeholder="Selecciona un archivo"
               value={file}
               onChange={(selected: File | null) => setFile(selected)}
-              inputRef={fileInputRef}
               required
             />
             <TextInput
@@ -193,7 +188,8 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
             }
           />
           {error && (
-            <Alert color="red" variant="light" size="sm">
+            <Alert color="red" variant="light">
+              {" "}
               {error}
             </Alert>
           )}
