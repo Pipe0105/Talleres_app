@@ -1,4 +1,12 @@
-from fastapi import FastAPI
+try:
+    from fastapi import FastAPI
+except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for local setup issues
+    raise ModuleNotFoundError(
+        "FastAPI is required to run the backend. Install the Python dependencies with "
+        "`python -m pip install -r backend/requirements.txt` and retry."
+    ) from exc
+
+from textwrap import dedent
 from sqlalchemy import text
 from .config import API_PREFIX
 from .database import Base, engine
@@ -10,43 +18,36 @@ app = FastAPI(title="MercaMorfosis Backend")
 def _startup():
     # Crear tablas
     Base.metadata.create_all(bind=engine)
-    # Crear/asegurar vista v_taller_calculo (idempotente)
-    create_view_sql = '''
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM pg_views WHERE viewname = 'v_taller_calculo'
-      ) THEN
-        EXECUTE $$
-        CREATE VIEW v_taller_calculo AS
-        SELECT
-          td.taller_id,
-          c.nombre_corte,
-          i.item_code,
-          i.descripcion,
-          i.precio_venta,
-          td.peso,
-          SUM(td.peso) OVER (PARTITION BY td.taller_id) AS peso_total,
-          c.porcentaje_default,
-          CASE 
-            WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0 
-            THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
-            ELSE 0
-          END AS porcentaje_real,
-          (CASE 
-            WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0 
-            THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
-            ELSE 0
-          END - c.porcentaje_default) AS delta_pct,
-          td.peso * i.precio_venta AS valor_estimado
-        FROM taller_detalles td
-        JOIN cortes c ON c.id = td.corte_id
-        JOIN talleres t ON t.id = td.taller_id
-        JOIN items i ON i.id = t.item_id;
-        $$;
-      END IF;
-    END $$;
-    '''
+    # Crear/asegurar vista v_taller_calculo (idem potente)
+    create_view_sql = dedent(
+        """
+    CREATE OR REPLACE VIEW v_taller_calculo AS
+    SELECT
+      td.taller_id,
+      c.nombre_corte,
+      i.item_code,
+      i.descripcion,
+      i.precio_venta,
+      td.peso,
+      SUM(td.peso) OVER (PARTITION BY td.taller_id) AS peso_total,
+      c.porcentaje_default,
+      CASE
+        WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0
+        THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
+        ELSE 0
+      END AS porcentaje_real,
+      (CASE
+        WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0
+        THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
+        ELSE 0
+      END - c.porcentaje_default) AS delta_pct,
+      td.peso * i.precio_venta AS valor_estimado
+    FROM taller_detalles td
+    JOIN cortes c ON c.id = td.corte_id
+    JOIN talleres t ON t.id = td.taller_id
+    JOIN items i ON i.id = t.item_id;
+    """
+    )
     with engine.begin() as conn:
         conn.execute(text(create_view_sql))
 
