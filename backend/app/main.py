@@ -1,4 +1,9 @@
-from fastapi import FastAPI
+try: 
+    from fastapi import FastAPI
+except ModuleNotFoundError as exct:
+
+    raise ModuleNotFoundError("FastAPI no está instalado. Por favor, instala las dependencias con 'pip install -r requirements.txt'") from exct
+
 from sqlalchemy import text
 from .config import API_PREFIX
 from .database import Base, engine
