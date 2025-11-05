@@ -14,6 +14,13 @@ from .routers import upload, items, cortes, talleres
 
 app = FastAPI(title="MercaMorfosis Backend")
 
+@app.get("/")
+def read_root():
+    """Simple root endpoint to verify that the API is running."""
+    return {"status":"OK"}
+    
+
+
 @app.on_event("startup")
 def _startup():
     # Crear tablas
