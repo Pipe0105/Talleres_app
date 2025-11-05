@@ -1,52 +1,59 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { AppShell, Button, Container, Group, Text, Title } from "@mantine/core";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Talleres from "./pages/Talleres";
 
 const App = () => {
+  const location = useLocation();
+
+  const navItems = [
+    { label: "Inicio", to: "/", isActive: location.pathname === "/" },
+    {
+      label: "Talleres",
+      to: "/talleres",
+      isActive: location.pathname.startsWith("/talleres"),
+    },
+  ];
+
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-semibold text-brand-700">
-              Talleres Cárnicos
-            </h1>
-            <p className="text-sm text-slate-500">
-              Panel para visualizar y registrar talleres usando el mock JSON
-            </p>
-          </div>
-          <nav className="flex gap-4 text-sm font-medium text-slate-600">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `rounded px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700 ${
-                  isActive ? "bg-brand-100 text-brand-700" : ""
-                }`
-              }
-            >
-              Inicio
-            </NavLink>
-            <NavLink
-              to="/talleres"
-              className={({ isActive }) =>
-                `rounded px-3 py-2 transition hover:bg-brand-50 hover:text-brand-700 ${
-                  isActive ? "bg-brand-100 text-brand-700" : ""
-                }`
-              }
-            >
-              Talleres
-            </NavLink>
-          </nav>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/talleres" element={<Talleres />} />
-        </Routes>
-      </main>
-    </div>
+    <AppShell header={{ height: 88 }} padding="xl">
+      <AppShell.Header>
+        <Container size="lg" h="100%">
+          <Group justify="space-between" align="center" h="100%">
+            <div>
+              <Title order={1} size="h3">
+                Talleres Cárnicos
+              </Title>
+              <Text size="sm" c="dimmed">
+                Panel para visualizar y registrar talleres usando el mock JSON
+              </Text>
+            </div>
+            <Group gap="xs">
+              {navItems.map((item) => (
+                <Button
+                  key={item.to}
+                  component={Link}
+                  to={item.to}
+                  variant={item.isActive ? "filled" : "subtle"}
+                  color="brand"
+                  size="sm"
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Group>
+          </Group>
+        </Container>
+      </AppShell.Header>
+      <AppShell.Main>
+        <Container size="lg" py="xl">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/talleres" element={<Talleres />} />
+          </Routes>
+        </Container>
+      </AppShell.Main>
+    </AppShell>
   );
 };
 

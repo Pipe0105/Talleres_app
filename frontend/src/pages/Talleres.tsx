@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
+  Button,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import {
   createTaller,
   getPrecios,
   getProductos,
@@ -91,37 +100,40 @@ const Talleres = () => {
     setLoading(true);
     setRefreshToken((token) => token + 1);
   };
-
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="flex-1 space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-4">
+    <Stack gap="xl">
+      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl">
+        <Stack gap="md">
+          <Paper withBorder radius="lg" shadow="sm" p="xl">
+            <Stack gap="xs">
               <div>
-                <h2 className="text-xl font-semibold text-slate-800">
+                <Title order={2} size="h4">
                   Talleres registrados
-                </h2>
-                <p className="text-sm text-slate-500">
+                </Title>
+                <Text size="sm" c="dimmed">
                   Información proveniente del archivo <code>mock/db.json</code>.
-                </p>
+                </Text>
               </div>
-            </div>
+            </Stack>
             {loading ? (
-              <p className="mt-6 animate-pulse text-sm text-slate-500">
+              <Text mt="lg" size="sm" c="dimmed">
                 Cargando datos del servidor mock…
-              </p>
+              </Text>
             ) : error ? (
-              <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                <p>{error}</p>
-                <button
-                  type="button"
-                  className="mt-3 inline-flex items-center rounded bg-rose-600 px-3 py-2 text-white shadow hover:bg-rose-500"
-                  onClick={handleRetry}
-                >
-                  Reintentar
-                </button>
-              </div>
+              <Alert mt="lg" color="red" variant="light">
+                <Stack gap="xs">
+                  <Text size="sm">{error}</Text>
+                  <Button
+                    onClick={handleRetry}
+                    color="red"
+                    variant="filled"
+                    size="xs"
+                    maw={160}
+                  >
+                    Reintentar
+                  </Button>
+                </Stack>
+              </Alert>
             ) : (
               <Dashboard
                 talleres={talleres}
@@ -131,26 +143,22 @@ const Talleres = () => {
                 onSelectTaller={setSelectedTallerId}
               />
             )}
-          </div>
-        </div>
-        <div className="w-full max-w-md">
-          <TallerForm productos={productos} onCreated={handleTallerCreated} />
-        </div>
-      </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-800">
+          </Paper>
+        </Stack>
+        <TallerForm productos={productos} onCreated={handleTallerCreated} />
+      </SimpleGrid>
+      <Paper withBorder radius="lg" shadow="sm" p="xl">
+        <Title order={3} size="h4">
           Archivos asociados
-        </h3>
-        <p className="text-sm text-slate-500">
+        </Title>
+        <Text size="sm" c="dimmed" mt="xs">
           Visualiza documentos o imágenes ligados al taller seleccionado. El
           formulario de subida se comporta de manera local para fines de
           prototipado.
-        </p>
-        <div className="mt-4">
-          <FileUploader taller={selectedTaller} />
-        </div>
-      </div>
-    </section>
+        </Text>
+        <FileUploader taller={selectedTaller} />
+      </Paper>
+    </Stack>
   );
 };
 

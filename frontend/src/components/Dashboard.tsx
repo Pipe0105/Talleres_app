@@ -1,4 +1,17 @@
-import { useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
+import {
+  Button,
+  Card,
+  Group,
+  Paper,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { Precio, Producto, Taller } from "../types";
 
 interface DashboardProps {
@@ -100,151 +113,159 @@ const Dashboard = ({
   }, [filteredTalleres]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <Stack gap="xl">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         {resumenPorGrupo.map((grupo) => (
-          <article
-            key={grupo.grupo}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-          >
-            <p className="text-xs uppercase tracking-wide text-slate-500">
+          <Card key={grupo.grupo} withBorder radius="md" shadow="xs" p="lg">
+            <Text size="xs" c="dimmed" fw={600} tt="uppercase">
               Grupo
-            </p>
-            <h3 className="mt-1 text-lg font-semibold text-slate-800">
+            </Text>
+            <Title order={3} size="h4" mt={4}>
               {grupo.grupo.replace(/_/g, " ")}
-            </h3>
-            <dl className="mt-3 space-y-1 text-sm text-slate-600">
-              <div className="flex justify-between">
-                <dt>Registros</dt>
-                <dd className="font-medium text-slate-800">{grupo.cantidad}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Peso total</dt>
-                <dd className="font-medium text-slate-800">
-                  {grupo.totalPeso.toFixed(2)} kg
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Rendimiento medio</dt>
-                <dd className="font-medium text-slate-800">
+            </Title>
+            <Stack gap={4} mt="md">
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Registros
+                </Text>
+                <Text fw={600}>{grupo.cantidad}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Peso total
+                </Text>
+                <Text fw={600}>{grupo.totalPeso.toFixed(2)} kg</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Rendimiento medio
+                </Text>
+                <Text fw={600}>
                   {grupo.rendimientoPromedio
                     ? `${(grupo.rendimientoPromedio * 100).toFixed(2)}%`
                     : "Sin datos"}
-                </dd>
-              </div>
-            </dl>
-          </article>
+                </Text>
+              </Group>
+            </Stack>
+          </Card>
         ))}
         {resumenPorGrupo.length === 0 && (
-          <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
-            No se encontraron registros para el filtro aplicado.
-          </p>
+          <Paper withBorder radius="md" p="lg">
+            <Text size="sm" c="dimmed">
+              No se encontraron registros para el filtro aplicado.
+            </Text>
+          </Paper>
         )}
-      </div>
+      </SimpleGrid>
 
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold text-slate-800">
+      <Stack gap="md">
+        <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
+          <Title order={3} size="h4">
             Detalle de talleres
-          </h3>
-          <input
-            type="search"
+          </Title>
+          <TextInput
             placeholder="Buscar por grupo, producto o código"
-            className="w-full max-w-md rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setSearch(event.currentTarget.value)
+            }
+            maw={340}
           />
-        </div>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Producto</th>
-                <th className="px-4 py-3">Grupo</th>
-                <th className="px-4 py-3">Peso inicial</th>
-                <th className="px-4 py-3">Peso taller</th>
-                <th className="px-4 py-3">Rendimiento</th>
-                <th className="px-4 py-3">Precio unitario</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-sm text-slate-600">
-              {filteredTalleres.map((taller) => {
-                const producto = productoMap.get(taller.producto_id);
-                const precio = precioMap.get(taller.producto_id);
-                const isSelected = selectedTallerId === taller.id;
-                return (
-                  <tr
-                    key={taller.id}
-                    className={
-                      isSelected ? "bg-brand-50 text-slate-800" : "bg-white"
-                    }
-                  >
-                    <td className="px-4 py-3 font-medium text-slate-700">
-                      {new Date(taller.fecha).toLocaleDateString("es-CL")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-slate-800">
-                        {producto?.nombre ?? "Producto desconocido"}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Código {taller.codigo}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {taller.grupo.replace(/_/g, " ")}
-                    </td>
-                    <td className="px-4 py-3">
-                      {taller.peso_inicial ? `${taller.peso_inicial} kg` : "—"}
-                    </td>
-                    <td className="px-4 py-3">{taller.peso_taller} kg</td>
-                    <td className="px-4 py-3">
-                      {typeof taller.rendimiento === "number"
-                        ? `${(taller.rendimiento * 100).toFixed(2)}%`
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {precio
-                        ? new Intl.NumberFormat("es-CL", {
-                            style: "currency",
-                            currency: "CLP",
-                          }).format(precio.precio_unitario)
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {onSelectTaller && (
-                        <button
-                          type="button"
-                          className={`rounded px-3 py-1 text-xs font-semibold shadow transition ${
-                            isSelected
-                              ? "bg-brand-600 text-white"
-                              : "bg-slate-100 text-slate-700 hover:bg-brand-100 hover:text-brand-700"
-                          }`}
-                          onClick={() => onSelectTaller(taller.id)}
-                        >
-                          {isSelected ? "Seleccionado" : "Ver detalle"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {filteredTalleres.length === 0 && (
-                <tr>
-                  <td
-                    className="px-4 py-6 text-center text-sm text-slate-500"
-                    colSpan={8}
-                  >
-                    No hay talleres que coincidan con tu búsqueda.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+        </Group>
+        <Paper withBorder radius="lg" shadow="sm">
+          <ScrollArea>
+            <Table
+              striped
+              highlightOnHover
+              verticalSpacing="sm"
+              horizontalSpacing="md"
+            >
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Fecha</Table.Th>
+                  <Table.Th>Producto</Table.Th>
+                  <Table.Th>Grupo</Table.Th>
+                  <Table.Th>Peso inicial</Table.Th>
+                  <Table.Th>Peso taller</Table.Th>
+                  <Table.Th>Rendimiento</Table.Th>
+                  <Table.Th>Precio unitario</Table.Th>
+                  <Table.Th>Acciones</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {filteredTalleres.map((taller) => {
+                  const producto = productoMap.get(taller.producto_id);
+                  const precio = precioMap.get(taller.producto_id);
+                  const isSelected = selectedTallerId === taller.id;
+
+                  return (
+                    <Table.Tr
+                      key={taller.id}
+                      bg={
+                        isSelected ? "var(--mantine-color-brand-0)" : undefined
+                      }
+                    >
+                      <Table.Td fw={500}>
+                        {new Date(taller.fecha).toLocaleDateString("es-CL")}
+                      </Table.Td>
+                      <Table.Td>
+                        <Text fw={600}>
+                          {producto?.nombre ?? "Producto desconocido"}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Código {taller.codigo}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>{taller.grupo.replace(/_/g, " ")}</Table.Td>
+                      <Table.Td>
+                        {taller.peso_inicial
+                          ? `${taller.peso_inicial} kg`
+                          : "—"}
+                      </Table.Td>
+                      <Table.Td>{taller.peso_taller} kg</Table.Td>
+                      <Table.Td>
+                        {typeof taller.rendimiento === "number"
+                          ? `${(taller.rendimiento * 100).toFixed(2)}%`
+                          : "—"}
+                      </Table.Td>
+                      <Table.Td>
+                        {precio
+                          ? new Intl.NumberFormat("es-CL", {
+                              style: "currency",
+                              currency: "CLP",
+                            }).format(precio.precio_unitario)
+                          : "—"}
+                      </Table.Td>
+                      <Table.Td>
+                        {onSelectTaller && (
+                          <Button
+                            size="xs"
+                            variant={isSelected ? "filled" : "light"}
+                            color="brand"
+                            onClick={() => onSelectTaller(taller.id)}
+                          >
+                            {isSelected ? "Seleccionado" : "Ver detalle"}
+                          </Button>
+                        )}
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+                {filteredTalleres.length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={8}>
+                      <Text ta="center" size="sm" c="dimmed">
+                        No hay talleres que coincidan con tu búsqueda.
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </Paper>
+      </Stack>
+    </Stack>
   );
 };
 

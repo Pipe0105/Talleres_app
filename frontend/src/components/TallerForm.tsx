@@ -1,4 +1,18 @@
-import { FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import dayjs from "dayjs";
+import {
+  Alert,
+  Button,
+  Paper,
+  Select,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import { NewTaller, Producto } from "../types";
 
 interface TallerFormProps {
@@ -6,9 +20,19 @@ interface TallerFormProps {
   onCreated: (nuevoTaller: NewTaller) => Promise<void>;
 }
 
-const initialState = {
+interface FormState {
+  productoId: string;
+  fecha: Date | null;
+  pesoInicial: string;
+  pesoTaller: string;
+  grupo: string;
+  observaciones: string;
+  creadoPor: string;
+}
+
+const initialState: FormState = {
   productoId: "",
-  fecha: "",
+  fecha: null,
   pesoInicial: "",
   pesoTaller: "",
   grupo: "",
@@ -67,7 +91,7 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
     const nuevoTaller: NewTaller = {
       producto_id: producto.id,
       codigo: producto.codigo,
-      fecha: formState.fecha,
+      fecha: dayjs(formState.fecha).format("DD/MM/YYYY"),
       grupo: formState.grupo || `${producto.nombre.replace(/\s+/g, "_")}_Group`,
       observaciones:
         formState.observaciones || `Taller generado para ${producto.nombre}`,
@@ -93,218 +117,151 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
   };
 
   return (
-    <aside className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-800">Nuevo taller</h3>
-      <p className="mt-1 text-sm text-slate-500">
+    <Paper withBorder radius="lg" shadow="sm" p="xl" component="section">
+      <Title order={3} size="h4">
+        Nuevo taller
+      </Title>
+      <Text size="sm" c="dimmed" mt="xs">
         Completa el formulario para simular el registro de un nuevo taller en el
         json-server.
-      </p>
-      <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-        <div className="space-y-2">
-          <label
-            className="text-sm font-medium text-slate-700"
-            htmlFor="producto"
-          >
-            Producto
-          </label>
-          <select
-            id="producto"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-            value={formState.productoId}
-            onChange={(event) =>
+      </Text>
+      <Stack component="form" gap="md" mt="lg" onSubmit={handleSubmit}>
+        <Select
+          label="Producto"
+          placeholder="Selecciona un producto…"
+          data={productosOptions}
+          value={formState.productoId}
+          onChange={(value: string | null) =>
+            setFormState((prev) => ({
+              ...prev,
+              productoId: value ?? "",
+            }))
+          }
+          required
+          disabled={isDisabled}
+          searchable
+          nothingFoundMessage="Sin coincidencias"
+        />
+
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+          <DateInput
+            label="Fecha"
+            placeholder="Selecciona una fecha"
+            value={formState.fecha}
+            onChange={(value: Date | null) =>
               setFormState((prev) => ({
                 ...prev,
-                productoId: event.target.value,
+                fecha: value,
+              }))
+            }
+            valueFormat="DD/MM/YYYY"
+            required
+            disabled={isDisabled}
+          />
+          <TextInput
+            label="Grupo"
+            placeholder="Ej. Ampolleta_Group"
+            value={formState.grupo}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setFormState((prev) => ({
+                ...prev,
+                grupo: event.currentTarget.value,
+              }))
+            }
+            disabled={isDisabled}
+          />
+        </SimpleGrid>
+
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+          <TextInput
+            label="Peso inicial (kg)"
+            type="number"
+            min={0}
+            step="0.001"
+            placeholder="Ej. 35.2"
+            value={formState.pesoInicial}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setFormState((prev) => ({
+                ...prev,
+                pesoInicial: event.currentTarget.value,
+              }))
+            }
+            disabled={isDisabled}
+          />
+          <TextInput
+            label="Peso taller (kg)"
+            type="number"
+            min={0}
+            step="0.001"
+            placeholder="Ej. 31.8"
+            value={formState.pesoTaller}
+            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+              setFormState((prev) => ({
+                ...prev,
+                pesoTaller: event.currentTarget.value,
               }))
             }
             required
             disabled={isDisabled}
-          >
-            <option value="">Selecciona un producto…</option>
-            {productosOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-slate-700"
-              htmlFor="fecha"
-            >
-              Fecha
-            </label>
-            <input
-              id="fecha"
-              type="date"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-              value={formState.fecha}
-              onChange={(event) =>
-                setFormState((prev) => ({
-                  ...prev,
-                  fecha: event.target.value,
-                }))
-              }
-              required
-              disabled={isDisabled}
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-slate-700"
-              htmlFor="grupo"
-            >
-              Grupo
-            </label>
-            <input
-              id="grupo"
-              type="text"
-              placeholder="Ej. Ampolleta_Group"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-              value={formState.grupo}
-              onChange={(event) =>
-                setFormState((prev) => ({
-                  ...prev,
-                  grupo: event.target.value,
-                }))
-              }
-              disabled={isDisabled}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-slate-700"
-              htmlFor="pesoInicial"
-            >
-              Peso inicial (kg)
-            </label>
-            <input
-              id="pesoInicial"
-              type="number"
-              min="0"
-              step="0.001"
-              placeholder="Ej. 35.2"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-              value={formState.pesoInicial}
-              onChange={(event) =>
-                setFormState((prev) => ({
-                  ...prev,
-                  pesoInicial: event.target.value,
-                }))
-              }
-              disabled={isDisabled}
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              className="text-sm font-medium text-slate-700"
-              htmlFor="pesoTaller"
-            >
-              Peso taller (kg)
-            </label>
-            <input
-              id="pesoTaller"
-              type="number"
-              min="0"
-              step="0.001"
-              placeholder="Ej. 31.8"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-              value={formState.pesoTaller}
-              onChange={(event) =>
-                setFormState((prev) => ({
-                  ...prev,
-                  pesoTaller: event.target.value,
-                }))
-              }
-              required
-              disabled={isDisabled}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label
-            className="text-sm font-medium text-slate-700"
-            htmlFor="observaciones"
-          >
-            Observaciones
-          </label>
-          <textarea
-            id="observaciones"
-            rows={3}
-            placeholder="Notas relevantes del taller"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-            value={formState.observaciones}
-            onChange={(event) =>
-              setFormState((prev) => ({
-                ...prev,
-                observaciones: event.target.value,
-              }))
-            }
-            disabled={isDisabled}
           />
-        </div>
+        </SimpleGrid>
 
-        <div className="space-y-2">
-          <label
-            className="text-sm font-medium text-slate-700"
-            htmlFor="creadoPor"
-          >
-            Operario
-          </label>
-          <input
-            id="creadoPor"
-            type="text"
-            placeholder="Ej. operario1"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-400"
-            value={formState.creadoPor}
-            onChange={(event) =>
-              setFormState((prev) => ({
-                ...prev,
-                creadoPor: event.target.value,
-              }))
-            }
-            disabled={isDisabled}
-          />
-        </div>
+        <Textarea
+          label="Observaciones"
+          placeholder="Notas relevantes del taller"
+          minRows={3}
+          value={formState.observaciones}
+          onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+            setFormState((prev) => ({
+              ...prev,
+              observaciones: event.currentTarget.value,
+            }))
+          }
+          disabled={isDisabled}
+        />
+
+        <TextInput
+          label="Operario"
+          placeholder="Ej. operario1"
+          value={formState.creadoPor}
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+            setFormState((prev) => ({
+              ...prev,
+              creadoPor: event.currentTarget.value,
+            }))
+          }
+          disabled={isDisabled}
+        />
 
         {error && (
-          <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <Alert color="red" variant="light">
             {error}
-          </p>
+          </Alert>
         )}
 
         {successMessage && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+          <Alert color="green" variant="light">
             {successMessage}
-          </p>
+          </Alert>
         )}
 
-        <button
+        <Button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-70"
+          color="brand"
           disabled={isDisabled}
+          loading={submitting}
+          fullWidth
         >
-          {submitting
-            ? "Guardando…"
-            : productos.length === 0
-            ? "Cargando productos…"
-            : "Registrar taller"}
-        </button>
+          {productos.length === 0 ? "Cargando productos…" : "Registrar taller"}
+        </Button>
         {productos.length === 0 && (
-          <p className="text-center text-xs text-slate-500">
+          <Text ta="center" size="xs" c="dimmed">
             Espera a que cargue el listado de productos para habilitar el
             formulario.
-          </p>
+          </Text>
         )}
-      </form>
-    </aside>
+      </Stack>
+    </Paper>
   );
 };
 

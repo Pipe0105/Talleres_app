@@ -6,6 +6,19 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  Alert,
+  Button,
+  FileInput,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { getArchivos } from "../api/archivosApi";
 import { Archivo, Taller } from "../types";
 
@@ -71,11 +84,6 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
     };
   }, []);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] ?? null;
-    setFile(selectedFile);
-  };
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!taller) {
@@ -122,138 +130,140 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
 
   if (!taller) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
-        Selecciona un taller en la tabla para visualizar y simular cargas de
-        archivos.
-      </div>
+      <Paper
+        withBorder
+        radius="md"
+        p="lg"
+        style={{ borderStyle: "dashed" }}
+        bg="var(--mantine-color-gray-0)"
+      >
+        <Text ta="center" size="sm" c="dimmed">
+          Selecciona un taller en la tabla para visualizar y simular cargas de
+          archivos.
+        </Text>
+      </Paper>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <form
+    <Stack gap="lg" mt="lg">
+      <Paper
+        withBorder
+        radius="md"
+        shadow="xs"
+        p="lg"
+        component="form"
         onSubmit={handleSubmit}
-        className="rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-inner"
       >
-        <h4 className="text-sm font-semibold text-slate-700">
-          Subir archivo (simulado)
-        </h4>
-        <p className="mt-1 text-xs text-slate-500">
-          Esta acción solo actualiza el estado local de la interfaz para fines
-          de prototipado.
-        </p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              className="text-xs font-medium text-slate-600"
-              htmlFor="archivo"
-            >
-              Archivo
-            </label>
-            <input
-              id="archivo"
-              type="file"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-400"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-            />
+        <Stack gap="sm">
+          <div>
+            <Title order={4} size="h6">
+              Subir archivo (simulado)
+            </Title>
+            <Text size="xs" c="dimmed" mt={4}>
+              Esta acción solo actualiza el estado local de la interfaz para
+              fines de prototipado.
+            </Text>
           </div>
-          <div className="space-y-2">
-            <label
-              className="text-xs font-medium text-slate-600"
-              htmlFor="creadoPor"
-            >
-              Operario
-            </label>
-            <input
-              id="creadoPor"
-              type="text"
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+            <FileInput
+              label="Archivo"
+              placeholder="Selecciona un archivo"
+              value={file}
+              onChange={(selected: File | null) => setFile(selected)}
+              inputRef={fileInputRef}
+              required
+            />
+            <TextInput
+              label="Operario"
               placeholder="Ej. operario-demo"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-400"
               value={creadoPor}
-              onChange={(event) => setCreadoPor(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                setCreadoPor(event.currentTarget.value)
+              }
             />
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          <label
-            className="text-xs font-medium text-slate-600"
-            htmlFor="comentarios"
-          >
-            Comentarios
-          </label>
-          <textarea
-            id="comentarios"
-            rows={2}
+          </SimpleGrid>
+          <Textarea
+            label="Comentarios"
             placeholder="Detalle o contexto del archivo"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-400"
+            minRows={2}
             value={comentarios}
-            onChange={(event) => setComentarios(event.target.value)}
+            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+              setComentarios(event.currentTarget.value)
+            }
           />
-        </div>
-        {error && (
-          <p className="mt-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-            {error}
-          </p>
-        )}
-        <div className="mt-4 flex justify-end">
-          <button
-            type="submit"
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-brand-500"
-          >
-            Simular subida
-          </button>
-        </div>
-      </form>
+          {error && (
+            <Alert color="red" variant="light" size="sm">
+              {error}
+            </Alert>
+          )}
+          <Group justify="flex-end">
+            <Button type="submit">Simular subida</Button>
+          </Group>
+        </Stack>
+      </Paper>
 
-      <div className="rounded-lg border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-4 py-3">
-          <h4 className="text-sm font-semibold text-slate-700">
-            Archivos de {taller.observaciones}
-          </h4>
-          {loading && (
-            <p className="mt-1 text-xs text-slate-500">
-              Cargando archivos desde el mock…
-            </p>
-          )}
-        </div>
-        <ul className="divide-y divide-slate-200 text-sm text-slate-600">
-          {archivosOrdenados.map((archivo) => (
-            <li
-              key={archivo.id}
-              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <p className="font-medium text-slate-800">{archivo.ruta}</p>
-                <p className="text-xs text-slate-500">
-                  Subido el{" "}
-                  {new Date(archivo.fecha_subida).toLocaleString("es-CL")}
-                  {archivo.esSimulado && " · Simulado"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {archivo.creado_por} — {archivo.comentarios}
-                </p>
-              </div>
-              {archivo.localUrl && (
-                <a
-                  href={archivo.localUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center rounded border border-brand-200 px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
+      <Paper withBorder radius="md" shadow="sm">
+        <Stack gap={0}>
+          <div
+            style={{
+              padding: "1rem",
+              borderBottom: "1px solid var(--mantine-color-gray-3)",
+            }}
+          >
+            <Title order={4} size="h6">
+              Archivos de {taller.observaciones}
+            </Title>
+            {loading && (
+              <Text size="xs" c="dimmed" mt={4}>
+                Cargando archivos desde el mock…
+              </Text>
+            )}
+          </div>
+          <Stack gap="xs" p="md">
+            {archivosOrdenados.map((archivo) => (
+              <Paper key={archivo.id} radius="md" withBorder p="md" shadow="xs">
+                <Group
+                  justify="space-between"
+                  align="flex-start"
+                  wrap="nowrap"
+                  gap="md"
                 >
-                  Ver archivo
-                </a>
-              )}
-            </li>
-          ))}
-          {archivosOrdenados.length === 0 && (
-            <li className="px-4 py-6 text-center text-xs text-slate-500">
-              Este taller aún no tiene archivos asociados.
-            </li>
-          )}
-        </ul>
-      </div>
-    </div>
+                  <div>
+                    <Text fw={600}>{archivo.ruta}</Text>
+                    <Text size="xs" c="dimmed">
+                      Subido el{" "}
+                      {new Date(archivo.fecha_subida).toLocaleString("es-CL")}
+                      {archivo.esSimulado && " · Simulado"}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {archivo.creado_por} — {archivo.comentarios}
+                    </Text>
+                  </div>
+                  {archivo.localUrl && (
+                    <Button
+                      component="a"
+                      href={archivo.localUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      variant="light"
+                      size="xs"
+                    >
+                      Ver archivo
+                    </Button>
+                  )}
+                </Group>
+              </Paper>
+            ))}
+            {archivosOrdenados.length === 0 && (
+              <Text ta="center" size="xs" c="dimmed">
+                Este taller aún no tiene archivos asociados.
+              </Text>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 };
 

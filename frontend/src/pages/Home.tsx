@@ -1,48 +1,48 @@
+import { Card, Code, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+
 const Home = () => {
   return (
-    <section className="space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-2xl font-semibold text-slate-800">
-          Bienvenido al panel de Talleres
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
+    <Stack gap="lg">
+      <Card withBorder radius="lg" shadow="sm" padding="xl">
+        <Title order={2}>Bienvenido al panel de Talleres</Title>
+        <Text size="sm" mt="md">
           Este panel consume el JSON mockeado expuesto mediante json-server.
           Desde aquí podrás explorar los talleres registrados, revisar sus
           archivos asociados, verificar precios de productos y generar nuevos
           registros de manera simulada.
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-brand-700">Mock API</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Utiliza{" "}
-            <code className="rounded bg-slate-100 px-1 py-0.5">
-              json-server
-            </code>
-            sobre{" "}
-            <code className="rounded bg-slate-100 px-1 py-0.5">
-              frontend/mock/db.json
-            </code>
-            para entregar los datos de talleres, productos, precios y archivos.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-brand-700">Tailwind CSS</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            La interfaz está construida con Tailwind para prototipar rápidamente
-            tarjetas, tablas y formularios sin definir CSS adicional.
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-brand-700">React Router</h3>
-          <p className="mt-2 text-sm text-slate-600">
+        </Text>
+      </Card>
+      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+        <Card withBorder padding="lg" radius="md" shadow="sm">
+          <Title order={3} size="h4" c="brand.7">
+            Mock API
+          </Title>
+          <Text size="sm" mt="sm" c="dimmed">
+            Utiliza <Code>json-server</Code> sobre{" "}
+            <Code>frontend/mock/db.json</Code> para entregar los datos de
+            talleres, productos, precios y archivos.
+          </Text>
+        </Card>
+        <Card withBorder padding="lg" radius="md" shadow="sm">
+          <Title order={3} size="h4" c="brand.7">
+            Mantine UI
+          </Title>
+          <Text size="sm" mt="sm" c="dimmed">
+            La interfaz está construida con Mantine, aprovechando componentes
+            accesibles y tematizables para mantener un diseño consistente.
+          </Text>
+        </Card>
+        <Card withBorder padding="lg" radius="md" shadow="sm">
+          <Title order={3} size="h4" c="brand.7">
+            React Router
+          </Title>
+          <Text size="sm" mt="sm" c="dimmed">
             Navega entre la página de inicio y el tablero de talleres utilizando
             rutas cliente simples.
-          </p>
-        </div>
-      </div>
-    </section>
+          </Text>
+        </Card>
+      </SimpleGrid>
+    </Stack>
   );
 };
 
