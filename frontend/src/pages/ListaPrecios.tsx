@@ -12,6 +12,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import { getPrecios, getProductos } from "../api/talleresApi";
@@ -37,6 +38,7 @@ const ListaPrecios = () => {
   const [precios, setPrecios] = useState<Precio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -113,6 +115,26 @@ const ListaPrecios = () => {
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   }, [precios, productos]);
 
+  const filteredRows = useMemo(() => {
+    const query = filter.trim().toLowerCase();
+
+    if (!query) {
+      return rows;
+    }
+
+    return rows.filter((row) => {
+      const codigo = String(row.codigo);
+      const nombre = row.nombre.toLowerCase();
+      const descripcion = row.descripcion.toLowerCase();
+
+      return (
+        codigo.includes(query) ||
+        nombre.includes(query) ||
+        descripcion.includes(query)
+      );
+    });
+  }, [filter, rows]);
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -144,6 +166,14 @@ const ListaPrecios = () => {
       );
     }
 
+    if (!filteredRows.length) {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          No se encontraron productos que coincidan con tu búsqueda.
+        </Typography>
+      );
+    }
+
     return (
       <TableContainer sx={{ borderRadius: 3 }}>
         <Table size="medium">
@@ -158,7 +188,7 @@ const ListaPrecios = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => {
+            {filteredRows.map((row) => {
               const precio =
                 row.precioUnitario != null
                   ? currencyFormatter.format(row.precioUnitario)
@@ -229,6 +259,12 @@ const ListaPrecios = () => {
               ausencia de la API real.
             </Typography>
           </div>
+          <TextField
+            fullWidth
+            label="Buscar por código, producto o descripción"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
           {renderContent()}
         </Stack>
       </Paper>

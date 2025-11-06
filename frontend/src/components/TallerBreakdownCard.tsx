@@ -79,7 +79,25 @@ const TallerBreakdownCard = ({ breakdown }: TallerBreakdownCardProps) => {
             <Typography variant="overline" color="text.secondary">
               Taller {breakdown.grupo.replace(/_/g, " ")}
             </Typography>
-            <Typography variant="h5">{breakdown.productoPrincipal}</Typography>
+            <Typography variant="h5">
+              {breakdown.codigoPrincipal != null
+                ? `${breakdown.productoPrincipal} (Código ${breakdown.codigoPrincipal})`
+                : breakdown.productoPrincipal}
+            </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 0.25, sm: 1 }}
+              alignItems={{ sm: "baseline" }}
+            >
+              <Typography variant="h5">
+                {breakdown.productoPrincipal}
+              </Typography>
+              {breakdown.codigoPrincipal != null && (
+                <Typography variant="body2" color="text.secondary">
+                  Código {breakdown.codigoPrincipal}
+                </Typography>
+              )}
+            </Stack>{" "}
             <Typography variant="body2" color="text.secondary">
               Fecha {fechaFormateada}
             </Typography>
@@ -94,13 +112,6 @@ const TallerBreakdownCard = ({ breakdown }: TallerBreakdownCardProps) => {
               color="primary"
               variant="outlined"
             />
-            {breakdown.codigoPrincipal != null && (
-              <Chip
-                label={`Código ${breakdown.codigoPrincipal}`}
-                color="secondary"
-                variant="outlined"
-              />
-            )}
           </Stack>
         </Stack>
 

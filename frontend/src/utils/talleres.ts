@@ -54,6 +54,28 @@ export const calcularGruposDeTalleres = (
   const grupos = agruparPorGrupo(talleres);
   const resultados: TallerGrupoCalculado[] = [];
 
+  const buscarProducto = (
+    productoId: number | null | undefined,
+    codigo: number | null | undefined
+  ): Producto | undefined => {
+    if (productoId != null) {
+      const porId = productoMap.get(productoId);
+      if (porId) {
+        return porId;
+      }
+    }
+
+    if (codigo != null) {
+      for (const producto of productoMap.values()) {
+        if (producto.codigo === codigo) {
+          return producto;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
   grupos.forEach((talleresDelGrupo, grupo) => {
     if (talleresDelGrupo.length === 0) {
       return;
@@ -64,7 +86,10 @@ export const calcularGruposDeTalleres = (
         (t) => typeof t.peso_inicial === "number" && t.peso_inicial > 0
       ) ?? talleresDelGrupo[0];
 
-    const productoPrincipal = productoMap.get(principal.producto_id);
+    const productoPrincipal = buscarProducto(
+      principal.producto_id,
+      principal.codigo
+    );
 
     const pesoInicialCalculado =
       typeof principal.peso_inicial === "number" && principal.peso_inicial > 0
@@ -76,7 +101,7 @@ export const calcularGruposDeTalleres = (
 
     const cortes: CorteCalculado[] = talleresDelGrupo
       .map((taller) => {
-        const producto = productoMap.get(taller.producto_id);
+        const producto = buscarProducto(taller.producto_id, taller.codigo);
         const peso = taller.peso_taller;
         const porcentaje =
           pesoInicialCalculado > 0 ? (peso / pesoInicialCalculado) * 100 : 0;
@@ -84,7 +109,7 @@ export const calcularGruposDeTalleres = (
         return {
           id: taller.id,
           codigo: taller.codigo,
-          nombre: producto?.nombre ?? `Producto ${taller.codigo}`,
+          nombre: producto?.nombre ?? "Producto sin nombre",
           peso: roundKg(peso),
           porcentaje: roundPct(porcentaje),
           esPrincipal: taller.id === principal.id,
@@ -116,8 +141,7 @@ export const calcularGruposDeTalleres = (
       grupo,
       fecha: principal.fecha,
       responsable: principal.creado_por,
-      productoPrincipal:
-        productoPrincipal?.nombre ?? `Producto ${principal.codigo}`,
+      productoPrincipal: productoPrincipal?.nombre ?? "Producto sin nombre",
       codigoPrincipal: principal.codigo ?? null,
       pesoInicial: roundKg(pesoInicialCalculado),
       pesoProcesado: roundKg(pesoProcesado),
