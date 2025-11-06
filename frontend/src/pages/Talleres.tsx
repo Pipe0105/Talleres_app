@@ -18,6 +18,12 @@ import Dashboard from "../components/Dashboard";
 import FileUploader from "../components/FileUploader";
 import TallerForm from "../components/TallerForm";
 import { NewTaller, Precio, Producto, Taller } from "../types";
+import TallerBreakdownCard from "../components/TallerBreakdownCard";
+import {
+  construirMapaDeGrupos,
+  construirMapaProductos,
+  TallerGrupoCalculado,
+} from "../utils/talleres";
 
 const Talleres = () => {
   const [talleres, setTalleres] = useState<Taller[]>([]);
@@ -75,6 +81,21 @@ const Talleres = () => {
     () => talleres.find((taller) => taller.id === selectedTallerId) ?? null,
     [selectedTallerId, talleres]
   );
+
+  const productoMap = useMemo(
+    () => construirMapaProductos(productos),
+    [productos]
+  );
+  const gruposPorNombre = useMemo(
+    () => construirMapaDeGrupos(talleres, productoMap),
+    [talleres, productoMap]
+  );
+  const selectedBreakdown: TallerGrupoCalculado | null = useMemo(() => {
+    if (!selectedTaller) {
+      return null;
+    }
+    return gruposPorNombre.get(selectedTaller.grupo) ?? null;
+  }, [selectedTaller, gruposPorNombre]);
 
   const handleTallerCreated = async (payload: NewTaller) => {
     try {
@@ -160,6 +181,22 @@ const Talleres = () => {
         </Typography>
         <FileUploader taller={selectedTaller} />
       </Paper>
+
+      <Stack spacing={3}>
+        <Typography variant="h6" component="h3">
+          Resultados del taller seleccionado
+        </Typography>
+        {selectedBreakdown ? (
+          <TallerBreakdownCard breakdown={selectedBreakdown} />
+        ) : (
+          <Paper sx={{ p: { xs: 3, md: 4 } }}>
+            <Typography variant="body2" color="text.secondary">
+              Selecciona un taller en la tabla para visualizar el reparto de
+              cortes y porcentajes.
+            </Typography>
+          </Paper>
+        )}
+      </Stack>
     </Stack>
   );
 };

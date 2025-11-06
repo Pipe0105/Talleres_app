@@ -1,175 +1,197 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
-  Chip,
-  Divider,
-  FormControl,
-  InputLabel,
-  MenuItem,
+  CircularProgress,
   Paper,
-  Select,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
+import { getProductos, getTalleres } from "../api/talleresApi";
+import { Producto, Taller } from "../types";
+import TallerBreakdownCard from "../components/TallerBreakdownCard";
+import {
+  calcularGruposDeTalleres,
+  construirMapaProductos,
+  TallerGrupoCalculado,
+} from "../utils/talleres";
 
-interface HistoricalReport {
-  id: number;
-  title: string;
-  sede: string;
-  fecha: string;
-  responsable: string;
-  estado: "Generado" | "Pendiente" | "Revisado";
-  categoria: "Productividad" | "Seguridad" | "Calidad";
-  resumen: string;
-}
+const formatKg = (valor: number): string =>
+  valor.toLocaleString("es-CL", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
 
-const REPORTS: HistoricalReport[] = [
-  {
-    id: 1,
-    title: "Informe Productividad Q1 2024",
-    sede: "Sede Central",
-    fecha: "2024-03-31",
-    responsable: "María González",
-    estado: "Generado",
-    categoria: "Productividad",
-    resumen:
-      "Análisis de la eficiencia operativa y cumplimiento de metas para el primer trimestre de 2024.",
-  },
-  {
-    id: 2,
-    title: "Reporte Auditoría Seguridad 2023",
-    sede: "Sede Norte",
-    fecha: "2023-11-15",
-    responsable: "Luis Ramírez",
-    estado: "Revisado",
-    categoria: "Seguridad",
-    resumen:
-      "Resultados de la auditoría anual de seguridad industrial y planes de acción implementados.",
-  },
-  {
-    id: 3,
-    title: "Indicadores de Calidad Semestral",
-    sede: "Sede Central",
-    fecha: "2023-07-10",
-    responsable: "Ana Pérez",
-    estado: "Generado",
-    categoria: "Calidad",
-    resumen:
-      "Resumen de indicadores de calidad de procesos y satisfacción de clientes internos.",
-  },
-  {
-    id: 4,
-    title: "Informe de Productividad Talleres Técnicos",
-    sede: "Sede Sur",
-    fecha: "2024-01-20",
-    responsable: "Juan Ortiz",
-    estado: "Pendiente",
-    categoria: "Productividad",
-    resumen:
-      "Evaluación de talleres técnicos y rendimiento del personal especializado del último semestre.",
-  },
-  {
-    id: 5,
-    title: "Reporte de Seguridad Taller Mecánico",
-    sede: "Sede Norte",
-    fecha: "2024-02-12",
-    responsable: "Carolina López",
-    estado: "Generado",
-    categoria: "Seguridad",
-    resumen:
-      "Control de incidentes y actividades de capacitación en seguridad del taller mecánico.",
-  },
-];
+const formatPct = (valor: number): string =>
+  valor.toLocaleString("es-CL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const InformesHistoricos = () => {
+  const [talleres, setTalleres] = useState<Taller[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [selectedSede, setSelectedSede] = useState<string>("Todas");
-  const [selectedEstado, setSelectedEstado] = useState<string>("Todos");
-  const [selectedCategoria, setSelectedCategoria] = useState<string>("Todas");
+  const [refreshToken, setRefreshToken] = useState(0);
 
-  const uniqueSedes = useMemo(
-    () => ["Todas", ...new Set(REPORTS.map((report) => report.sede))],
-    []
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [talleresData, productosData] = await Promise.all([
+          getTalleres(),
+          getProductos(),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setTalleres(talleresData);
+        setProductos(productosData);
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        if (isMounted) {
+          setError("No fue posible cargar los informes históricos.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshToken]);
+
+  const productoMap = useMemo(
+    () => construirMapaProductos(productos),
+    [productos]
   );
 
-  const uniqueEstados = useMemo(
-    () => ["Todos", ...new Set(REPORTS.map((report) => report.estado))],
-    []
+  const gruposCalculados = useMemo(
+    () => calcularGruposDeTalleres(talleres, productoMap),
+    [talleres, productoMap]
   );
 
-  const uniqueCategorias = useMemo(
-    () => ["Todas", ...new Set(REPORTS.map((report) => report.categoria))],
-    []
-  );
+  const filteredBreakdowns = useMemo(() => {
+    if (!search.trim()) {
+      return gruposCalculados;
+    }
 
-  const filteredReports = useMemo(() => {
-    return REPORTS.filter((report) => {
-      const matchesSearch =
-        search.trim().length === 0 ||
-        report.title.toLowerCase().includes(search.toLowerCase()) ||
-        report.responsable.toLowerCase().includes(search.toLowerCase());
+    const term = search.toLowerCase();
+    return gruposCalculados.filter((grupo) => {
+      const baseMatch =
+        grupo.grupo.toLowerCase().includes(term) ||
+        grupo.productoPrincipal.toLowerCase().includes(term) ||
+        (grupo.responsable && grupo.responsable.toLowerCase().includes(term)) ||
+        (grupo.codigoPrincipal != null &&
+          grupo.codigoPrincipal.toString().includes(term));
 
-      const matchesSede =
-        selectedSede === "Todas" || report.sede === selectedSede;
+      if (baseMatch) {
+        return true;
+      }
 
-      const matchesEstado =
-        selectedEstado === "Todos" || report.estado === selectedEstado;
+      return grupo.cortes.some(
+        (corte) =>
+          corte.nombre.toLowerCase().includes(term) ||
+          corte.codigo.toString().includes(term)
+      );
+    });
+  }, [search, gruposCalculados]);
 
-      const matchesCategoria =
-        selectedCategoria === "Todas" || report.categoria === selectedCategoria;
-
-      return matchesSearch && matchesSede && matchesEstado && matchesCategoria;
-    }).sort(
-      (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+  const resumenGeneral = useMemo(() => {
+    const totalInicial = filteredBreakdowns.reduce(
+      (acum, item) => acum + item.pesoInicial,
+      0
     );
-  }, [search, selectedSede, selectedEstado, selectedCategoria]);
+    const totalProcesado = filteredBreakdowns.reduce(
+      (acum, item) => acum + item.pesoProcesado,
+      0
+    );
+    const totalMerma = filteredBreakdowns.reduce(
+      (acum, item) => acum + item.mermaKg,
+      0
+    );
 
-  const handleDownloadReport = (report: HistoricalReport) => {
-    const content = `Informe: ${report.title}\nSede: ${report.sede}\nFecha: ${report.fecha}\nResponsable: ${report.responsable}\nEstado: ${report.estado}\nCategoría: ${report.categoria}\nResumen: ${report.resumen}`;
+    return {
+      totalInicial,
+      totalProcesado,
+      totalMerma,
+      porcentajeProcesado:
+        totalInicial > 0 ? (totalProcesado / totalInicial) * 100 : 0,
+      porcentajeMerma: totalInicial > 0 ? (totalMerma / totalInicial) * 100 : 0,
+    };
+  }, [filteredBreakdowns]);
 
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${report.title.replace(/\s+/g, "_")}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleRetry = () => {
+    setError(null);
+    setRefreshToken((token) => token + 1);
   };
 
-  const handleDownloadFiltered = () => {
+  const handleExport = () => {
+    if (filteredBreakdowns.length === 0) {
+      return;
+    }
+
     const headers = [
-      "Título",
-      "Sede",
+      "Grupo",
       "Fecha",
       "Responsable",
-      "Estado",
-      "Categoría",
-      "Resumen",
+      "Producto principal",
+      "Código principal",
+      "Corte",
+      "Código corte",
+      "Peso (kg)",
+      "% sobre inicial",
+      "Peso inicial (kg)",
+      "Total procesado (kg)",
+      "% total procesado",
+      "Merma (kg)",
+      "% merma",
     ];
 
-    const rows = filteredReports.map((report) =>
-      [
-        report.title,
-        report.sede,
-        report.fecha,
-        report.responsable,
-        report.estado,
-        report.categoria,
-        report.resumen,
-      ]
-        .map((value) => `"${value.replace(/"/g, '""')}"`)
-        .join(",")
+    const rows = filteredBreakdowns.flatMap((grupo) =>
+      grupo.cortes.map((corte) => [
+        grupo.grupo,
+        grupo.fecha,
+        grupo.responsable,
+        grupo.productoPrincipal,
+        grupo.codigoPrincipal ?? "",
+        corte.nombre,
+        corte.codigo,
+        corte.peso,
+        corte.porcentaje,
+        grupo.pesoInicial,
+        grupo.pesoProcesado,
+        grupo.porcentajeProcesado,
+        grupo.mermaKg,
+        grupo.mermaPorcentaje,
+      ])
     );
 
-    const csv = [headers.join(","), ...rows].join("\n");
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = typeof value === "number" ? value.toString() : value;
+            return `"${text.replace(/"/g, '""')}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
+
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -182,171 +204,113 @@ const InformesHistoricos = () => {
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Informes Históricos
-        </Typography>
-        <Typography variant="body1" color="text.secondary" gutterBottom>
-          Accede a los informes históricos de talleres realizados en las sedes.
-          Aquí podrás generar reportes detallados que te permitirán analizar el
-          Organiza, filtra y descarga los reportes que necesitas para tus
-          análisis.
-        </Typography>
-        <Divider sx={{ my: 3 }} />
+        <Stack spacing={1.5}>
+          <Typography variant="h4" component="h1">
+            Informes Históricos
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Consulta la trazabilidad de los talleres registrados y revisa cómo
+            se distribuyeron los cortes principales y secundarios en cada
+            proceso.
+          </Typography>
+        </Stack>
 
         <Stack
           direction={{ xs: "column", md: "row" }}
           spacing={2}
+          mt={3}
           alignItems={{ md: "flex-end" }}
         >
           <TextField
-            label="Buscar por título o responsable"
-            variant="outlined"
+            label="Buscar por grupo, producto o corte"
+            placeholder="Ej. Ampolleta, Gordana, operario"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            sx={{ flex: 1 }}
+            sx={{ width: { xs: "100%", md: 360 } }}
           />
-
-          <FormControl sx={{ minWidth: 160 }}>
-            <InputLabel id="sede-filter-label">Sede</InputLabel>
-            <Select
-              labelId="sede-filter-label"
-              label="Sede"
-              value={selectedSede}
-              onChange={(event) => setSelectedSede(event.target.value)}
-            >
-              {uniqueSedes.map((sede) => (
-                <MenuItem key={sede} value={sede}>
-                  {sede}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl sx={{ minWidth: 160 }}>
-            <InputLabel id="estado-filter-label">Estado</InputLabel>
-            <Select
-              labelId="estado-filter-label"
-              label="Estado"
-              value={selectedEstado}
-              onChange={(event) => setSelectedEstado(event.target.value)}
-            >
-              {uniqueEstados.map((estado) => (
-                <MenuItem key={estado} value={estado}>
-                  {estado}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl sx={{ minWidth: 180 }}>
-            <InputLabel id="categoria-filter-label">Categoría</InputLabel>
-            <Select
-              labelId="categoria-filter-label"
-              label="Categoría"
-              value={selectedCategoria}
-              onChange={(event) => setSelectedCategoria(event.target.value)}
-            >
-              {uniqueCategorias.map((categoria) => (
-                <MenuItem key={categoria} value={categoria}>
-                  {categoria}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Stack>
-
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          spacing={2}
-          sx={{ mt: 3 }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {filteredReports.length} informe(s) encontrados.
-          </Typography>
           <Button
             variant="contained"
-            color="primary"
-            disabled={filteredReports.length === 0}
-            onClick={handleDownloadFiltered}
+            onClick={handleExport}
+            disabled={filteredBreakdowns.length === 0}
           >
-            Descargar listado filtrado (CSV)
+            Exportar CSV
           </Button>
         </Stack>
+
+        <Box
+          sx={{
+            mt: 3,
+            p: 2,
+            borderRadius: 2,
+            bgcolor: "action.hover",
+            display: "grid",
+            gap: 1.5,
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+          }}
+        >
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              Peso total inicial
+            </Typography>
+            <Typography variant="subtitle1">
+              {formatKg(resumenGeneral.totalInicial)} kg
+            </Typography>
+          </Stack>
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              Total procesado
+            </Typography>
+            <Typography variant="subtitle1">
+              {formatKg(resumenGeneral.totalProcesado)} kg ·{" "}
+              {formatPct(resumenGeneral.porcentajeProcesado)}%
+            </Typography>
+          </Stack>
+          <Stack spacing={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              Merma acumulada
+            </Typography>
+            <Typography variant="subtitle1">
+              {formatKg(resumenGeneral.totalMerma)} kg ·{" "}
+              {formatPct(resumenGeneral.porcentajeMerma)}%
+            </Typography>
+          </Stack>
+        </Box>
       </Paper>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Título</TableCell>
-              <TableCell>Sede</TableCell>
-              <TableCell>Fecha</TableCell>
-              <TableCell>Responsable</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Categoría</TableCell>
-              <TableCell align="center">Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredReports.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7}>
-                  <Box textAlign="center" py={4}>
-                    <Typography variant="body1" color="text.secondary">
-                      No se encontraron informes con los filtros seleccionados.
-                    </Typography>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredReports.map((report) => (
-                <TableRow key={report.id} hover>
-                  <TableCell>
-                    <Stack spacing={0.5}>
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        {report.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {report.resumen}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{report.sede}</TableCell>
-                  <TableCell>
-                    {new Date(report.fecha).toLocaleDateString("es-ES")}
-                  </TableCell>
-                  <TableCell>{report.responsable}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={report.estado}
-                      color={
-                        report.estado === "Generado"
-                          ? "success"
-                          : report.estado === "Pendiente"
-                          ? "warning"
-                          : "default"
-                      }
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{report.categoria}</TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleDownloadReport(report)}
-                    >
-                      Descargar
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {error ? (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={handleRetry}>
+              Reintentar
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      ) : loading ? (
+        <Paper sx={{ p: 4, textAlign: "center" }}>
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress size={32} />
+            <Typography variant="body2" color="text.secondary">
+              Cargando datos históricos…
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : filteredBreakdowns.length === 0 ? (
+        <Paper sx={{ p: { xs: 3, md: 4 } }}>
+          <Typography variant="body2" color="text.secondary">
+            No se encontraron talleres que coincidan con la búsqueda.
+          </Typography>
+        </Paper>
+      ) : (
+        filteredBreakdowns.map((breakdown: TallerGrupoCalculado) => (
+          <TallerBreakdownCard
+            key={`${breakdown.grupo}-${breakdown.fecha}`}
+            breakdown={breakdown}
+          />
+        ))
+      )}
     </Stack>
   );
 };

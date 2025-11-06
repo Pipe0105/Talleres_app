@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import {
   Alert,
@@ -34,6 +34,38 @@ const TalleresDesposte = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const resumenAutomatico = useMemo(() => {
+    const pesoValue = Number.parseFloat(pesoTaller);
+    const gordanaValue = Number.parseFloat(gordana);
+    const recorteValue = Number.parseFloat(recorte);
+
+    if (
+      Number.isNaN(pesoValue) ||
+      Number.isNaN(gordanaValue) ||
+      Number.isNaN(recorteValue) ||
+      pesoValue <= 0
+    ) {
+      return null;
+    }
+
+    const pesoResultante = Math.max(pesoValue - gordanaValue - recorteValue, 0);
+    const porcentajeGordana = (gordanaValue / pesoValue) * 100;
+    const porcentajeRecorte = (recorteValue / pesoValue) * 100;
+    const porcentajeResultante = (pesoResultante / pesoValue) * 100;
+
+    return {
+      pesoInicial: pesoValue,
+      gordana: gordanaValue,
+      recorte: recorteValue,
+      pesoResultante,
+      porcentajeGordana,
+      porcentajeRecorte,
+      porcentajeResultante,
+      porcentajeTotal:
+        porcentajeGordana + porcentajeRecorte + porcentajeResultante,
+    };
+  }, [pesoTaller, gordana, recorte]);
 
   useEffect(() => {
     let isMounted = true;
@@ -121,28 +153,55 @@ const TalleresDesposte = () => {
       return;
     }
 
-    const gordanaValue = Number.parseFloat(gordana);
-    const recorteValue = Number.parseFloat(recorte);
-
-    if (Number.isNaN(gordanaValue) || Number.isNaN(recorteValue)) {
+    if (!resumenAutomatico) {
       setFormError(
         "Completa los campos de gordana y recorte con valores numéricos."
       );
       return;
     }
 
-    const rendimiento = pesoValue
-      ? Number(((gordanaValue + recorteValue) / pesoValue).toFixed(6))
+    if (
+      resumenAutomatico.gordana + resumenAutomatico.recorte >
+      resumenAutomatico.pesoInicial
+    ) {
+      setFormError(
+        "La suma de gordana y recorte no puede superar el peso inicial."
+      );
+      return;
+    }
+
+    const rendimiento = resumenAutomatico.pesoInicial
+      ? Number(
+          (
+            resumenAutomatico.pesoResultante / resumenAutomatico.pesoInicial
+          ).toFixed(6)
+        )
       : null;
+
+    const porcentajeGordana = Number(
+      resumenAutomatico.porcentajeGordana.toFixed(2)
+    );
+    const porcentajeRecorte = Number(
+      resumenAutomatico.porcentajeRecorte.toFixed(2)
+    );
+    const porcentajeResultante = Number(
+      resumenAutomatico.porcentajeResultante.toFixed(2)
+    );
 
     const nuevoTaller: NewTaller = {
       producto_id: selectedProducto.id,
       codigo: selectedProducto.codigo,
       fecha: dayjs().format("DD/MM/YYYY"),
       grupo: `${selectedProducto.nombre.replace(/\s+/g, "_")}_Desposte`,
-      observaciones: `Gordana: ${gordanaValue} kg · Recorte: ${recorteValue} kg`,
-      peso_inicial: Number(pesoValue.toFixed(3)),
-      peso_taller: Number(pesoValue.toFixed(3)),
+      observaciones: `Gordana: ${resumenAutomatico.gordana.toFixed(
+        3
+      )} kg (${porcentajeGordana}%) · Recorte: ${resumenAutomatico.recorte.toFixed(
+        3
+      )} kg (${porcentajeRecorte}%) · Peso final: ${resumenAutomatico.pesoResultante.toFixed(
+        3
+      )} kg (${porcentajeResultante}%)`,
+      peso_inicial: Number(resumenAutomatico.pesoInicial.toFixed(3)),
+      peso_taller: Number(resumenAutomatico.pesoResultante.toFixed(3)),
       rendimiento,
       creado_por: "operario-desposte",
     };
@@ -381,6 +440,87 @@ const TalleresDesposte = () => {
                           fullWidth
                         />
                       </Stack>
+                      {resumenAutomatico && (
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            mt: 3,
+                            p: { xs: 2, sm: 3 },
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Typography variant="subtitle2" gutterBottom>
+                            Resumen automático del taller
+                          </Typography>
+                          <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={2}
+                          >
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Peso inicial
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {resumenAutomatico.pesoInicial.toFixed(3)} kg
+                              </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Gordana
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {resumenAutomatico.gordana.toFixed(3)} kg ·{" "}
+                                {resumenAutomatico.porcentajeGordana.toFixed(2)}
+                                %
+                              </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Recorte
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {resumenAutomatico.recorte.toFixed(3)} kg ·{" "}
+                                {resumenAutomatico.porcentajeRecorte.toFixed(2)}
+                                %
+                              </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Peso final tras el taller
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {resumenAutomatico.pesoResultante.toFixed(3)} kg
+                                ·{" "}
+                                {resumenAutomatico.porcentajeResultante.toFixed(
+                                  2
+                                )}
+                                %
+                              </Typography>
+                            </Box>
+                          </Stack>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            mt={2}
+                            display="block"
+                          >
+                            La suma de porcentajes es{" "}
+                            {resumenAutomatico.porcentajeTotal.toFixed(2)}%.
+                          </Typography>
+                        </Paper>
+                      )}
                     </Box>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                       <Button
