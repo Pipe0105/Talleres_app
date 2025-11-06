@@ -4,14 +4,16 @@ import HighlightsSection from "./section/HighlightsSection";
 import OperationsSection from "./section/OperationsSection";
 import TestimonialsSection from "./section/TestimonialsSection";
 import CallToActionSection from "./section/CallToActionSection";
+import { homeSectionsConfig } from "./homeSectionsConfig";
 
 const Home = () => {
-  // 👇 Cambia estos valores para mostrar u ocultar secciones
-  const mostrarHero = true;
-  const mostrarHighlights = true; // ❌ Oculto
-  const mostrarOperations = false;
-  const mostrarTestimonials = false;
-  const mostrarCallToAction = false;
+  const {
+    hero: mostrarHero,
+    highlights: mostrarHighlights,
+    operations: mostrarOperations,
+    testimonials: mostrarTestimonials,
+    callToAction: mostrarCallToAction,
+  } = homeSectionsConfig;
 
   return (
     <Stack spacing={6} pb={6}>

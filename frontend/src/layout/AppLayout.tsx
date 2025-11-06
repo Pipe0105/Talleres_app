@@ -57,6 +57,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   to={item.to}
                   variant={item.isActive ? "contained" : "text"}
                   color={item.isActive ? "primary" : "inherit"}
+                  aria-current={item.isActive ? "page" : undefined}
                   sx={{ fontWeight: 600 }}
                 >
                   {item.label}

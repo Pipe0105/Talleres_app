@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { NewTaller, Producto } from "../types";
+import { sanitizeInput, safeParseNumber } from "../utils/security";
 
 interface TallerFormProps {
   productos: Producto[];
@@ -36,6 +37,9 @@ const initialState: FormState = {
   observaciones: "",
   creadoPor: "",
 };
+
+const MAX_COMMENT_LENGTH = 400;
+const MAX_OPERATOR_LENGTH = 60;
 
 const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
   const [formState, setFormState] = useState(initialState);
@@ -70,15 +74,41 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
       return;
     }
 
-    const pesoInicial = formState.pesoInicial
-      ? Number.parseFloat(formState.pesoInicial)
-      : null;
-    const pesoTaller = Number.parseFloat(formState.pesoTaller);
+    const pesoInicial = safeParseNumber(formState.pesoInicial);
+    const pesoTaller = safeParseNumber(formState.pesoTaller);
 
-    if (Number.isNaN(pesoTaller)) {
-      setError("Debes ingresar un peso de taller numérico.");
+    if (pesoTaller == null || pesoTaller <= 0) {
+      setError("Debes ingresar un peso de taller numérico y mayor a cero.");
       return;
     }
+
+    if (pesoInicial != null && pesoInicial <= 0) {
+      setError("El peso inicial debe ser mayor a cero cuando se indique.");
+      return;
+    }
+
+    if (pesoInicial != null && pesoTaller > pesoInicial) {
+      setError("El peso del taller no puede ser mayor al peso inicial.");
+      return;
+    }
+
+    if (pesoTaller > 100000) {
+      setError("El peso del taller no puede superar las 100 toneladas.");
+      return;
+    }
+
+    if (dayjs(formState.fecha).isAfter(dayjs(), "day")) {
+      setError("La fecha del taller no puede ser futura.");
+      return;
+    }
+
+    const observacionesSeguras = sanitizeInput(formState.observaciones, {
+      maxLength: MAX_COMMENT_LENGTH,
+    });
+    const grupoSeguro = sanitizeInput(formState.grupo, { maxLength: 120 });
+    const operarioSeguro = sanitizeInput(formState.creadoPor, {
+      maxLength: MAX_OPERATOR_LENGTH,
+    });
 
     const rendimiento =
       pesoInicial && pesoInicial > 0
@@ -89,13 +119,13 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
       producto_id: producto.id,
       codigo: producto.codigo,
       fecha: dayjs(formState.fecha).format("DD/MM/YYYY"),
-      grupo: formState.grupo || `${producto.nombre.replace(/\s+/g, "_")}_Group`,
+      grupo: grupoSeguro || `${producto.nombre.replace(/\s+/g, "_")}_Group`,
       observaciones:
-        formState.observaciones || `Taller generado para ${producto.nombre}`,
+        observacionesSeguras || `Taller generado para ${producto.nombre}`,
       peso_inicial: pesoInicial,
       peso_taller: Number(pesoTaller.toFixed(3)),
       rendimiento,
-      creado_por: formState.creadoPor || "operario-demo",
+      creado_por: operarioSeguro || "operario-demo",
     };
 
     try {
@@ -164,6 +194,7 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               required
               disabled={isDisabled}
               InputLabelProps={{ shrink: true }}
+              inputProps={{ maxLength: 10 }}
             />
             <TextField
               label="Grupo"
@@ -172,10 +203,13 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setFormState((prev) => ({
                   ...prev,
-                  grupo: event.currentTarget.value,
+                  grupo: sanitizeInput(event.currentTarget.value, {
+                    maxLength: 120,
+                  }),
                 }))
               }
               disabled={isDisabled}
+              inputProps={{ maxLength: 120, autoComplete: "off" }}
             />
           </Stack>
 
@@ -189,7 +223,9 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setFormState((prev) => ({
                   ...prev,
-                  pesoInicial: event.currentTarget.value,
+                  pesoInicial: sanitizeInput(event.currentTarget.value, {
+                    maxLength: 16,
+                  }),
                 }))
               }
               disabled={isDisabled}
@@ -203,7 +239,9 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setFormState((prev) => ({
                   ...prev,
-                  pesoTaller: event.currentTarget.value,
+                  pesoTaller: sanitizeInput(event.currentTarget.value, {
+                    maxLength: 16,
+                  }),
                 }))
               }
               required
@@ -222,10 +260,16 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
             ) =>
               setFormState((prev) => ({
                 ...prev,
-                observaciones: event.currentTarget.value,
+                observaciones: sanitizeInput(event.currentTarget.value, {
+                  maxLength: MAX_COMMENT_LENGTH,
+                }),
               }))
             }
             disabled={isDisabled}
+            inputProps={{
+              maxLength: MAX_COMMENT_LENGTH,
+              autoComplete: "off",
+            }}
           />
 
           <TextField
@@ -235,10 +279,16 @@ const TallerForm = ({ productos, onCreated }: TallerFormProps) => {
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               setFormState((prev) => ({
                 ...prev,
-                creadoPor: event.currentTarget.value,
+                creadoPor: sanitizeInput(event.currentTarget.value, {
+                  maxLength: MAX_OPERATOR_LENGTH,
+                }),
               }))
             }
             disabled={isDisabled}
+            inputProps={{
+              maxLength: MAX_OPERATOR_LENGTH,
+              autoComplete: "off",
+            }}
           />
 
           {error && <Alert severity="error">{error}</Alert>}

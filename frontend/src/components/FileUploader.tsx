@@ -22,6 +22,11 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { getArchivos } from "../api/archivosApi";
 import { Archivo, Taller } from "../types";
+import {
+  isSafeFileSize,
+  isSafeFileType,
+  sanitizeInput,
+} from "../utils/security";
 
 interface FileUploaderProps {
   taller: Taller | null;
@@ -40,6 +45,13 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const localUrlsRef = useRef<string[]>([]);
+
+  const ALLOWED_TYPES = useRef<readonly string[]>([
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+  ]);
+  const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
   useEffect(() => {
     let isMounted = true;
@@ -100,10 +112,13 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
     const nuevoArchivo: LocalArchivo = {
       id: Date.now(),
       taller_id: taller.id,
-      ruta: file.name,
+      ruta: sanitizeInput(file.name, { maxLength: 160 }),
       fecha_subida: new Date().toISOString(),
-      creado_por: creadoPor || "operario-demo",
-      comentarios: comentarios || "Archivo cargado de manera local",
+      creado_por:
+        sanitizeInput(creadoPor, { maxLength: 60 }) || "operario-demo",
+      comentarios:
+        sanitizeInput(comentarios, { maxLength: 300 }) ||
+        "Archivo cargado de manera local",
       localUrl,
       esSimulado: true,
     };
@@ -177,8 +192,32 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
                   <input
                     type="file"
                     hidden
+                    accept={ALLOWED_TYPES.current.join(",")}
                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                       const selected = event.target.files?.[0] ?? null;
+                      if (!selected) {
+                        setFile(null);
+                        return;
+                      }
+
+                      if (
+                        selected.type &&
+                        !isSafeFileType(selected.type, ALLOWED_TYPES.current)
+                      ) {
+                        setError(
+                          "Formato no permitido. Usa imágenes JPG/PNG o PDF."
+                        );
+                        setFile(null);
+                        return;
+                      }
+
+                      if (!isSafeFileSize(selected.size, MAX_FILE_SIZE_BYTES)) {
+                        setError("El archivo no debe superar los 5 MB.");
+                        setFile(null);
+                        return;
+                      }
+
+                      setError(null);
                       setFile(selected);
                     }}
                   />
@@ -196,8 +235,11 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
                 placeholder="Ej. operario-demo"
                 value={creadoPor}
                 onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                  setCreadoPor(event.currentTarget.value)
+                  setCreadoPor(
+                    sanitizeInput(event.currentTarget.value, { maxLength: 60 })
+                  )
                 }
+                inputProps={{ maxLength: 60, autoComplete: "off" }}
               />
             </Grid>
           </Grid>
@@ -209,11 +251,20 @@ const FileUploader = ({ taller }: FileUploaderProps) => {
             value={comentarios}
             onChange={(
               event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-            ) => setComentarios(event.currentTarget.value)}
+            ) =>
+              setComentarios(
+                sanitizeInput(event.currentTarget.value, { maxLength: 300 })
+              )
+            }
+            inputProps={{ maxLength: 300, autoComplete: "off" }}
           />
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction="row" justifyContent="flex-end">
-            <Button type="submit" variant="contained" disabled={!file}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={!file || !!error}
+            >
               Simular subida
             </Button>
           </Stack>

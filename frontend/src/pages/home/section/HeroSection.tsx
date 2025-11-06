@@ -80,7 +80,28 @@ const HeroSection = () => {
             >
               Ingreso, gestion y Reporte historico de Talleres de Desposte.
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}></Stack>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Button
+                component={RouterLink}
+                to="/talleres"
+                variant="contained"
+                color="secondary"
+                size="large"
+                sx={{ fontWeight: 700 }}
+              >
+                Ir al tablero de talleres
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/talleres/desposte"
+                variant="outlined"
+                color="inherit"
+                size="large"
+                sx={{ fontWeight: 700 }}
+              >
+                Registrar desposte
+              </Button>
+            </Stack>{" "}
           </Stack>
         </Grid>
         <Grid item xs={12} md={5}>

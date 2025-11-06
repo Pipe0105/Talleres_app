@@ -1,10 +1,11 @@
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
   Card,
   CardContent,
   CssBaseline,
+  LinearProgress,
   Paper,
   Stack,
   Table,
@@ -19,6 +20,7 @@ import {
 } from "@mui/material";
 import { Theme, ThemeProvider, createTheme } from "@mui/material/styles";
 import { Precio, Producto, Taller } from "../types";
+import { sanitizeSearchQuery } from "../utils/security";
 
 const dashboardTheme = createTheme({
   palette: {
@@ -117,6 +119,8 @@ interface DashboardProps {
   precios: Precio[];
   selectedTallerId: number | null;
   onSelectTaller?: (tallerId: number) => void;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 const Dashboard = ({
@@ -125,8 +129,20 @@ const Dashboard = ({
   precios,
   selectedTallerId,
   onSelectTaller,
+  searchQuery,
+  onSearchChange,
 }: DashboardProps) => {
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState<string>(
+    searchQuery ?? ""
+  );
+
+  useEffect(() => {
+    if (typeof searchQuery === "string") {
+      setInternalSearch(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const search = searchQuery ?? internalSearch;
 
   const productoMap = useMemo(
     () =>
@@ -199,16 +215,52 @@ const Dashboard = ({
       map.set(taller.grupo, entry);
     });
 
-    return Array.from(map.entries()).map(([grupo, valores]) => ({
-      grupo,
-      totalPeso: valores.totalPeso,
-      rendimientoPromedio:
-        valores.conRendimiento > 0
-          ? valores.totalRendimiento / valores.conRendimiento
-          : null,
-      cantidad: valores.cantidad,
-    }));
+    return Array.from(map.entries())
+      .sort(([, a], [, b]) => b.totalPeso - a.totalPeso)
+      .map(([grupo, valores]) => ({
+        grupo,
+        totalPeso: valores.totalPeso,
+        rendimientoPromedio:
+          valores.conRendimiento > 0
+            ? valores.totalRendimiento / valores.conRendimiento
+            : null,
+        cantidad: valores.cantidad,
+      }));
   }, [filteredTalleres]);
+
+  const pesoPorGrupoData = useMemo(() => {
+    const topGroups = resumenPorGrupo.slice(0, 5);
+    const total = topGroups.reduce((acum, item) => acum + item.totalPeso, 0);
+    return topGroups.map((grupo) => ({
+      id: grupo.grupo,
+      label: grupo.grupo.replace(/_/g, " "),
+      kilos: Number(grupo.totalPeso.toFixed(2)),
+      porcentaje: total > 0 ? (grupo.totalPeso / total) * 100 : 0,
+    }));
+  }, [resumenPorGrupo]);
+
+  const rendimientoPorGrupo = useMemo(
+    () =>
+      resumenPorGrupo
+        .filter((grupo) => typeof grupo.rendimientoPromedio === "number")
+        .slice(0, 5)
+        .map((grupo) => ({
+          label: grupo.grupo.replace(/_/g, " "),
+          rendimiento: Number(
+            ((grupo.rendimientoPromedio ?? 0) * 100).toFixed(2)
+          ),
+        })),
+    [resumenPorGrupo]
+  );
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const value = sanitizeSearchQuery(event.currentTarget.value);
+    if (onSearchChange) {
+      onSearchChange(value);
+      return;
+    }
+    setInternalSearch(value);
+  };
 
   return (
     <Stack spacing={4} mt={4}>
@@ -279,6 +331,83 @@ const Dashboard = ({
         )}
       </Grid>
 
+      {(pesoPorGrupoData.length > 0 || rendimientoPorGrupo.length > 0) && (
+        <Grid container spacing={3}>
+          {pesoPorGrupoData.length > 0 && (
+            <Grid xs={12} md={6}>
+              <Paper sx={{ p: { xs: 2, md: 3 } }}>
+                <Typography variant="h6" gutterBottom>
+                  Top grupos por peso procesado
+                </Typography>
+                <Stack spacing={2}>
+                  {pesoPorGrupoData.map((item) => (
+                    <Box key={item.id}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        sx={{ mb: 0.5 }}
+                      >
+                        <Typography variant="body2" fontWeight={600}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.kilos.toLocaleString("es-CL", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                          {" kg"}
+                        </Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(item.porcentaje, 100)}
+                        sx={{ borderRadius: 999 }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+          )}
+
+          {rendimientoPorGrupo.length > 0 && (
+            <Grid xs={12} md={6}>
+              <Paper sx={{ p: { xs: 2, md: 3 } }}>
+                <Typography variant="h6" gutterBottom>
+                  Rendimiento promedio por grupo
+                </Typography>
+                <Stack spacing={2}>
+                  {rendimientoPorGrupo.map((item) => (
+                    <Box key={item.label}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        sx={{ mb: 0.5 }}
+                      >
+                        <Typography variant="body2" fontWeight={600}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.rendimiento.toFixed(2)}%
+                        </Typography>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(item.rendimiento, 100)}
+                        color="secondary"
+                        sx={{ borderRadius: 999 }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
+      )}
+
       {/* ==== DETALLE DE TALLERES ==== */}
       <Stack spacing={2}>
         <Stack
@@ -293,9 +422,7 @@ const Dashboard = ({
           <TextField
             placeholder="Buscar por grupo, producto o código"
             value={search}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              setSearch(event.currentTarget.value)
-            }
+            onChange={handleSearchChange}
             size="small"
             sx={{ width: { xs: "100%", md: 320 } }}
           />

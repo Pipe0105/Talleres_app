@@ -25,14 +25,27 @@ import {
   TallerGrupoCalculado,
 } from "../utils/talleres";
 
+import { safeNumberFromStorage, safeStorage } from "../utils/storage";
+import { sanitizeSearchQuery } from "../utils/security";
+
+const STORAGE_KEYS = {
+  selectedTaller: "talleres.selectedTallerId",
+  search: "talleres.dashboardSearch",
+} as const;
+
 const Talleres = () => {
   const [talleres, setTalleres] = useState<Taller[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [precios, setPrecios] = useState<Precio[]>([]);
-  const [selectedTallerId, setSelectedTallerId] = useState<number | null>(null);
+  const [selectedTallerId, setSelectedTallerId] = useState<number | null>(() =>
+    safeNumberFromStorage(STORAGE_KEYS.selectedTaller)
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [dashboardSearch, setDashboardSearch] = useState<string>(
+    () => safeStorage.getItem(STORAGE_KEYS.search) ?? ""
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -121,6 +134,26 @@ const Talleres = () => {
     setLoading(true);
     setRefreshToken((token) => token + 1);
   };
+
+  useEffect(() => {
+    if (selectedTallerId) {
+      safeStorage.setItem(
+        STORAGE_KEYS.selectedTaller,
+        String(selectedTallerId)
+      );
+    } else {
+      safeStorage.removeItem(STORAGE_KEYS.selectedTaller);
+    }
+  }, [selectedTallerId]);
+
+  useEffect(() => {
+    const sanitized = sanitizeSearchQuery(dashboardSearch);
+    safeStorage.setItem(STORAGE_KEYS.search, sanitized);
+  }, [dashboardSearch]);
+
+  const handleSearchChange = (value: string) => {
+    setDashboardSearch(sanitizeSearchQuery(value));
+  };
   return (
     <Stack spacing={4}>
       <Grid container spacing={4}>
@@ -162,6 +195,8 @@ const Talleres = () => {
                 precios={precios}
                 selectedTallerId={selectedTallerId}
                 onSelectTaller={setSelectedTallerId}
+                searchQuery={dashboardSearch}
+                onSearchChange={handleSearchChange}
               />
             )}
           </Paper>

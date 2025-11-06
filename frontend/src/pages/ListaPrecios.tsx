@@ -17,6 +17,8 @@ import {
 } from "@mui/material";
 import { getPrecios, getProductos } from "../api/talleresApi";
 import { Precio, Producto } from "../types";
+import { safeStorage } from "../utils/storage";
+import { sanitizeSearchQuery } from "../utils/security";
 
 type ListaPrecioRow = {
   id: number;
@@ -33,12 +35,18 @@ const currencyFormatter = new Intl.NumberFormat("es-CL", {
   currency: "CLP",
   maximumFractionDigits: 0,
 });
+const STORAGE_KEYS = {
+  filter: "listaPrecios.filter",
+} as const;
+
 const ListaPrecios = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [precios, setPrecios] = useState<Precio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState(() =>
+    sanitizeSearchQuery(safeStorage.getItem(STORAGE_KEYS.filter) ?? "")
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -134,6 +142,14 @@ const ListaPrecios = () => {
       );
     });
   }, [filter, rows]);
+
+  useEffect(() => {
+    safeStorage.setItem(STORAGE_KEYS.filter, filter);
+  }, [filter]);
+
+  const handleFilterChange = (value: string) => {
+    setFilter(sanitizeSearchQuery(value));
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -263,7 +279,7 @@ const ListaPrecios = () => {
             fullWidth
             label="Buscar por código, producto o descripción"
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
+            onChange={(event) => handleFilterChange(event.target.value)}
           />
           {renderContent()}
         </Stack>

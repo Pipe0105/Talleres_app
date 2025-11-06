@@ -7,6 +7,9 @@ import {
   Button,
   Collapse,
   Divider,
+  Step,
+  StepLabel,
+  Stepper,
   Paper,
   Stack,
   TextField,
@@ -15,6 +18,12 @@ import {
 import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
 import { createTaller, getProductos } from "../api/talleresApi";
 import { NewTaller, Producto } from "../types";
+import {
+  isSafeFileSize,
+  isSafeFileType,
+  sanitizeInput,
+  safeParseNumber,
+} from "../utils/security";
 
 const TalleresDesposte = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -32,16 +41,18 @@ const TalleresDesposte = () => {
   const [gordana, setGordana] = useState("");
   const [recorte, setRecorte] = useState("");
   const [pesoFinal, setPesoFinal] = useState("");
+  const ALLOWED_IMAGE_TYPES: readonly string[] = ["image/jpeg", "image/png"];
+  const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB
 
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const resumenAutomatico = useMemo(() => {
-    const pesoValue = Number.parseFloat(pesoTaller);
-    const gordanaValue = Number.parseFloat(gordana);
-    const recorteValue = Number.parseFloat(recorte);
-    const pesoFinalValue = Number.parseFloat(pesoFinal);
+    const pesoValue = safeParseNumber(pesoTaller) ?? Number.NaN;
+    const gordanaValue = safeParseNumber(gordana) ?? Number.NaN;
+    const recorteValue = safeParseNumber(recorte) ?? Number.NaN;
+    const pesoFinalValue = safeParseNumber(pesoFinal) ?? Number.NaN;
 
     if (
       Number.isNaN(pesoValue) ||
@@ -125,14 +136,15 @@ const TalleresDesposte = () => {
       return;
     }
 
-    const pesoValue = Number.parseFloat(pesoTaller);
-    if (Number.isNaN(pesoValue) || pesoValue <= 0) {
+    const pesoValue = safeParseNumber(pesoTaller);
+    if (pesoValue == null || pesoValue <= 0) {
       setFormError("Ingresa un peso válido en kilogramos.");
       return;
     }
 
     if (!labelPhoto) {
       setFormError("Sube la foto de la etiqueta de la canastilla.");
+      return;
     }
 
     setFormError(null);
@@ -145,8 +157,8 @@ const TalleresDesposte = () => {
       return;
     }
 
-    const pesoValue = Number.parseFloat(pesoTaller);
-    if (Number.isNaN(pesoValue) || pesoValue <= 0) {
+    const pesoValue = safeParseNumber(pesoTaller);
+    if (pesoValue == null || pesoValue <= 0) {
       setFormError("Ingresa un peso válido en kilogramos.");
       return;
     }
@@ -227,6 +239,15 @@ const TalleresDesposte = () => {
       setSubmitting(false);
     }
   };
+  const activeStep = useMemo(() => {
+    if (!selectedProducto) {
+      return 0;
+    }
+    if (!showAdvancedFields) {
+      return 1;
+    }
+    return 2;
+  }, [selectedProducto, showAdvancedFields]);
 
   const handleRetry = () => {
     setError(null);
@@ -249,6 +270,14 @@ const TalleresDesposte = () => {
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={3}>
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {["Material", "Peso y etiqueta", "Cortes base"].map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
           <Box>
             <Typography variant="h5" component="h2">
               Registrar nuevo taller de desposte
@@ -308,7 +337,9 @@ const TalleresDesposte = () => {
                 }}
                 inputValue={materialInput}
                 onInputChange={(_, newInputValue) =>
-                  setMaterialInput(newInputValue)
+                  setMaterialInput(
+                    sanitizeInput(newInputValue, { maxLength: 80 })
+                  )
                 }
                 disableClearable={false}
                 loading={loading}
@@ -350,10 +381,13 @@ const TalleresDesposte = () => {
                       placeholder="Ej. 120.5"
                       value={pesoTaller}
                       onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                        setPesoTaller(event.target.value)
+                        setPesoTaller(
+                          sanitizeInput(event.target.value, { maxLength: 16 })
+                        )
                       }
                       disabled={submitting || showAdvancedFields}
                       fullWidth
+                      helperText="Introduce el peso según la etiqueta original"
                     />
                     {!showAdvancedFields && (
                       <Button
@@ -381,14 +415,34 @@ const TalleresDesposte = () => {
                       {labelPhoto ? "Cambiar foto" : "Subir foto de etiqueta"}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={ALLOWED_IMAGE_TYPES.join(",")}
                         hidden
                         onChange={(event: ChangeEvent<HTMLInputElement>) => {
                           const file = event.target.files?.[0] ?? null;
-                          setLabelPhoto(file);
-                          if (file) {
-                            setFormError(null);
+                          if (!file) {
+                            setLabelPhoto(null);
+                            return;
                           }
+
+                          if (
+                            file.type &&
+                            !isSafeFileType(file.type, ALLOWED_IMAGE_TYPES)
+                          ) {
+                            setFormError(
+                              "Formato no permitido. Solo JPG o PNG."
+                            );
+                            setLabelPhoto(null);
+                            return;
+                          }
+
+                          if (!isSafeFileSize(file.size, MAX_IMAGE_BYTES)) {
+                            setFormError("La imagen no debe superar los 4 MB.");
+                            setLabelPhoto(null);
+                            return;
+                          }
+
+                          setLabelPhoto(file);
+                          setFormError(null);
                         }}
                       />
                     </Button>
@@ -429,7 +483,11 @@ const TalleresDesposte = () => {
                           placeholder="Ej. 12.4"
                           value={gordana}
                           onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            setGordana(event.target.value)
+                            setGordana(
+                              sanitizeInput(event.target.value, {
+                                maxLength: 16,
+                              })
+                            )
                           }
                           disabled={submitting}
                           fullWidth
@@ -441,7 +499,11 @@ const TalleresDesposte = () => {
                           placeholder="Ej. 8.1"
                           value={recorte}
                           onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            setRecorte(event.target.value)
+                            setRecorte(
+                              sanitizeInput(event.target.value, {
+                                maxLength: 16,
+                              })
+                            )
                           }
                           disabled={submitting}
                           fullWidth
@@ -453,7 +515,11 @@ const TalleresDesposte = () => {
                           placeholder="Ej. 95.3"
                           value={pesoFinal}
                           onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            setPesoFinal(event.target.value)
+                            setPesoFinal(
+                              sanitizeInput(event.target.value, {
+                                maxLength: 16,
+                              })
+                            )
                           }
                           disabled={submitting}
                           fullWidth
