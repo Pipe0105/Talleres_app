@@ -366,7 +366,7 @@ const TalleresDesposte = () => {
                             onChange={(event: ChangeEvent<HTMLInputElement>) =>
                               setPesoTaller(event.target.value)
                             }
-                            disabled={submitting}
+                            disabled={submitting || showAdvancedFields}
                             fullWidth
                           />
                           {!showAdvancedFields && (
