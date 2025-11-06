@@ -50,7 +50,7 @@ const Login = () => {
               color="primary.main"
               gutterBottom
             >
-              Talleres Cárnicos
+              Talleres Desposte
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Ingresa tus credenciales para acceder al panel de control de los

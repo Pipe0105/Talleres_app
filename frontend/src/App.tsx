@@ -13,6 +13,11 @@ const App = () => {
 
   const navItems = [
     { label: "Inicio", to: "/", isActive: location.pathname === "/" },
+    {
+      label: "Iniciar sesión",
+      to: "/login",
+      isActive: location.pathname === "/login",
+    },
   ];
 
   if (isLoginRoute) {
