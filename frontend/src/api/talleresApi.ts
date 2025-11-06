@@ -2,7 +2,7 @@ import axios from "axios";
 import mockDbUrl from "../../mock/db.json?url";
 import { Archivo, NewTaller, Precio, Producto, Taller } from "../types";
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3001",
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
 });
 
 type MockDb = {
@@ -43,6 +43,91 @@ const withMockFallback = async <T>(
   }
 };
 
+const toNumberOrNull = (value: unknown): number | null => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const parsed = Number(normalized);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  return null;
+};
+
+const toBoolean = (value: unknown): boolean => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+
+    if (normalized === "true") {
+      return true;
+    }
+
+    if (normalized === "false") {
+      return false;
+    }
+
+    const parsed = Number(normalized);
+    if (!Number.isNaN(parsed)) {
+      return parsed !== 0;
+    }
+
+    return false;
+  }
+
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+
+  return false;
+};
+
+const mapPreciosResponse = (data: unknown): Precio[] => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const record = item as Record<string, unknown>;
+      const id = toNumberOrNull(record.id);
+      const productoId = toNumberOrNull(record.producto_id);
+
+      if (id == null || productoId == null) {
+        return null;
+      }
+
+      return {
+        id,
+        producto_id: productoId,
+        fecha_vigencia_desde:
+          typeof record.fecha_vigencia_desde === "string"
+            ? record.fecha_vigencia_desde
+            : "",
+        precio_unitario: toNumberOrNull(record.precio_unitario),
+        impuestos_incluidos: toBoolean(record.impuestos_incluidos),
+      } satisfies Precio;
+    })
+    .filter((precio): precio is Precio => precio !== null);
+};
+
 export const getTalleres = async (): Promise<Taller[]> =>
   withMockFallback(
     () => api.get("/talleres").then((res) => res.data),
@@ -57,8 +142,8 @@ export const getProductos = async (): Promise<Producto[]> =>
 
 export const getPrecios = async (): Promise<Precio[]> =>
   withMockFallback(
-    () => api.get("/precios").then((res) => res.data),
-    (db) => db.precios
+    () => api.get("/precios").then((res) => mapPreciosResponse(res.data)),
+    (db) => mapPreciosResponse(db.precios)
   );
 
 export const createTaller = async (data: NewTaller): Promise<Taller> =>

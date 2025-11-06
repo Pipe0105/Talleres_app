@@ -9,7 +9,7 @@ export interface Precio {
   id: number;
   producto_id: number;
   fecha_vigencia_desde: string;
-  precio_unitario: number;
+  precio_unitario: number | null;
   impuestos_incluidos: boolean;
 }
 

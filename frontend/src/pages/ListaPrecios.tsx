@@ -80,21 +80,33 @@ const ListaPrecios = () => {
 
     const preciosPorProducto = new Map<number, Precio>();
     precios.forEach((precio) => {
-      if (!preciosPorProducto.has(precio.producto_id)) {
-        preciosPorProducto.set(precio.producto_id, precio);
+      const productoId = precio.producto_id;
+
+      if (!Number.isFinite(productoId) || preciosPorProducto.has(productoId)) {
+        return;
       }
+      preciosPorProducto.set(productoId, precio);
     });
 
     return productos
       .map((producto) => {
         const precio = preciosPorProducto.get(producto.id) ?? null;
+        const precioUnitario =
+          typeof precio?.precio_unitario === "number" &&
+          Number.isFinite(precio.precio_unitario)
+            ? precio.precio_unitario
+            : null;
+        const fechaVigencia =
+          precio && precio.fecha_vigencia_desde.trim()
+            ? precio.fecha_vigencia_desde
+            : null;
         return {
           id: producto.id,
           codigo: producto.codigo,
           nombre: producto.nombre,
           descripcion: producto.descripcion,
-          precioUnitario: precio?.precio_unitario ?? null,
-          fechaVigencia: precio?.fecha_vigencia_desde ?? null,
+          precioUnitario,
+          fechaVigencia,
           impuestosIncluidos: precio?.impuestos_incluidos ?? false,
         } satisfies ListaPrecioRow;
       })

@@ -138,9 +138,10 @@ const Dashboard = ({
     const map = new Map<number, Precio>();
 
     precios.forEach((precio) => {
-      const current = map.get(precio.producto_id);
+      const productoId = precio.producto_id;
+      const current = map.get(productoId);
       if (!current) {
-        map.set(precio.producto_id, precio);
+        map.set(productoId, precio);
         return;
       }
 
@@ -148,7 +149,7 @@ const Dashboard = ({
       const candidateDate = new Date(precio.fecha_vigencia_desde).getTime();
 
       if (candidateDate > currentDate) {
-        map.set(precio.producto_id, precio);
+        map.set(productoId, precio);
       }
     });
 
@@ -356,7 +357,7 @@ const Dashboard = ({
                         : "—"}
                     </TableCell>
                     <TableCell>
-                      {precio
+                      {precio && typeof precio.precio_unitario === "number"
                         ? new Intl.NumberFormat("es-CL", {
                             style: "currency",
                             currency: "CLP",
