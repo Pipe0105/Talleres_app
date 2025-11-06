@@ -31,6 +31,8 @@ const TalleresDesposte = () => {
   const [showAdvancedFields, setShowAdvancedFields] = useState(false);
   const [gordana, setGordana] = useState("");
   const [recorte, setRecorte] = useState("");
+  const [pesoFinal, setPesoFinal] = useState("");
+
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,33 +41,35 @@ const TalleresDesposte = () => {
     const pesoValue = Number.parseFloat(pesoTaller);
     const gordanaValue = Number.parseFloat(gordana);
     const recorteValue = Number.parseFloat(recorte);
+    const pesoFinalValue = Number.parseFloat(pesoFinal);
 
     if (
       Number.isNaN(pesoValue) ||
       Number.isNaN(gordanaValue) ||
       Number.isNaN(recorteValue) ||
-      pesoValue <= 0
+      Number.isNaN(pesoFinalValue) ||
+      pesoValue <= 0 ||
+      pesoFinalValue <= 0
     ) {
       return null;
     }
 
-    const pesoResultante = Math.max(pesoValue - gordanaValue - recorteValue, 0);
     const porcentajeGordana = (gordanaValue / pesoValue) * 100;
     const porcentajeRecorte = (recorteValue / pesoValue) * 100;
-    const porcentajeResultante = (pesoResultante / pesoValue) * 100;
+    const porcentajeResultante = (pesoFinalValue / pesoValue) * 100;
 
     return {
       pesoInicial: pesoValue,
       gordana: gordanaValue,
       recorte: recorteValue,
-      pesoResultante,
+      pesoResultante: pesoFinalValue,
       porcentajeGordana,
       porcentajeRecorte,
       porcentajeResultante,
       porcentajeTotal:
         porcentajeGordana + porcentajeRecorte + porcentajeResultante,
     };
-  }, [pesoTaller, gordana, recorte]);
+  }, [pesoTaller, gordana, recorte, pesoFinal]);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,6 +109,7 @@ const TalleresDesposte = () => {
     setLabelPhoto(null);
     setGordana("");
     setRecorte("");
+    setPesoFinal("");
     setShowAdvancedFields(false);
     setFormError(null);
   };
@@ -155,17 +160,19 @@ const TalleresDesposte = () => {
 
     if (!resumenAutomatico) {
       setFormError(
-        "Completa los campos de gordana y recorte con valores numéricos."
+        "Completa los campos de gordana, recorte y peso final con valores numéricos."
       );
       return;
     }
 
     if (
-      resumenAutomatico.gordana + resumenAutomatico.recorte >
+      resumenAutomatico.gordana +
+        resumenAutomatico.recorte +
+        resumenAutomatico.pesoResultante >
       resumenAutomatico.pesoInicial
     ) {
       setFormError(
-        "La suma de gordana y recorte no puede superar el peso inicial."
+        "La suma de gordana, recorte y peso final no puede superar el peso inicial."
       );
       return;
     }
@@ -435,6 +442,18 @@ const TalleresDesposte = () => {
                           value={recorte}
                           onChange={(event: ChangeEvent<HTMLInputElement>) =>
                             setRecorte(event.target.value)
+                          }
+                          disabled={submitting}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Peso final tras el taller (kg)"
+                          type="number"
+                          inputProps={{ step: 0.001, min: 0 }}
+                          placeholder="Ej. 95.3"
+                          value={pesoFinal}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                            setPesoFinal(event.target.value)
                           }
                           disabled={submitting}
                           fullWidth
