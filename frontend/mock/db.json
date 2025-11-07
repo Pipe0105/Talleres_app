@@ -35,6 +35,24 @@
       "codigo": 25949,
       "nombre": "CADERITA ESPECIAL",
       "descripcion": "Caderita especial"
+    },
+    {
+      "id": 7,
+      "codigo": 33648,
+      "nombre": "RECORTE AMPOLLETA",
+      "descripcion": "Recorte asociado a Ampolleta"
+    },
+    {
+      "id": 8,
+      "codigo": 11019,
+      "nombre": "PULPA NORMAL SUBPRODUCTO",
+      "descripcion": "Pulpa normal – subproducto"
+    },
+    {
+      "id": 9,
+      "codigo": 22836,
+      "nombre": "GORDANA*KILO CADERITA",
+      "descripcion": "Gordana*kilo - Caderita"
     }
   ],
 
@@ -79,6 +97,27 @@
       "producto_id": 6,
       "fecha_vigencia_desde": "2025-10-29",
       "precio_unitario": 15011.86448,
+      "impuestos_incluidos": true
+    },
+    {
+      "id": 7,
+      "producto_id": 7,
+      "fecha_vigencia_desde": "2025-10-29",
+      "precio_unitario": 6290.5,
+      "impuestos_incluidos": true
+    },
+    {
+      "id": 8,
+      "producto_id": 8,
+      "fecha_vigencia_desde": "2025-10-29",
+      "precio_unitario": 11890.75,
+      "impuestos_incluidos": true
+    },
+    {
+      "id": 9,
+      "producto_id": 9,
+      "fecha_vigencia_desde": "2025-10-29",
+      "precio_unitario": 4290.25,
       "impuestos_incluidos": true
     }
   ],
@@ -187,6 +226,42 @@
       "peso_inicial": null,
       "peso_taller": 2.4,
       "rendimiento": 0.053812,
+      "observaciones": "Gordana*kilo - Caderita",
+      "fecha": "2025-10-29",
+      "grupo": "Caderita_Group",
+      "creado_por": "operario3"
+    },
+    {
+      "id": 401,
+      "producto_id": 7,
+      "codigo": 33648,
+      "peso_inicial": null,
+      "peso_taller": 0.45,
+      "rendimiento": 0.011854,
+      "observaciones": "Recorte asociado a Ampolleta",
+      "fecha": "2025-10-29",
+      "grupo": "Ampolleta_Group",
+      "creado_por": "operario1"
+    },
+    {
+      "id": 402,
+      "producto_id": 8,
+      "codigo": 11019,
+      "peso_inicial": null,
+      "peso_taller": 1.1,
+      "rendimiento": 0.032258,
+      "observaciones": "Pulpa normal – subproducto",
+      "fecha": "2025-10-29",
+      "grupo": "Bola_Group",
+      "creado_por": "operario2"
+    },
+    {
+      "id": 403,
+      "producto_id": 9,
+      "codigo": 22836,
+      "peso_inicial": null,
+      "peso_taller": 1.7,
+      "rendimiento": 0.038281,
       "observaciones": "Gordana*kilo - Caderita",
       "fecha": "2025-10-29",
       "grupo": "Caderita_Group",

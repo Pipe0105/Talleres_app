@@ -35,16 +35,17 @@ const Login = () => {
         elevation={8}
         sx={{
           width: "100%",
-          maxWidth: 420,
+          maxWidth: 450,
           borderRadius: 4,
           p: { xs: 4, sm: 5 },
-          boxShadow: (theme) => theme.shadows[12],
+          boxShadow: (theme) => theme.shadows[20],
         }}
       >
         <Stack spacing={4}>
           <Box>
             <Typography
               variant="h4"
+              align="center"
               component="h1"
               fontWeight={700}
               color="primary.main"
@@ -52,7 +53,7 @@ const Login = () => {
             >
               Talleres Desposte
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" align="center">
               Ingresa tus credenciales para acceder al panel de control de los
               talleres.
             </Typography>
@@ -89,7 +90,12 @@ const Login = () => {
           </Stack>
 
           <Divider>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontSize={14}
+              fontWeight={500}
+            >
               ¿Olvidaste tu contraseña?
             </Typography>
           </Divider>
@@ -108,7 +114,7 @@ const Login = () => {
               type="button"
               onClick={() => navigate("/")}
               underline="hover"
-              sx={{ fontWeight: 600 }}
+              sx={{ fontWeight: 700 }}
             >
               Explorar el panel como invitado
             </Link>
