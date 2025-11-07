@@ -329,7 +329,7 @@ const ListaPrecios = () => {
                 ? new Date(row.proximaActualizacion).toLocaleDateString("es-CL")
                 : "—";
               const vigenteHasta = row.vigenteHasta
-                ? new Date(row.vigenteHasta).toLocaleDateString("es-CL")
+                ? new Date(row.vigenteHasta).toLocaleDateString("es-CO")
                 : "—";
 
               return (
