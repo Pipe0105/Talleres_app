@@ -32,15 +32,14 @@ const Login = () => {
       })}
     >
       <Paper
-        elevation={0}
-        sx={(theme) => ({
+        elevation={8}
+        sx={{
           width: "100%",
           maxWidth: 420,
-          borderRadius: theme.shape.borderRadius,
+          borderRadius: 4,
           p: { xs: 4, sm: 5 },
-          boxShadow: theme.customShadows.floating,
-          backgroundImage: theme.gradients.subtle,
-        })}
+          boxShadow: (theme) => theme.shadows[12],
+        }}
       >
         <Stack spacing={4}>
           <Box>

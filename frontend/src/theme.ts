@@ -1,5 +1,42 @@
 import { createTheme } from "@mui/material/styles";
 
+type LayoutConfig = {
+  sectionSpacing: number;
+  pagePaddingY: {
+    xs: number;
+    md: number;
+  };
+  contentMaxWidth: number;
+};
+
+type GradientConfig = {
+  page: string;
+  hero: string;
+  heroOverlay: string;
+  callout: string;
+  subtle: string;
+};
+
+type CustomShadowsConfig = {
+  surface: string;
+  floating: string;
+  frosted: string;
+};
+
+declare module "@mui/material/styles" {
+  interface Theme {
+    layout: LayoutConfig;
+    gradients: GradientConfig;
+    customShadows: CustomShadowsConfig;
+  }
+
+  interface ThemeOptions {
+    layout?: LayoutConfig;
+    gradients?: GradientConfig;
+    customShadows?: CustomShadowsConfig;
+  }
+}
+
 export const appTheme = createTheme({
   palette: {
     mode: "light",
