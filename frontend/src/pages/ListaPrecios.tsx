@@ -19,6 +19,7 @@ import { getPrecios, getProductos } from "../api/talleresApi";
 import { Precio, Producto } from "../types";
 import { safeStorage } from "../utils/storage";
 import { sanitizeSearchQuery } from "../utils/security";
+import PageSection from "../components/PageSection";
 
 type ListaPrecioRow = {
   id: number;
@@ -254,27 +255,37 @@ const ListaPrecios = () => {
 
   return (
     <Stack spacing={3}>
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Lista de Precios
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Consulta la información de precios vigentes para cada producto. Esta
-          vista se alimenta de la API (o el mock local) para mantener los datos
-          organizados y listos para futuras integraciones comerciales.
-        </Typography>
-      </Paper>
-      <Paper sx={{ p: { xs: 2, md: 3 } }}>
+      <PageSection
+        spacing={2}
+        title={
+          <Typography variant="h4" component="h1" gutterBottom>
+            Lista de Precios
+          </Typography>
+        }
+        description={
+          <Typography variant="body1" color="text.secondary">
+            Consulta la información de precios vigentes para cada producto. Esta
+            vista se alimenta de la API (o el mock local) para mantener los
+            datos organizados y listos para futuras integraciones comerciales.
+          </Typography>
+        }
+      />
+      <PageSection
+        spacing={2}
+        padding="compact"
+        title={
+          <Typography variant="h6" component="h2">
+            Productos y precios vigentes
+          </Typography>
+        }
+        description={
+          <Typography variant="body2" color="text.secondary">
+            Información proveniente del archivo <code>mock/db.json</code> en
+            ausencia de la API real.
+          </Typography>
+        }
+      >
         <Stack spacing={2}>
-          <div>
-            <Typography variant="h6" component="h2">
-              Productos y precios vigentes
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Información proveniente del archivo <code>mock/db.json</code> en
-              ausencia de la API real.
-            </Typography>
-          </div>
           <TextField
             fullWidth
             label="Buscar por código, producto o descripción"
@@ -283,7 +294,7 @@ const ListaPrecios = () => {
           />
           {renderContent()}
         </Stack>
-      </Paper>
+      </PageSection>
     </Stack>
   );
 };

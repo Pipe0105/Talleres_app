@@ -4,13 +4,12 @@ import { Button, Card, Stack, Typography } from "@mui/material";
 const CallToActionSection = () => {
   return (
     <Card
-      sx={{
-        mt: 6,
+      sx={(theme) => ({
         p: { xs: 4, md: 6 },
         textAlign: "center",
-        backgroundImage:
-          "linear-gradient(135deg, rgba(15,132,255,0.12), rgba(0,40,77,0.4))",
-      }}
+        backgroundImage: theme.gradients.callout,
+        boxShadow: theme.customShadows.floating,
+      })}
     >
       <Stack spacing={2} alignItems="center">
         <Typography variant="h4" component="h2">

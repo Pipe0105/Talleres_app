@@ -20,14 +20,22 @@ const maturityIndicators = [
 
 const OperationsSection = () => {
   return (
-    <Stack spacing={3} mt={6}>
+    <Stack spacing={3}>
       <Typography variant="h4" component="h2">
         Indicadores de madurez operativa
       </Typography>
       <Grid container spacing={3}>
         {maturityIndicators.map((indicator) => (
           <Grid item xs={12} md={4} key={indicator.label}>
-            <Paper sx={{ p: 3, height: "100%" }}>
+            <Paper
+              sx={(theme) => ({
+                p: 3,
+                height: "100%",
+                boxShadow: theme.customShadows.surface,
+                backgroundImage: theme.gradients.subtle,
+              })}
+            >
+              {" "}
               <Stack spacing={1.5}>
                 <Stack
                   direction="row"

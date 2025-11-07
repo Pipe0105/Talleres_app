@@ -68,7 +68,15 @@ const TallerBreakdownCard = ({ breakdown }: TallerBreakdownCardProps) => {
   );
 
   return (
-    <Paper sx={{ p: { xs: 3, md: 4 } }} elevation={0}>
+    <Paper
+      elevation={0}
+      sx={(theme) => ({
+        p: { xs: 3, md: 4 },
+        boxShadow: theme.customShadows.surface,
+        backgroundImage: theme.gradients.subtle,
+      })}
+    >
+      {" "}
       <Stack spacing={3}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -168,7 +176,11 @@ const TallerBreakdownCard = ({ breakdown }: TallerBreakdownCardProps) => {
         <TableContainer
           component={Paper}
           elevation={0}
-          sx={{ borderRadius: 2 }}
+          sx={(theme) => ({
+            borderRadius: 2,
+            boxShadow: theme.customShadows.surface,
+            backgroundImage: theme.gradients.subtle,
+          })}
         >
           <Table size="small">
             <TableHead>

@@ -27,19 +27,20 @@ const Login = () => {
         alignItems: "center",
         justifyContent: "center",
         bgcolor: theme.palette.background.default,
-        backgroundImage: `radial-gradient(circle at top left, ${theme.palette.grey[100]} 0%, transparent 60%), radial-gradient(circle at bottom right, ${theme.palette.grey[200]} 0%, transparent 55%)`,
+        backgroundImage: theme.gradients.subtle,
         p: { xs: 3, md: 6 },
       })}
     >
       <Paper
-        elevation={8}
-        sx={{
+        elevation={0}
+        sx={(theme) => ({
           width: "100%",
           maxWidth: 420,
-          borderRadius: 4,
+          borderRadius: theme.shape.borderRadius,
           p: { xs: 4, sm: 5 },
-          boxShadow: (theme) => theme.shadows[12],
-        }}
+          boxShadow: theme.customShadows.floating,
+          backgroundImage: theme.gradients.subtle,
+        })}
       >
         <Stack spacing={4}>
           <Box>

@@ -16,6 +16,7 @@ import {
 } from "../api/talleresApi";
 import Dashboard from "../components/Dashboard";
 import FileUploader from "../components/FileUploader";
+import PageSection from "../components/PageSection";
 import TallerForm from "../components/TallerForm";
 import { NewTaller, Precio, Producto, Taller } from "../types";
 import TallerBreakdownCard from "../components/TallerBreakdownCard";
@@ -158,23 +159,25 @@ const Talleres = () => {
     <Stack spacing={4}>
       <Grid container spacing={4}>
         <Grid item xs={12} lg={7}>
-          <Paper sx={{ p: { xs: 3, md: 4 } }}>
-            <Stack spacing={1.5}>
-              <div>
-                <Typography variant="h5" component="h2">
-                  Talleres registrados
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Información proveniente del archivo <code>mock/db.json</code>.
-                </Typography>
-              </div>
-            </Stack>
+          <PageSection
+            spacing={3}
+            title={
+              <Typography variant="h5" component="h2">
+                Talleres registrados
+              </Typography>
+            }
+            description={
+              <Typography variant="body2" color="text.secondary">
+                Información proveniente del archivo <code>mock/db.json</code>.
+              </Typography>
+            }
+          >
             {loading ? (
-              <Typography mt={4} variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 Cargando datos del servidor mock…
               </Typography>
             ) : error ? (
-              <Alert severity="error" sx={{ mt: 4 }}>
+              <Alert severity="error">
                 <AlertTitle>Error al cargar</AlertTitle>
                 <Typography variant="body2" sx={{ mb: 1 }}>
                   {error}
@@ -199,24 +202,29 @@ const Talleres = () => {
                 onSearchChange={handleSearchChange}
               />
             )}
-          </Paper>
+          </PageSection>
         </Grid>
         <Grid item xs={12} lg={5}>
           <TallerForm productos={productos} onCreated={handleTallerCreated} />
         </Grid>
       </Grid>
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Typography variant="h6" component="h3">
-          Archivos asociados
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mt={1}>
-          Visualiza documentos o imágenes ligados al taller seleccionado. El
-          formulario de subida se comporta de manera local para fines de
-          prototipado.
-        </Typography>
+      <PageSection
+        spacing={2.5}
+        title={
+          <Typography variant="h6" component="h3">
+            Archivos asociados
+          </Typography>
+        }
+        description={
+          <Typography variant="body2" color="text.secondary">
+            Visualiza documentos o imágenes ligados al taller seleccionado. El
+            formulario de subida se comporta de manera local para fines de
+            prototipado.
+          </Typography>
+        }
+      >
         <FileUploader taller={selectedTaller} />
-      </Paper>
-
+      </PageSection>
       <Stack spacing={3}>
         <Typography variant="h6" component="h3">
           Resultados del taller seleccionado
@@ -224,12 +232,12 @@ const Talleres = () => {
         {selectedBreakdown ? (
           <TallerBreakdownCard breakdown={selectedBreakdown} />
         ) : (
-          <Paper sx={{ p: { xs: 3, md: 4 } }}>
+          <PageSection padding="compact">
             <Typography variant="body2" color="text.secondary">
               Selecciona un taller en la tabla para visualizar el reparto de
               cortes y porcentajes.
             </Typography>
-          </Paper>
+          </PageSection>
         )}
       </Stack>
     </Stack>

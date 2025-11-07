@@ -33,7 +33,7 @@ const HighlightsSection = () => {
   const theme = useTheme();
 
   return (
-    <Stack spacing={3} mt={6}>
+    <Stack spacing={3}>
       <Typography variant="h4" component="h2">
         Capacidades clave
       </Typography>
@@ -48,6 +48,8 @@ const HighlightsSection = () => {
                 p: 3,
                 height: "100%",
                 border: `1px solid ${theme.palette.divider}`,
+                boxShadow: theme.customShadows.surface,
+                backgroundImage: theme.gradients.subtle,
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
@@ -59,7 +61,7 @@ const HighlightsSection = () => {
                   }
                 ),
                 "&:hover": {
-                  boxShadow: theme.shadows[4],
+                  boxShadow: theme.customShadows.floating,
                   transform: "translateY(-4px)",
                 },
               }}

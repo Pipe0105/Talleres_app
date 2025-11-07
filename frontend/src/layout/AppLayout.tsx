@@ -27,7 +27,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       sx={(theme) => ({
         minHeight: "100vh",
         bgcolor: "background.default",
-        backgroundImage: `linear-gradient(180deg, ${theme.palette.grey[100]} 0%, ${theme.palette.background.default} 40%)`,
+        backgroundImage: theme.gradients.page,
       })}
     >
       <AppBar
@@ -37,9 +37,17 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         sx={(theme) => ({
           backdropFilter: "blur(12px)",
           borderBottom: `1px solid ${theme.palette.divider}`,
+          boxShadow: theme.customShadows.surface,
         })}
       >
-        <Container maxWidth="xl">
+        <Container
+          maxWidth={false}
+          sx={(theme) => ({
+            maxWidth: theme.layout.contentMaxWidth,
+            px: { xs: 2, md: 4 },
+          })}
+        >
+          {" "}
           <Toolbar disableGutters sx={{ py: 2, gap: 3 }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h6" fontWeight={700} color="primary.main">
@@ -68,8 +76,21 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         </Container>
       </AppBar>
 
-      <Box component="main" sx={{ py: { xs: 4, md: 6 } }}>
-        <Container maxWidth="xl">{children}</Container>
+      <Box
+        component="main"
+        sx={(theme) => ({
+          py: theme.layout.pagePaddingY,
+        })}
+      >
+        <Container
+          maxWidth={false}
+          sx={(theme) => ({
+            maxWidth: theme.layout.contentMaxWidth,
+            px: { xs: 2, md: 4 },
+          })}
+        >
+          {children}
+        </Container>
       </Box>
     </Box>
   );

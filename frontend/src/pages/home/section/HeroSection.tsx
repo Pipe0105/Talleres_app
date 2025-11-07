@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 const heroMetrics = [
   {
@@ -25,23 +26,22 @@ const heroMetrics = [
 const HeroSection = () => {
   return (
     <Card
-      sx={{
+      sx={(theme) => ({
         p: { xs: 4, md: 6 },
         position: "relative",
         overflow: "hidden",
-        backgroundImage:
-          "linear-gradient(140deg, rgba(15,132,255,0.95) 0%, rgba(0,40,77,0.95) 100%)",
-        color: "common.white",
-      }}
+        backgroundImage: theme.gradients.hero,
+        color: theme.palette.common.white,
+        boxShadow: theme.customShadows.floating,
+      })}
     >
       <Box
-        sx={{
+        sx={(theme) => ({
           position: "absolute",
           inset: 0,
-          background:
-            "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 55%)",
+          background: theme.gradients.heroOverlay,
           pointerEvents: "none",
-        }}
+        })}
       />
       <Grid container spacing={4} alignItems="center">
         <Grid item xs={12} md={7}>
@@ -51,32 +51,40 @@ const HeroSection = () => {
                 label="Plataforma para Talleres"
                 color="primary"
                 variant="filled"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.16)",
-                  color: "common.white",
-                }}
+                sx={(theme) => ({
+                  bgcolor: alpha(theme.palette.common.white, 0.16),
+                  color: theme.palette.common.white,
+                  borderColor: "transparent",
+                })}
               />
               <Chip
                 label="Dashboard operativo"
                 variant="outlined"
-                sx={{
-                  borderColor: "rgba(255,255,255,0.4)",
-                  color: "common.white",
-                }}
+                sx={(theme) => ({
+                  borderColor: alpha(theme.palette.common.white, 0.4),
+                  color: theme.palette.common.white,
+                  bgcolor: alpha(theme.palette.common.white, 0.08),
+                })}
               />
             </Stack>
             <Typography
               variant="h3"
               component="h1"
-              fontSize={76}
-              fontWeight={800}
+              sx={{
+                fontSize: { xs: 48, md: 76 },
+                fontWeight: 800,
+                lineHeight: 1,
+              }}
             >
               Talleres Desposte
             </Typography>
             <Typography
               variant="body1"
-              fontSize={24.5}
-              sx={{ maxWidth: 900, color: "rgba(255,255,255,0.85)" }}
+              sx={(theme) => ({
+                fontSize: { xs: 18, md: 24 },
+                maxWidth: 900,
+                color: alpha(theme.palette.common.white, 0.82),
+              })}
             >
               Ingreso, gestion y Reporte historico de Talleres de Desposte.
             </Typography>
@@ -101,17 +109,18 @@ const HeroSection = () => {
               >
                 Registrar desposte
               </Button>
-            </Stack>{" "}
+            </Stack>
           </Stack>
         </Grid>
         <Grid item xs={12} md={5}>
           <Card
-            sx={{
+            sx={(theme) => ({
               p: 3,
-              bgcolor: "rgba(4,15,31,0.75)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              backdropFilter: "blur(10px)",
-            }}
+              bgcolor: alpha(theme.palette.common.black, 0.35),
+              border: `1px solid ${alpha(theme.palette.common.white, 0.18)}`,
+              backdropFilter: "blur(12px)",
+              boxShadow: theme.customShadows.frosted,
+            })}
           >
             <Stack spacing={2}>
               <Stack
@@ -120,7 +129,8 @@ const HeroSection = () => {
                 alignItems="center"
               >
                 <Box>
-                  <Typography variant="h6" color="rgba(255,255,255,0.9)">
+                  <Typography variant="h6" color={alpha("#FFFFFF", 0.9)}>
+                    {" "}
                     Estado actual
                   </Typography>
                 </Box>
@@ -128,21 +138,22 @@ const HeroSection = () => {
                   label="Operativo"
                   color="success"
                   variant="outlined"
-                  sx={{
-                    bgcolor: "rgba(56, 142, 60, 0.15)",
-                    borderColor: "rgba(76, 175, 80, 0.4)",
-                    color: "#C8FACC",
-                  }}
+                  sx={(theme) => ({
+                    bgcolor: alpha(theme.palette.success.main, 0.15),
+                    borderColor: alpha(theme.palette.success.main, 0.4),
+                    color: alpha(theme.palette.success.light, 0.92),
+                  })}
                 />
               </Stack>
-              <Typography variant="body1" color="rgba(255,255,255,0.7)">
+              <Typography variant="body1" color={alpha("#FFFFFF", 0.7)}>
+                {" "}
                 Resumen de métricas clave
               </Typography>
               <Box>
                 <Typography
                   fontSize={20}
                   variant="caption"
-                  color="rgba(255,255,255,0.7)"
+                  color={alpha("#FFFFFF", 0.7)}
                 >
                   Talleres Mensuales
                 </Typography>
@@ -152,15 +163,22 @@ const HeroSection = () => {
                   <Box key={metric.label} sx={{ flex: 1 }}>
                     <Typography
                       variant="h5"
-                      color="rgba(165,200,233,1)"
-                      fontWeight={700}
+                      sx={{
+                        color: alpha("#CDE4FF", 0.98),
+                        fontWeight: 700,
+                      }}
                     >
                       {metric.value}
                     </Typography>
-                    <Typography variant="body2" color="rgba(255,255,255,0.9)">
+                    <Typography variant="body2" color={alpha("#FFFFFF", 0.9)}>
+                      {" "}
                       {metric.label}
                     </Typography>
-                    <Typography variant="caption" color="rgba(255,255,255,0.5)">
+                    <Typography
+                      variant="caption"
+                      color={alpha("#FFFFFF", 0.55)}
+                    >
+                      {" "}
                       {metric.helper}
                     </Typography>
                   </Box>

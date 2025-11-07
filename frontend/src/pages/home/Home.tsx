@@ -1,4 +1,4 @@
-import { Stack } from "@mui/material";
+import { Stack, useTheme } from "@mui/material";
 import HeroSection from "./section/HeroSection";
 import HighlightsSection from "./section/HighlightsSection";
 import OperationsSection from "./section/OperationsSection";
@@ -7,6 +7,7 @@ import CallToActionSection from "./section/CallToActionSection";
 import { homeSectionsConfig } from "./homeSectionsConfig";
 
 const Home = () => {
+  const theme = useTheme();
   const {
     hero: mostrarHero,
     highlights: mostrarHighlights,
@@ -16,7 +17,11 @@ const Home = () => {
   } = homeSectionsConfig;
 
   return (
-    <Stack spacing={6} pb={6}>
+    <Stack
+      spacing={theme.layout.sectionSpacing}
+      pb={theme.layout.sectionSpacing}
+    >
+      {" "}
       {mostrarHero && <HeroSection />}
       {mostrarHighlights && <HighlightsSection />}
       {mostrarOperations && <OperationsSection />}

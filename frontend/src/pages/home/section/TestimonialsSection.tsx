@@ -22,14 +22,22 @@ const initials = (name: string) =>
 
 const TestimonialsSection = () => {
   return (
-    <Stack spacing={3} mt={6}>
+    <Stack spacing={3}>
       <Typography variant="h4" component="h2">
         Historias reales de impacto
       </Typography>
       <Grid container spacing={3}>
         {testimonials.map((testimonial) => (
           <Grid item xs={12} md={6} key={testimonial.name}>
-            <Paper sx={{ p: 3, height: "100%" }}>
+            <Paper
+              sx={(theme) => ({
+                p: 3,
+                height: "100%",
+                boxShadow: theme.customShadows.surface,
+                backgroundImage: theme.gradients.subtle,
+              })}
+            >
+              {" "}
               <Stack spacing={2}>
                 <Typography
                   variant="body1"
