@@ -13,7 +13,6 @@ const App = () => {
 
   const navigationConfig = [
     { label: "Inicio", to: "/" },
-    { label: "Talleres", to: "/talleres" },
     { label: "Desposte", to: "/talleres/desposte" },
     { label: "Informes", to: "/informes-historicos" },
     { label: "Lista de precios", to: "/lista-precios" },

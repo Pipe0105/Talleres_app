@@ -9,7 +9,7 @@ export interface HomeSectionsConfig {
 export const homeSectionsConfig: HomeSectionsConfig = {
   hero: true,
   highlights: true,
-  operations: true,
-  testimonials: true,
-  callToAction: true,
+  operations: false,
+  testimonials: false,
+  callToAction: false,
 };
