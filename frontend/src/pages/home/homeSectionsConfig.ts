@@ -7,7 +7,7 @@ export interface HomeSectionsConfig {
 }
 
 export const homeSectionsConfig: HomeSectionsConfig = {
-  hero: true,
+  hero: false,
   highlights: true,
   operations: false,
   testimonials: false,

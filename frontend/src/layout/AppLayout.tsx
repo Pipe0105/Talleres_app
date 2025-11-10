@@ -51,10 +51,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           <Toolbar disableGutters sx={{ py: 2, gap: 3 }}>
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="h6" fontWeight={700} color="primary.main">
-                Talleres Cárnicos
+                Talleres Desposte
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Panel para visualizar y registrar talleres usando el mock JSON
+                Panel para visualizar y registrar talleres de desposte.
               </Typography>
             </Box>
             <Stack direction="row" spacing={1.5} alignItems="center">

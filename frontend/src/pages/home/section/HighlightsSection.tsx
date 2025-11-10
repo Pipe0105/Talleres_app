@@ -35,7 +35,7 @@ const HighlightsSection = () => {
   return (
     <Stack spacing={3}>
       <Typography variant="h4" component="h2">
-        Capacidades clave
+        Funcionalidades Principales
       </Typography>
       <Grid container spacing={3}>
         {capabilityPillars.map((pillar) => (
