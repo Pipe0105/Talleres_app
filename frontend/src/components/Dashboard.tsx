@@ -16,7 +16,6 @@ import {
   TableRow,
   TextField,
   Typography,
-  Unstable_Grid2 as Grid, // ✅ Usa la versión moderna de Grid compatible con MUI 7.3.5
 } from "@mui/material";
 import { Theme, ThemeProvider, createTheme } from "@mui/material/styles";
 import { Precio, Producto, Taller } from "../types";

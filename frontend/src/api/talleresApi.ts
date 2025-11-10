@@ -1,6 +1,35 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
+
 import mockDbUrl from "../../mock/db.json?url";
 import { Archivo, NewTaller, Precio, Producto, Taller } from "../types";
+
+
+const normalizeBaseUrl = (rawUrl: string): string =>
+  rawUrl.replace(/\/$/, "");
+
+const resolveBaseUrl = (): string => {
+  const envBaseUrl = import.meta.env.VITE_API_URL;
+  if (typeof envBaseUrl === "string" && envBaseUrl.trim().length > 0) {
+    return normalizeBaseUrl(envBaseUrl.trim());
+  }
+
+  if (typeof window !== "undefined") {
+    return `${normalizeBaseUrl(window.location.origin)}/api`;
+  }
+
+  return "http://localhost:8000/api";
+};
+
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
+  baseURL: resolveBaseUrl(),
+});
+
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (typeof config.url === "string" && config.url.startsWith("/")) {
+    config.url = config.url.replace(/^\/+/, "");
+  }
+  return config;
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
 });
@@ -136,19 +165,22 @@ export const getTalleres = async (): Promise<Taller[]> =>
 
 export const getProductos = async (): Promise<Producto[]> =>
   withMockFallback(
-    () => api.get("/productos").then((res) => res.data),
+    () => api.get<Producto[]>("/productos").then(({ data }) => data),
     (db) => db.productos
   );
 
 export const getPrecios = async (): Promise<Precio[]> =>
   withMockFallback(
-    () => api.get("/precios").then((res) => mapPreciosResponse(res.data)),
+    () =>
+      api
+        .get<Precio[]>("/precios")
+        .then(({ data }) => mapPreciosResponse(data)),
     (db) => mapPreciosResponse(db.precios)
   );
 
 export const createTaller = async (data: NewTaller): Promise<Taller> =>
   withMockFallback(
-    () => api.post("/talleres", data).then((res) => res.data),
+    () => api.post<Taller>("/talleres", data).then(({ data: created }) => created),
     (db) => {
       const nextId =
         db.talleres.reduce((max, taller) => Math.max(max, taller.id), 0) + 1;

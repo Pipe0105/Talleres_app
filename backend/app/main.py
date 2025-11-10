@@ -7,17 +7,34 @@ except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for loc
     ) from exc
 from textwrap import dedent
 
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from .config import API_PREFIX
+from .config import API_PREFIX, FRONTEND_ORIGINS
 from .database import Base, engine
 from .routers import upload, items, cortes, talleres
 
 app = FastAPI(title="MercaMorfosis Backend")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FRONTEND_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FRONTEND_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/")
 def read_root():
     """Simple root endpoint to verify that the API is running."""
-    return {"status":"OK"}
+    return {"status": "OK"}
     
 
 

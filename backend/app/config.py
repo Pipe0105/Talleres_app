@@ -1,6 +1,34 @@
 import os
+from typing import List
 from dotenv import load_dotenv
+
 load_dotenv()
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
-DATABASE_URL = os.getenv("DATABASE_URL")
+
+def _build_database_url() -> str:
+    driver = os.getenv("DB_DRIVER", "postgresql+psycopg2")
+    user = os.getenv("DB_USER", "talleres_user")
+    password = os.getenv("DB_PASSWORD", "talleres")
+    host = os.getenv("DB_HOST", "192.168.35.232")
+    port = os.getenv("DB_PORT", "5432")
+    db_name = os.getenv("DB_NAME", "talleres")
+    
+    return f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
+
+DATABASE_URL = _build_database_url()
+
+def _load_frontend_origins() -> List[str]:
+    origins_raw = os.getenv("FRONTEND_ORIGINS")
+    if not origins_raw:
+        return [ "http://localhost:5173" ]
+    
+    origins: List[str] = []
+    for origin in origins_raw.split(","):
+        normalized = origin.strip()
+        if normalized:
+            origins.append(normalized)
+            
+    return origins or [ "http://localhost:5173" ]
+
+FRONTEND_ORIGINS = _load_frontend_origins()
