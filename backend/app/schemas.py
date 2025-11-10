@@ -1,14 +1,21 @@
 from pydantic import BaseModel, ConfigDict, condecimal
 from typing import List, Optional
 from uuid import UUID
+from datetime import datetime
+
 
 class ItemIn(BaseModel):
     item_code: str
     descripcion: str
     precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4)
 
-class ItemOut(ItemIn):
+class ItemOut(BaseModel):
+
     id: UUID
+    item_code: str
+    descripcion: str
+    precio_venta: float
+    actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)
 
 class CorteIn(BaseModel):

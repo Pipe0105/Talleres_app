@@ -1,8 +1,14 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 import mockDbUrl from "../../mock/db.json?url";
-import { Archivo, NewTaller, Precio, Producto, Taller } from "../types";
-
+import {
+  Archivo,
+  NewTaller,
+  Precio,
+  PriceListItem,
+  Producto,
+  Taller,
+} from "../types";
 const normalizeBaseUrl = (rawUrl: string): string => rawUrl.replace(/\/$/, "");
 
 const resolveBaseUrl = (): string => {
@@ -152,6 +158,54 @@ const mapPreciosResponse = (data: unknown): Precio[] => {
     .filter((precio): precio is Precio => precio !== null);
 };
 
+const mapItemsResponse = (data: unknown): PriceListItem[] => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const record = item as Record<string, unknown>;
+      const rawId = record.id;
+      const normalizedId =
+        typeof rawId === "string"
+          ? rawId.trim()
+          : typeof rawId === "number"
+          ? String(rawId)
+          : null;
+
+      if (!normalizedId) {
+        return null;
+      }
+
+      const itemCode =
+        typeof record.item_code === "string"
+          ? record.item_code.trim()
+          : record.item_code != null
+          ? String(record.item_code)
+          : "";
+      const descripcion =
+        typeof record.descripcion === "string" ? record.descripcion.trim() : "";
+      const actualizadoEn =
+        typeof record.actualizado_en === "string"
+          ? record.actualizado_en
+          : null;
+
+      return {
+        id: normalizedId,
+        item_code: itemCode || normalizedId,
+        descripcion: descripcion || itemCode || normalizedId,
+        precio_venta: toNumberOrNull(record.precio_venta),
+        actualizado_en: actualizadoEn,
+      } satisfies PriceListItem;
+    })
+    .filter((item): item is PriceListItem => item !== null);
+};
+
 export const getTalleres = async (): Promise<Taller[]> =>
   withMockFallback(
     () => api.get("/talleres").then((res) => res.data),
@@ -171,6 +225,44 @@ export const getPrecios = async (): Promise<Precio[]> =>
         .get<Precio[]>("/precios")
         .then(({ data }) => mapPreciosResponse(data)),
     (db) => mapPreciosResponse(db.precios)
+  );
+export const getItems = async (): Promise<PriceListItem[]> =>
+  withMockFallback(
+    () => api.get("/items").then(({ data }) => mapItemsResponse(data)),
+    (db) => {
+      const preciosPorProducto = new Map<number, Precio>();
+
+      db.precios.forEach((precio) => {
+        if (
+          precio &&
+          typeof precio === "object" &&
+          typeof precio.producto_id === "number"
+        ) {
+          preciosPorProducto.set(precio.producto_id, precio);
+        }
+      });
+
+      return db.productos.map((producto) => {
+        const precioRelacionado = preciosPorProducto.get(producto.id) ?? null;
+        const precioUnitario = precioRelacionado
+          ? toNumberOrNull(precioRelacionado.precio_unitario)
+          : null;
+
+        return {
+          id: String(producto.id),
+          item_code: String(producto.codigo ?? producto.id),
+          descripcion:
+            producto.nombre?.trim() ||
+            producto.descripcion?.trim() ||
+            String(producto.codigo ?? producto.id),
+          precio_venta: precioUnitario,
+          actualizado_en:
+            typeof precioRelacionado?.fecha_vigencia_desde === "string"
+              ? precioRelacionado.fecha_vigencia_desde
+              : null,
+        } satisfies PriceListItem;
+      });
+    }
   );
 
 export const createTaller = async (data: NewTaller): Promise<Taller> =>

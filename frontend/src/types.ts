@@ -13,6 +13,14 @@ export interface Precio {
   impuestos_incluidos: boolean;
 }
 
+export interface PriceListItem {
+  id: string;
+  item_code: string;
+  descripcion: string;
+  precio_venta: number | null;
+  actualizado_en: string | null;
+}
+
 export interface Taller {
   id: number;
   producto_id: number;
