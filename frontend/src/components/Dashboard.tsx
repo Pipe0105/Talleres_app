@@ -17,6 +17,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Unstable_Grid2";
+
 import { Theme, ThemeProvider, createTheme } from "@mui/material/styles";
 import { Precio, Producto, Taller } from "../types";
 import { sanitizeSearchQuery } from "../utils/security";
@@ -262,265 +264,270 @@ const Dashboard = ({
   };
 
   return (
-    <Stack spacing={4} mt={4}>
-      {/* ==== RESUMEN POR GRUPO ==== */}
-      <Grid container spacing={3}>
-        {resumenPorGrupo.map((grupo) => (
-          <Grid key={grupo.grupo} xs={12} sm={6}>
-            <Card
-              elevation={0}
-              sx={(theme: Theme) => ({
-                borderRadius: 3,
-                border: `1px solid ${theme.palette.divider}`,
-              })}
-            >
-              <CardContent>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={600}
-                  textTransform="uppercase"
-                >
-                  Grupo
-                </Typography>
-                <Typography variant="h5" mt={1}>
-                  {grupo.grupo.replace(/_/g, " ")}
-                </Typography>
-                <Stack spacing={1.5} mt={2}>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Registros
-                    </Typography>
-                    <Typography variant="subtitle1">
-                      {grupo.cantidad}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Peso total
-                    </Typography>
-                    <Typography variant="subtitle1">
-                      {grupo.totalPeso.toFixed(2)} kg
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Rendimiento medio
-                    </Typography>
-                    <Typography variant="subtitle1">
-                      {grupo.rendimientoPromedio
-                        ? `${(grupo.rendimientoPromedio * 100).toFixed(2)}%`
-                        : "Sin datos"}
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-
-        {resumenPorGrupo.length === 0 && (
-          <Grid xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                No se encontraron registros para el filtro aplicado.
-              </Typography>
-            </Paper>
-          </Grid>
-        )}
-      </Grid>
-
-      {(pesoPorGrupoData.length > 0 || rendimientoPorGrupo.length > 0) && (
+    <ThemeProvider theme={dashboardTheme}>
+      <CssBaseline />
+      <Stack spacing={4} mt={4}>
+        {/* ==== RESUMEN POR GRUPO ==== */}
         <Grid container spacing={3}>
-          {pesoPorGrupoData.length > 0 && (
-            <Grid xs={12} md={6}>
-              <Paper sx={{ p: { xs: 2, md: 3 } }}>
-                <Typography variant="h6" gutterBottom>
-                  Top grupos por peso procesado
-                </Typography>
-                <Stack spacing={2}>
-                  {pesoPorGrupoData.map((item) => (
-                    <Box key={item.id}>
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        sx={{ mb: 0.5 }}
-                      >
-                        <Typography variant="body2" fontWeight={600}>
-                          {item.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {item.kilos.toLocaleString("es-CL", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                          {" kg"}
-                        </Typography>
-                      </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(item.porcentaje, 100)}
-                        sx={{ borderRadius: 999 }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
+          {resumenPorGrupo.map((grupo) => (
+            <Grid key={grupo.grupo} xs={12} sm={6}>
+              <Card
+                elevation={0}
+                sx={(theme: Theme) => ({
+                  borderRadius: 3,
+                  border: `1px solid ${theme.palette.divider}`,
+                })}
+              >
+                <CardContent>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                  >
+                    Grupo
+                  </Typography>
+                  <Typography variant="h5" mt={1}>
+                    {grupo.grupo.replace(/_/g, " ")}
+                  </Typography>
+                  <Stack spacing={1.5} mt={2}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color="text.secondary">
+                        Registros
+                      </Typography>
+                      <Typography variant="subtitle1">
+                        {grupo.cantidad}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color="text.secondary">
+                        Peso total
+                      </Typography>
+                      <Typography variant="subtitle1">
+                        {grupo.totalPeso.toFixed(2)} kg
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color="text.secondary">
+                        Rendimiento medio
+                      </Typography>
+                      <Typography variant="subtitle1">
+                        {grupo.rendimientoPromedio
+                          ? `${(grupo.rendimientoPromedio * 100).toFixed(2)}%`
+                          : "Sin datos"}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Grid>
-          )}
+          ))}
 
-          {rendimientoPorGrupo.length > 0 && (
-            <Grid xs={12} md={6}>
-              <Paper sx={{ p: { xs: 2, md: 3 } }}>
-                <Typography variant="h6" gutterBottom>
-                  Rendimiento promedio por grupo
+          {resumenPorGrupo.length === 0 && (
+            <Grid xs={12}>
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No se encontraron registros para el filtro aplicado.
                 </Typography>
-                <Stack spacing={2}>
-                  {rendimientoPorGrupo.map((item) => (
-                    <Box key={item.label}>
-                      <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        sx={{ mb: 0.5 }}
-                      >
-                        <Typography variant="body2" fontWeight={600}>
-                          {item.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {item.rendimiento.toFixed(2)}%
-                        </Typography>
-                      </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(item.rendimiento, 100)}
-                        color="secondary"
-                        sx={{ borderRadius: 999 }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
               </Paper>
             </Grid>
           )}
         </Grid>
-      )}
 
-      {/* ==== DETALLE DE TALLERES ==== */}
-      <Stack spacing={2}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "flex-end" }}
-          spacing={2}
-        >
-          <Typography variant="h5" component="h3">
-            Detalle de talleres
-          </Typography>
-          <TextField
-            placeholder="Buscar por grupo, producto o código"
-            value={search}
-            onChange={handleSearchChange}
-            size="small"
-            sx={{ width: { xs: "100%", md: 320 } }}
-          />
-        </Stack>
-
-        <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
-          <Table size="medium">
-            <TableHead>
-              <TableRow>
-                <TableCell>Fecha</TableCell>
-                <TableCell>Producto</TableCell>
-                <TableCell>Grupo</TableCell>
-                <TableCell>Peso inicial</TableCell>
-                <TableCell>Peso taller</TableCell>
-                <TableCell>Rendimiento</TableCell>
-                <TableCell>Precio unitario</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {filteredTalleres.map((taller) => {
-                const producto = productoMap.get(taller.producto_id);
-                const precio = precioMap.get(taller.producto_id);
-                const isSelected = selectedTallerId === taller.id;
-
-                return (
-                  <TableRow
-                    key={taller.id}
-                    hover
-                    selected={isSelected}
-                    sx={(theme: Theme) => ({
-                      "&.Mui-selected": {
-                        backgroundColor: `${theme.palette.primary.light}22`,
-                      },
-                    })}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
-                        {new Date(taller.fecha).toLocaleDateString("es-CL")}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="subtitle2">
-                        {producto?.nombre ?? "Producto desconocido"}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Código {taller.codigo}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{taller.grupo.replace(/_/g, " ")}</TableCell>
-                    <TableCell>
-                      {taller.peso_inicial ? `${taller.peso_inicial} kg` : "—"}
-                    </TableCell>
-                    <TableCell>{taller.peso_taller} kg</TableCell>
-                    <TableCell>
-                      {typeof taller.rendimiento === "number"
-                        ? `${(taller.rendimiento * 100).toFixed(2)}%`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {precio && typeof precio.precio_unitario === "number"
-                        ? new Intl.NumberFormat("es-CL", {
-                            style: "currency",
-                            currency: "CLP",
-                          }).format(precio.precio_unitario)
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {onSelectTaller && (
-                        <Button
-                          size="small"
-                          variant={isSelected ? "contained" : "outlined"}
-                          onClick={() => onSelectTaller(taller.id)}
+        {(pesoPorGrupoData.length > 0 || rendimientoPorGrupo.length > 0) && (
+          <Grid container spacing={3}>
+            {pesoPorGrupoData.length > 0 && (
+              <Grid xs={12} md={6}>
+                <Paper sx={{ p: { xs: 2, md: 3 } }}>
+                  <Typography variant="h6" gutterBottom>
+                    Top grupos por peso procesado
+                  </Typography>
+                  <Stack spacing={2}>
+                    {pesoPorGrupoData.map((item) => (
+                      <Box key={item.id}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          sx={{ mb: 0.5 }}
                         >
-                          {isSelected ? "Seleccionado" : "Ver detalle"}
-                        </Button>
-                      )}
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {item.kilos.toLocaleString("es-CL", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                            {" kg"}
+                          </Typography>
+                        </Stack>
+                        <LinearProgress
+                          variant="determinate"
+                          value={Math.min(item.porcentaje, 100)}
+                          sx={{ borderRadius: 999 }}
+                        />
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              </Grid>
+            )}
+
+            {rendimientoPorGrupo.length > 0 && (
+              <Grid xs={12} md={6}>
+                <Paper sx={{ p: { xs: 2, md: 3 } }}>
+                  <Typography variant="h6" gutterBottom>
+                    Rendimiento promedio por grupo
+                  </Typography>
+                  <Stack spacing={2}>
+                    {rendimientoPorGrupo.map((item) => (
+                      <Box key={item.label}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          sx={{ mb: 0.5 }}
+                        >
+                          <Typography variant="body2" fontWeight={600}>
+                            {item.label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {item.rendimiento.toFixed(2)}%
+                          </Typography>
+                        </Stack>
+                        <LinearProgress
+                          variant="determinate"
+                          value={Math.min(item.rendimiento, 100)}
+                          color="secondary"
+                          sx={{ borderRadius: 999 }}
+                        />
+                      </Box>
+                    ))}
+                  </Stack>
+                </Paper>
+              </Grid>
+            )}
+          </Grid>
+        )}
+
+        {/* ==== DETALLE DE TALLERES ==== */}
+        <Stack spacing={2}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", md: "flex-end" }}
+            spacing={2}
+          >
+            <Typography variant="h5" component="h3">
+              Detalle de talleres
+            </Typography>
+            <TextField
+              placeholder="Buscar por grupo, producto o código"
+              value={search}
+              onChange={handleSearchChange}
+              size="small"
+              sx={{ width: { xs: "100%", md: 320 } }}
+            />
+          </Stack>
+
+          <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
+            <Table size="medium">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Fecha</TableCell>
+                  <TableCell>Producto</TableCell>
+                  <TableCell>Grupo</TableCell>
+                  <TableCell>Peso inicial</TableCell>
+                  <TableCell>Peso taller</TableCell>
+                  <TableCell>Rendimiento</TableCell>
+                  <TableCell>Precio unitario</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {filteredTalleres.map((taller) => {
+                  const producto = productoMap.get(taller.producto_id);
+                  const precio = precioMap.get(taller.producto_id);
+                  const isSelected = selectedTallerId === taller.id;
+
+                  return (
+                    <TableRow
+                      key={taller.id}
+                      hover
+                      selected={isSelected}
+                      sx={(theme: Theme) => ({
+                        "&.Mui-selected": {
+                          backgroundColor: `${theme.palette.primary.light}22`,
+                        },
+                      })}
+                    >
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>
+                          {new Date(taller.fecha).toLocaleDateString("es-CL")}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="subtitle2">
+                          {producto?.nombre ?? "Producto desconocido"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Código {taller.codigo}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{taller.grupo.replace(/_/g, " ")}</TableCell>
+                      <TableCell>
+                        {taller.peso_inicial
+                          ? `${taller.peso_inicial} kg`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>{taller.peso_taller} kg</TableCell>
+                      <TableCell>
+                        {typeof taller.rendimiento === "number"
+                          ? `${(taller.rendimiento * 100).toFixed(2)}%`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {precio && typeof precio.precio_unitario === "number"
+                          ? new Intl.NumberFormat("es-CL", {
+                              style: "currency",
+                              currency: "CLP",
+                            }).format(precio.precio_unitario)
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {onSelectTaller && (
+                          <Button
+                            size="small"
+                            variant={isSelected ? "contained" : "outlined"}
+                            onClick={() => onSelectTaller(taller.id)}
+                          >
+                            {isSelected ? "Seleccionado" : "Ver detalle"}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                {filteredTalleres.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={8}>
+                      <Box py={3} textAlign="center">
+                        <Typography variant="body2" color="text.secondary">
+                          No hay talleres que coincidan con tu búsqueda.
+                        </Typography>
+                      </Box>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-
-              {filteredTalleres.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <Box py={3} textAlign="center">
-                      <Typography variant="body2" color="text.secondary">
-                        No hay talleres que coincidan con tu búsqueda.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
       </Stack>
-    </Stack>
+    </ThemeProvider>
   );
 };
 

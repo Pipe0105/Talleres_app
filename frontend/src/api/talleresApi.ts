@@ -3,9 +3,7 @@ import axios, { type InternalAxiosRequestConfig } from "axios";
 import mockDbUrl from "../../mock/db.json?url";
 import { Archivo, NewTaller, Precio, Producto, Taller } from "../types";
 
-
-const normalizeBaseUrl = (rawUrl: string): string =>
-  rawUrl.replace(/\/$/, "");
+const normalizeBaseUrl = (rawUrl: string): string => rawUrl.replace(/\/$/, "");
 
 const resolveBaseUrl = (): string => {
   const envBaseUrl = import.meta.env.VITE_API_URL;
@@ -21,7 +19,6 @@ const resolveBaseUrl = (): string => {
 };
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
   baseURL: resolveBaseUrl(),
 });
 
@@ -30,8 +27,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.url = config.url.replace(/^\/+/, "");
   }
   return config;
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
 });
 
 type MockDb = {
@@ -180,7 +175,8 @@ export const getPrecios = async (): Promise<Precio[]> =>
 
 export const createTaller = async (data: NewTaller): Promise<Taller> =>
   withMockFallback(
-    () => api.post<Taller>("/talleres", data).then(({ data: created }) => created),
+    () =>
+      api.post<Taller>("/talleres", data).then(({ data: created }) => created),
     (db) => {
       const nextId =
         db.talleres.reduce((max, taller) => Math.max(max, taller.id), 0) + 1;

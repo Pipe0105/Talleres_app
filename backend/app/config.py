@@ -21,7 +21,7 @@ DATABASE_URL = _build_database_url()
 def _load_frontend_origins() -> List[str]:
     origins_raw = os.getenv("FRONTEND_ORIGINS")
     if not origins_raw:
-        return [ "http://localhost:5173" ]
+        return ["http://localhost:5173"]
     
     origins: List[str] = []
     for origin in origins_raw.split(","):
@@ -29,6 +29,6 @@ def _load_frontend_origins() -> List[str]:
         if normalized:
             origins.append(normalized)
             
-    return origins or [ "http://localhost:5173" ]
+    return origins or ["http://localhost:5173"]
 
 FRONTEND_ORIGINS = _load_frontend_origins()
