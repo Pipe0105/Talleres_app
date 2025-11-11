@@ -7,10 +7,9 @@ from datetime import datetime
 class ItemIn(BaseModel):
     item_code: str
     descripcion: str
-    precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4)
+    precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class ItemOut(BaseModel):
-
     id: UUID
     item_code: str
     descripcion: str
@@ -21,7 +20,7 @@ class ItemOut(BaseModel):
 class CorteIn(BaseModel):
     item_id: UUID
     nombre_corte: str
-    porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4)
+    porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4) # type: ignore
 
 class CorteOut(CorteIn):
     id: UUID
@@ -34,7 +33,7 @@ class TallerIn(BaseModel):
 
 class TallerDetalleIn(BaseModel):
     corte_id: UUID
-    peso: condecimal(ge=0, max_digits=14, decimal_places=4)
+    peso: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class TallerCreatePayload(TallerIn):
     detalles: List[TallerDetalleIn]

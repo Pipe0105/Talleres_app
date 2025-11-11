@@ -206,6 +206,41 @@ const mapItemsResponse = (data: unknown): PriceListItem[] => {
     .filter((item): item is PriceListItem => item !== null);
 };
 
+const buildPriceListFromMock = (db: MockDb): PriceListItem[] => {
+  const preciosPorProducto = new Map<number, Precio>();
+
+  db.precios.forEach((precio) => {
+    if (
+      precio &&
+      typeof precio === "object" &&
+      typeof precio.producto_id === "number"
+    ) {
+      preciosPorProducto.set(precio.producto_id, precio);
+    }
+  });
+
+  return db.productos.map((producto) => {
+    const precioRelacionado = preciosPorProducto.get(producto.id) ?? null;
+    const precioUnitario = precioRelacionado
+      ? toNumberOrNull(precioRelacionado.precio_unitario)
+      : null;
+
+    return {
+      id: String(producto.id),
+      item_code: String(producto.codigo ?? producto.id),
+      descripcion:
+        producto.nombre?.trim() ||
+        producto.descripcion?.trim() ||
+        String(producto.codigo ?? producto.id),
+      precio_venta: precioUnitario,
+      actualizado_en:
+        typeof precioRelacionado?.fecha_vigencia_desde === "string"
+          ? precioRelacionado.fecha_vigencia_desde
+          : null,
+    } satisfies PriceListItem;
+  });
+};
+
 export const getTalleres = async (): Promise<Taller[]> =>
   withMockFallback(
     () => api.get("/talleres").then((res) => res.data),
@@ -228,41 +263,19 @@ export const getPrecios = async (): Promise<Precio[]> =>
   );
 export const getItems = async (): Promise<PriceListItem[]> =>
   withMockFallback(
-    () => api.get("/items").then(({ data }) => mapItemsResponse(data)),
-    (db) => {
-      const preciosPorProducto = new Map<number, Precio>();
+    async () => {
+      const items = await api
+        .get("/items")
+        .then(({ data }) => mapItemsResponse(data));
 
-      db.precios.forEach((precio) => {
-        if (
-          precio &&
-          typeof precio === "object" &&
-          typeof precio.producto_id === "number"
-        ) {
-          preciosPorProducto.set(precio.producto_id, precio);
-        }
-      });
+      if (items.length > 0) {
+        return items;
+      }
 
-      return db.productos.map((producto) => {
-        const precioRelacionado = preciosPorProducto.get(producto.id) ?? null;
-        const precioUnitario = precioRelacionado
-          ? toNumberOrNull(precioRelacionado.precio_unitario)
-          : null;
-
-        return {
-          id: String(producto.id),
-          item_code: String(producto.codigo ?? producto.id),
-          descripcion:
-            producto.nombre?.trim() ||
-            producto.descripcion?.trim() ||
-            String(producto.codigo ?? producto.id),
-          precio_venta: precioUnitario,
-          actualizado_en:
-            typeof precioRelacionado?.fecha_vigencia_desde === "string"
-              ? precioRelacionado.fecha_vigencia_desde
-              : null,
-        } satisfies PriceListItem;
-      });
-    }
+      const mockDb = await loadMockDb();
+      return buildPriceListFromMock(mockDb);
+    },
+    (db) => buildPriceListFromMock(db)
   );
 
 export const createTaller = async (data: NewTaller): Promise<Taller> =>
