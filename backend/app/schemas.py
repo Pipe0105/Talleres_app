@@ -12,11 +12,11 @@ class ItemIn(BaseModel):
     precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class ItemOut(BaseModel):
-    id: UUID
+    id: str
     item_code: str
     descripcion: str
-    precio_venta: float
-    actualizado_en: datetime
+    precio_venta: Optional[float] = None
+    actualizado_en: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 class CorteIn(BaseModel):
