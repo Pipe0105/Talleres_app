@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Numeric, TIMESTAMP, func, ForeignKey
+from sqlalchemy import Column, Text, Numeric, TIMESTAMP, func, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -47,3 +47,14 @@ class PreciosRechazados(Base):
     motivo = Column(Text)
     fuente_archivo = Column(Text)
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(Text, unique=True, nullable=False)
+    full_name = Column(Text)
+    hashed_password = Column(Text, nullable=False)
+    is_active = Column(Boolean, nullable=False, server_default="true")
+    creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    actualizado_en = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from .config import API_PREFIX, FRONTEND_ORIGINS
 from .database import Base, engine
-from .routers import upload, items, cortes, talleres
+from .routers import auth, upload, items, cortes, talleres
 
 app = FastAPI(title="MercaMorfosis Backend")
 
@@ -76,6 +76,7 @@ def _startup():
         conn.execute(text(create_view_sql))
 
 # Routers
+app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(upload.router, prefix=API_PREFIX)
 app.include_router(items.router, prefix=API_PREFIX)
 app.include_router(cortes.router, prefix=API_PREFIX)

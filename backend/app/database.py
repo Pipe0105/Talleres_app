@@ -7,16 +7,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, futu
 Base = declarative_base()
 
 def get_db():
-    from contextlib import contextmanager
-    @contextmanager
-    def _session_scope():
-        db = SessionLocal()
-        try:
-            yield db
-            db.commit()
-        except:
-            db.rollback()
-            raise
-        finally:
-            db.close()
-    return _session_scope()
+
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()

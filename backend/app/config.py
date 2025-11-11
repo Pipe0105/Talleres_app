@@ -32,3 +32,7 @@ def _load_frontend_origins() -> List[str]:
     return origins or ["http://localhost:5173"]
 
 FRONTEND_ORIGINS = _load_frontend_origins()
+
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
