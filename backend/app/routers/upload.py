@@ -1,15 +1,24 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+import os
+import shutil
+import uuid
+
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
-import shutil, os, uuid
+
+from .. import crud, models
 from ..database import get_db
+from ..dependencies import get_current_active_user
 from ..services.etl_precios import leer_y_limpiar_precios
 from .. import models
 from .. import crud
 
-router = APIRouter(prefix="/upload", tags=["upload"])
-
+router = APIRouter(
+    prefix="/upload",
+    tags=["upload"],
+    dependencies=[Depends(get_current_active_user)],
+)
 @router.post("/precios")
-def cargar_precios(file: UploadFile = File(...), db: Session = Depends(lambda: next(get_db()))):
+def cargar_precios(file: UploadFile = File(...), db: Session = Depends(get_db)):
     tmpname = f"/tmp/{uuid.uuid4()}_{file.filename}"
     with open(tmpname, "wb") as f:
         shutil.copyfileobj(file.file, f)

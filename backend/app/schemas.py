@@ -1,7 +1,9 @@
-from pydantic import BaseModel, ConfigDict, condecimal
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, EmailStr, condecimal
+
 
 
 class ItemIn(BaseModel):
@@ -42,3 +44,29 @@ class TallerOut(BaseModel):
     id: UUID
     item_id: UUID
     model_config = ConfigDict(from_attributes=True)
+
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: Optional[str] = None
+    
+class UserCreate(UserBase):
+    password: str
+    
+class UserOut(UserBase):
+    id: UUID
+    is_active: bool
+    creado_en: datetime
+    model_config = ConfigDict(from_attributes=True)
+    
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+    
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class TokenPayload(BaseModel):
+    sub: UUID
+    exp: Optional[int] = None
+    model_config = ConfigDict(extra="ignore")
