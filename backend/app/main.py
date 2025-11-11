@@ -5,13 +5,27 @@ except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for loc
         "FastAPI is required to run the backend. Install the Python dependencies with "
         "`python -m pip install -r backend/requirements.txt` and retry."
     ) from exc
+import logging
 from textwrap import dedent
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from .config import API_PREFIX, FRONTEND_ORIGINS
-from .database import Base, engine
+from sqlalchemy.exc import SQLAlchemyError
+
+from . import crud
+from .config import (
+    ADMIN_EMAIL,
+    ADMIN_FULL_NAME,
+    ADMIN_PASSWORD,
+    API_PREFIX,
+    FRONTEND_ORIGINS,
+)
+from .database import Base, SessionLocal, engine
 from .routers import auth, upload, items, cortes, talleres
+from .security import get_password_hash
+
+logger = logging.getLogger(__name__)
+
 
 app = FastAPI(title="MercaMorfosis Backend")
 
@@ -35,6 +49,32 @@ app.add_middleware(
 def read_root():
     """Simple root endpoint to verify that the API is running."""
     return {"status": "OK"}
+
+def _ensure_default_admin() -> None:
+    """Create the default admin user if configuration variables are provided."""
+
+    if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+        return
+
+    with SessionLocal() as db:
+        existing_admin = crud.get_user_by_email(db, ADMIN_EMAIL)
+        if existing_admin:
+            return
+
+        try:
+            hashed_password = get_password_hash(ADMIN_PASSWORD)
+            crud.create_user(
+                db,
+                email=ADMIN_EMAIL,
+                hashed_password=hashed_password,
+                full_name=ADMIN_FULL_NAME,
+            )
+            db.commit()
+            logger.info("Default admin user created: %s", ADMIN_EMAIL)
+        except SQLAlchemyError:
+            db.rollback()
+            logger.exception("Failed to create default admin user.")
+            raise
     
 
 
@@ -74,6 +114,9 @@ def _startup():
     )
     with engine.begin() as conn:
         conn.execute(text(create_view_sql))
+        
+    _ensure_default_admin()
+
 
 # Routers
 app.include_router(auth.router, prefix=API_PREFIX)
