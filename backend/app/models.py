@@ -16,7 +16,7 @@ class Item(Base):
 class Corte(Base):
     __tablename__ = "cortes"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    item_id = Column(Integer(as_uuid=True), ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
+    item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
     nombre_corte = Column(Text, nullable=False)
     porcentaje_default = Column(Numeric(7,4), nullable=False)
     item = relationship("Item", back_populates="cortes")
