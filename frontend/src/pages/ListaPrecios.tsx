@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import { getItems } from "../api/talleresApi";
-import { PriceListItem } from "../types";
+import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
 import { sanitizeSearchQuery } from "../utils/security";
 
@@ -32,7 +32,7 @@ const STORAGE_KEYS = {
 } as const;
 
 const ListaPrecios = () => {
-  const [items, setItems] = useState<PriceListItem[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState(() =>
@@ -184,10 +184,7 @@ const ListaPrecios = () => {
           </TableHead>
           <TableBody>
             {filteredItems.map((item) => {
-              const precio =
-                item.precio_venta != null
-                  ? currencyFormatter.format(item.precio_venta)
-                  : "Sin precio";
+              const precio = currencyFormatter.format(item.precio_venta);
 
               return (
                 <TableRow key={item.id} hover>

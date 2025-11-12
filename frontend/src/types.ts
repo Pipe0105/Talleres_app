@@ -1,46 +1,66 @@
-export interface Producto {
-  id: number;
-  codigo: number;
-  nombre: string;
-  descripcion: string;
-}
-
-export interface Precio {
-  id: number;
-  producto_id: number;
-  fecha_vigencia_desde: string;
-  precio_unitario: number | null;
-  impuestos_incluidos: boolean;
-}
-
-export interface PriceListItem {
+export interface Item {
   id: string;
   item_code: string;
   descripcion: string;
-  precio_venta: number | null;
-  actualizado_en: string | null;
+  precio_venta: number;
+  actualizado_en: string;
 }
 
-export interface Taller {
-  id: number;
-  producto_id: number;
-  codigo: number;
-  peso_inicial: number | null;
-  peso_taller: number;
-  rendimiento: number | null;
-  observaciones: string;
+export interface corte {
+  id: string;
+  item_id: string;
+  nombre_corte: string;
+  porcentaje_default: number;
+}
+
+export interface TallerListItem {
+  id: string;
+  item_id: string;
   fecha: string;
-  grupo: string;
-  creado_por: string;
+  unidad_base: string;
+  observaciones: string | null;
 }
 
-export type NewTaller = Omit<Taller, "id">;
+export interface TallerDetalleInput {
+  corte_id: string;
+  peso: number;
+}
 
-export interface Archivo {
-  id: number;
-  taller_id: number;
-  ruta: string;
-  fecha_subida: string;
-  creado_por: string;
-  comentarios: string;
+export interface CrearTallerPayload {
+  item_id: string;
+  unidad_base?: string;
+  observaciones?: string | null;
+  detalles: TallerDetalleInput[];
+}
+
+export interface TallerCreado {
+  id: string;
+  item_id: string;
+}
+
+export interface TallerCalculoRow {
+  taller_id: string;
+  nombre_corte: string;
+  item_code: string;
+  descripcion: string;
+  precio_venta: number;
+  peso: number;
+  peso_total: number;
+  porcentaje_default: number;
+  porcentaje_real: number;
+  delta_pct: number;
+  valor_estimado: number;
+}
+
+export interface AuthToken {
+  access_token: string;
+  token_type: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  is_active: boolean;
+  creado_en: string;
 }

@@ -6,7 +6,7 @@ from .. import crud, models
 from .. database import get_db
 from ..dependencies import get_current_active_user
 from ..schemas import Token, UserCreate, UserOut
-from ..security import create_acces_token, get_password_hash, verify_password
+from ..security import create_access_token, get_password_hash, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -34,7 +34,7 @@ def login_for_access_token(
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="credenciales incorrectas")
     
-    access_token = create_acces_token(str(user.id))
+    access_token = create_access_token(str(user.id))
     return Token(access_token=access_token, token_type="bearer")
 
 @router.get("me", response_model=UserOut)

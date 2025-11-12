@@ -44,6 +44,28 @@ class TallerOut(BaseModel):
     id: UUID
     item_id: UUID
     model_config = ConfigDict(from_attributes=True)
+    
+class TallerListItem(BaseModel):
+    id: UUID
+    item_id: UUID
+    fecha: datetime
+    unidad_base: str
+    observaciones: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+class TallerCalculoRow(BaseModel):
+    taller_id: UUID
+    nombre_corte: str
+    item_code: str
+    descripcion: str
+    precio_venta: float
+    peso: float
+    peso_total: float
+    porcentaje_default: float
+    porcentaje_real: float
+    delta_pct: float
+    valor_estimado: float
 
 class UserBase(BaseModel):
     email: EmailStr
