@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from uuid import UUID
 
 from ..database import get_db
 from ..dependencies import get_current_active_user
@@ -27,5 +26,5 @@ def crear_corte(payload: CorteIn, db: Session = Depends(get_db)):
     return corte
 
 @router.get("/por-item/{item_id}", response_model=list[CorteOut])
-def cortes_por_item(item_id: UUID, db: Session = Depends(get_db)):
+def cortes_por_item(item_id: int, db: Session = Depends(get_db)):
     return db.query(Corte).filter(Corte.item_id == item_id).order_by(Corte.nombre_corte).all()

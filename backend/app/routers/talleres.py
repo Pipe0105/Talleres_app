@@ -46,7 +46,7 @@ def _to_float(value: Decimal | float | int | None) -> float:
     return float(value)
 
 @router.get("/{taller_id}/calculo", response_model=list[TallerCalculoRow])
-def ver_calculo(taller_id: str, db: Session = Depends(get_db)):
+def ver_calculo(taller_id: int, db: Session = Depends(get_db)):
     sql = text("SELECT * FROM v_taller_calculo WHERE taller_id = :tid")
     rows = db.execute(sql, {"tid": taller_id}).mappings().all()
     if not rows:

@@ -1,5 +1,4 @@
 from typing import Iterable, Optional
-from uuid import UUID
 from sqlalchemy.orm import Session
 from . import models
 
@@ -17,7 +16,7 @@ def upsert_items(db: Session, rows: Iterable[dict]) -> list[models.Item]:
         out.append(obj)
     return out
 
-def get_user(db: Session, user_id: str) -> Optional[models.User]:
+def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.get(models.User, user_id)
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:

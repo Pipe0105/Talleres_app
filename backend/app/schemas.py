@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import List, Optional
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal
 
@@ -12,7 +11,7 @@ class ItemIn(BaseModel):
     precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class ItemOut(BaseModel):
-    id: str
+    id: int
     item_code: str
     descripcion: str
     precio_venta: Optional[float] = None
@@ -20,34 +19,34 @@ class ItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class CorteIn(BaseModel):
-    item_id: UUID
+    item_id: int
     nombre_corte: str
     porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4) # type: ignore
 
 class CorteOut(CorteIn):
-    id: UUID
+    id: int
     model_config = ConfigDict(from_attributes=True)
 
 class TallerIn(BaseModel):
-    item_id: UUID
+    item_id: int
     unidad_base: Optional[str] = "KG"
     observaciones: Optional[str] = None
 
 class TallerDetalleIn(BaseModel):
-    corte_id: UUID
+    corte_id: int
     peso: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class TallerCreatePayload(TallerIn):
     detalles: List[TallerDetalleIn]
 
 class TallerOut(BaseModel):
-    id: UUID
-    item_id: UUID
+    id: int
+    item_id: int
     model_config = ConfigDict(from_attributes=True)
     
 class TallerListItem(BaseModel):
-    id: UUID
-    item_id: UUID
+    id: int
+    item_id: int
     fecha: datetime
     unidad_base: str
     observaciones: Optional[str] = None
@@ -55,7 +54,7 @@ class TallerListItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
 class TallerCalculoRow(BaseModel):
-    taller_id: UUID
+    taller_id: int
     nombre_corte: str
     item_code: str
     descripcion: str
@@ -75,7 +74,7 @@ class UserCreate(UserBase):
     password: str
     
 class UserOut(UserBase):
-    id: UUID
+    id: int
     is_active: bool
     creado_en: datetime
     model_config = ConfigDict(from_attributes=True)
@@ -89,6 +88,6 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 class TokenPayload(BaseModel):
-    sub: UUID
+    sub: int
     exp: Optional[int] = None
     model_config = ConfigDict(extra="ignore")
