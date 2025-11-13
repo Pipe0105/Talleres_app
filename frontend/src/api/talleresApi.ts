@@ -115,10 +115,10 @@ const mapCorte = (raw: any): corte => ({
 
 const mapTaller = (raw: any): TallerListItem => ({
   id: toStringOr(raw?.id, ""),
-  item_id: toStringOr(raw?.item_id, ""),
-  fecha: toStringOr(raw?.fecha, new Date().toISOString()),
-  unidad_base: toStringOr(raw?.unidad_base, "KG"),
-  observaciones: raw?.observaciones ?? null,
+  nombre_taller: toStringOr(raw?.nombre_taller, ""),
+  descripcion: raw?.descripcion ?? null,
+  total_peso: toNumber(raw?.total_peso),
+  detalles_count: Math.max(0, Math.trunc(toNumber(raw?.detalles_count, 0))),
 });
 
 const mapCalculo = (raw: any): TallerCalculoRow => ({
@@ -197,7 +197,11 @@ export const createTaller = async (
   payload: CrearTallerPayload
 ): Promise<TallerCreado> => {
   const { data } = await api.post<TallerCreado>("/talleres", payload);
-  return data;
+  return {
+    id: toStringOr((data as any)?.id, ""),
+    nombre_taller: toStringOr((data as any)?.nombre_taller, ""),
+    descripcion: (data as any)?.descripcion ?? null,
+  };
 };
 
 export const getTalleres = async (): Promise<TallerListItem[]> => {

@@ -15,27 +15,28 @@ export interface corte {
 
 export interface TallerListItem {
   id: string;
-  item_id: string;
-  fecha: string;
-  unidad_base: string;
-  observaciones: string | null;
+  nombre_taller: string;
+  descripcion: string | null;
+  total_peso: number;
+  detalles_count: number;
 }
 
 export interface TallerDetalleInput {
+  item_id: string;
   corte_id: string;
   peso: number;
 }
 
 export interface CrearTallerPayload {
-  item_id: string;
-  unidad_base?: string;
-  observaciones?: string | null;
+  nombre_taller: string;
+  descripcion?: string | null;
   detalles: TallerDetalleInput[];
 }
 
 export interface TallerCreado {
   id: string;
-  item_id: string;
+  nombre_taller: string;
+  descripcion: string | null;
 }
 
 export interface TallerCalculoRow {

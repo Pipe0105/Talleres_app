@@ -8,9 +8,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { getItems, getTallerCalculo, getTalleres } from "../api/talleresApi";
-import { Item, TallerCalculoRow, TallerListItem } from "../types";
+import { getTallerCalculo, getTalleres } from "../api/talleresApi";
+import { TallerCalculoRow, TallerListItem } from "../types";
 import TallerCalculoTable from "../components/TallerCalculoTable";
+
+const pesoFormatter = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
 
 interface TallerOption {
   id: string;
@@ -18,7 +23,6 @@ interface TallerOption {
 }
 
 const InformesHistoricos = () => {
-  const [items, setItems] = useState<Item[]>([]);
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,24 +32,14 @@ const InformesHistoricos = () => {
   const [calculo, setCalculo] = useState<TallerCalculoRow[] | null>(null);
   const [loadingCalculo, setLoadingCalculo] = useState(false);
 
-  const itemMap = useMemo(
-    () => new Map(items.map((item) => [item.id, item] as const)),
-    [items]
-  );
-
   const tallerOptions = useMemo<TallerOption[]>(() => {
-    return talleres.map((taller) => {
-      const item = itemMap.get(taller.item_id);
-      const fecha = new Date(taller.fecha).toLocaleString("es-CO");
-      const material = item
-        ? `${item.descripcion} · ${item.item_code}`
-        : "Material sin nombre";
-      return {
-        id: taller.id,
-        label: `${material} — ${fecha}`,
-      };
-    });
-  }, [talleres, itemMap]);
+    return talleres.map((taller) => ({
+      id: taller.id,
+      label: `${taller.nombre_taller} · ${pesoFormatter.format(
+        taller.total_peso
+      )} kg`,
+    }));
+  }, [talleres]);
 
   useEffect(() => {
     let isMounted = true;
@@ -53,16 +47,12 @@ const InformesHistoricos = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [itemsData, talleresData] = await Promise.all([
-          getItems(),
-          getTalleres(),
-        ]);
+        const talleresData = await getTalleres();
 
         if (!isMounted) {
           return;
         }
 
-        setItems(itemsData);
         setTalleres(talleresData);
         setError(null);
       } catch (err) {
@@ -194,12 +184,8 @@ const InformesHistoricos = () => {
               titulo={`Detalle del taller · ${selectedTaller.label}`}
               calculo={calculo}
               observaciones={
-                talleres.find((t) => t.id === selectedTaller.id)
-                  ?.observaciones ?? null
-              }
-              unidadBase={
-                talleres.find((t) => t.id === selectedTaller.id)?.unidad_base ??
-                "KG"
+                talleres.find((t) => t.id === selectedTaller.id)?.descripcion ??
+                null
               }
             />
           )}

@@ -28,28 +28,27 @@ class CorteOut(CorteIn):
     model_config = ConfigDict(from_attributes=True)
 
 class TallerIn(BaseModel):
-    item_id: int
-    unidad_base: Optional[str] = "KG"
-    observaciones: Optional[str] = None
+    nombre_taller: str
+    descripcion: Optional[str] = None
 
 class TallerDetalleIn(BaseModel):
+    item_id: int
     corte_id: int
     peso: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class TallerCreatePayload(TallerIn):
     detalles: List[TallerDetalleIn]
 
-class TallerOut(BaseModel):
+class TallerOut(TallerIn):
     id: int
-    item_id: int
     model_config = ConfigDict(from_attributes=True)
     
 class TallerListItem(BaseModel):
     id: int
-    item_id: int
-    fecha: datetime
-    unidad_base: str
-    observaciones: Optional[str] = None
+    nombre_taller: str
+    descripcion: Optional[str] = None
+    total_peso: float
+    detalles_count: int
     
     model_config = ConfigDict(from_attributes=True)
     

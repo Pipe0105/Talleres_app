@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, Text, Numeric, TIMESTAMP, func, ForeignKey, Boolean
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    Numeric,
+    TIMESTAMP,
+    Text,
+    func,
+)
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -7,34 +16,50 @@ class Item(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     item_code = Column(Text, unique=True, nullable=False)
     descripcion = Column(Text, nullable=False)
-    precio_venta = Column(Numeric(14,4), nullable=False)
+    precio_venta = Column(Numeric(14, 4), nullable=False)
     fuente_archivo = Column(Text)
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    actualizado_en = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
-    cortes = relationship("Corte", back_populates="item", cascade="all, delete-orphan")
+    actualizado_en = Column(
+        TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    cortes = relationship(
+        "Corte", back_populates="item", cascade="all, delete-orphan"
+    )
+    detalles = relationship("TallerDetalle", back_populates="item")
 
 class Corte(Base):
     __tablename__ = "cortes"
     id = Column(Integer, primary_key=True, autoincrement=True)
     item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
     nombre_corte = Column(Text, nullable=False)
-    porcentaje_default = Column(Numeric(7,4), nullable=False)
+    porcentaje_default = Column(Numeric(7, 4), nullable=False)
     item = relationship("Item", back_populates="cortes")
+    detalles = relationship("TallerDetalle", back_populates="corte")
 
 class Taller(Base):
     __tablename__ = "talleres"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
-    fecha = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    unidad_base = Column(Text, default="KG")
-    observaciones = Column(Text)
+    nombre_taller = Column(Text, nullable=False)
+    descripcion = Column(Text)
+
+    detalles = relationship(
+        "TallerDetalle", back_populates="taller", cascade="all, delete-orphan"
+    )
 
 class TallerDetalle(Base):
     __tablename__ = "taller_detalles"
     id = Column(Integer, primary_key=True, autoincrement=True)
     item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
     corte_id = Column(Integer, ForeignKey("cortes.id"), nullable=False)
-    peso = Column(Numeric(14,4), nullable=False)
+    taller_id = Column(
+        Integer, ForeignKey("talleres.id", ondelete="CASCADE"), nullable=False
+    )
+    peso = Column(Numeric(14, 4), nullable=False)
+
+    taller = relationship("Taller", back_populates="detalles")
+    item = relationship("Item", back_populates="detalles")
+    corte = relationship("Corte", back_populates="detalles")
 
 class PreciosRechazados(Base):
     __tablename__ = "precios_rechazados"
@@ -55,4 +80,6 @@ class User(Base):
     hashed_password = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default="true")
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    actualizado_en = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False)
+    actualizado_en = Column(
+        TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
+    )

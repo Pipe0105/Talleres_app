@@ -33,6 +33,11 @@ import {
 import { sanitizeInput } from "../utils/security";
 import TallerCalculoTable from "./TallerCalculoTable";
 
+const pesoFormatter = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
+
 interface TallerWorkflowProps {
   title: string;
   description: string;
@@ -48,8 +53,8 @@ const TallerWorkflow = ({
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [cortes, setCortes] = useState<corte[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
-  const [unidadBase, setUnidadBase] = useState("KG");
-  const [observaciones, setObservaciones] = useState("");
+  const [nombreTaller, setNombreTaller] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [pesos, setPesos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [loadingCortes, setLoadingCortes] = useState(false);
@@ -58,10 +63,12 @@ const TallerWorkflow = ({
   const [calculo, setCalculo] = useState<TallerCalculoRow[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const itemMap = useMemo(
-    () => new Map(items.map((item) => [item.id, item] as const)),
-    [items]
-  );
+  const tallerSeleccionado = useMemo(() => {
+    if (!selectedTallerId) {
+      return null;
+    }
+    return talleres.find((taller) => taller.id === selectedTallerId) ?? null;
+  }, [talleres, selectedTallerId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,8 +85,13 @@ const TallerWorkflow = ({
         }
         setItems(itemsData);
         setTalleres(talleresData);
-        if (itemsData.length && !selectedItemId) {
-          setSelectedItemId(itemsData[0].id);
+        if (itemsData.length) {
+          setSelectedItemId((current) => current || itemsData[0].id);
+          setNombreTaller(
+            (current) =>
+              current ||
+              sanitizeInput(itemsData[0].descripcion, { maxLength: 120 })
+          );
         }
         setError(null);
       } catch (err) {
@@ -147,6 +159,19 @@ const TallerWorkflow = ({
   }, [selectedItemId]);
 
   useEffect(() => {
+    if (!selectedItemId) {
+      return;
+    }
+    const selectedItem = items.find((item) => item.id === selectedItemId);
+    if (selectedItem) {
+      setNombreTaller(
+        (current) =>
+          current || sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
+      );
+    }
+  });
+
+  useEffect(() => {
     if (!selectedTallerId) {
       setCalculo(null);
       return;
@@ -161,6 +186,7 @@ const TallerWorkflow = ({
           return;
         }
         setCalculo(response);
+        setError(null);
       } catch (err) {
         console.error(err);
         if (isMounted) {
@@ -188,8 +214,13 @@ const TallerWorkflow = ({
 
   const resetForm = () => {
     setPesos({});
-    setObservaciones("");
-    setUnidadBase("KG");
+    setDescripcion("");
+    setNombreTaller(() => {
+      const selectedItem = items.find((item) => item.id === selectedItemId);
+      return selectedItem
+        ? sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
+        : "";
+    });
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -212,7 +243,9 @@ const TallerWorkflow = ({
         return { corte_id: corte.id, peso: parsed };
       })
       .filter(
-        (detalle): detalle is { corte_id: string; peso: number } =>
+        (
+          detalle
+        ): detalle is { item_id: string; corte_id: string; peso: number } =>
           detalle !== null
       );
 
@@ -223,12 +256,19 @@ const TallerWorkflow = ({
       return;
     }
 
+    const nombreNormalizado = sanitizeInput(nombreTaller, { maxLength: 120 });
+    if (!nombreNormalizado) {
+      setError("Ingresa un nombre valido para el taller");
+      return;
+    }
+
+    const descripcionNormalizada = descripcion
+      ? sanitizeInput(descripcion, { maxLength: 300 })
+      : undefined;
+
     const payload: CrearTallerPayload = {
-      item_id: selectedItemId,
-      unidad_base: unidadBase || "KG",
-      observaciones: observaciones
-        ? sanitizeInput(observaciones, { maxLength: 300 })
-        : undefined,
+      nombre_taller: nombreNormalizado,
+      descripcion: descripcionNormalizada,
       detalles,
     };
 
@@ -279,8 +319,8 @@ const TallerWorkflow = ({
                 Registrar nuevo taller
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Completa los campos para crear un nuevo taller asociado a un
-                material y sus cortes configurados.
+                Completa los campos para crear un nuevo taller con los cortes
+                configurados para el material seleccionado.
               </Typography>
             </div>
 
@@ -301,25 +341,28 @@ const TallerWorkflow = ({
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
-                label="Unidad base"
-                value={unidadBase}
+                label="Nombre del taller"
+                value={nombreTaller}
                 onChange={(event) =>
-                  setUnidadBase(
-                    sanitizeInput(event.target.value, { maxLength: 12 })
+                  setNombreTaller(
+                    sanitizeInput(event.target.value, { maxLength: 120 })
                   )
                 }
-                helperText="Ej. KG o UND"
+                required
+                fullWidth
+                helperText="Ej. Taller desposte res 2024"
               />
               <TextField
-                label="Observaciones"
-                value={observaciones}
+                label="Descripción (opcional)"
+                value={descripcion}
                 onChange={(event) =>
-                  setObservaciones(
+                  setDescripcion(
                     sanitizeInput(event.target.value, { maxLength: 300 })
                   )
                 }
                 multiline
                 minRows={2}
+                fullWidth
               />
             </Stack>
 
@@ -344,7 +387,7 @@ const TallerWorkflow = ({
                     onChange={(event: ChangeEvent<HTMLInputElement>) =>
                       handlePesoChange(corte.id, event)
                     }
-                    helperText="Ingresa el peso en la unidad seleccionada"
+                    helperText="Ingresa el peso en kilogramos"
                   />
                 ))
               ) : (
@@ -387,33 +430,44 @@ const TallerWorkflow = ({
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Fecha</TableCell>
-                      <TableCell>Material</TableCell>
-                      <TableCell>Unidad</TableCell>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Descripcion</TableCell>
+                      <TableCell align="right">Total procesado (kg)</TableCell>
+                      <TableCell align="right"># Detalles</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {talleres.map((taller) => {
-                      const item = itemMap.get(taller.item_id);
-                      const fecha = new Date(taller.fecha);
-                      return (
-                        <TableRow
-                          key={taller.id}
-                          hover
-                          selected={taller.id === selectedTallerId}
-                          onClick={() => setSelectedTallerId(taller.id)}
-                          sx={{ cursor: "pointer" }}
-                        >
-                          <TableCell>{fecha.toLocaleString("es-CO")}</TableCell>
-                          <TableCell>
-                            {item
-                              ? `${item.descripcion} · ${item.item_code}`
-                              : "Material"}
-                          </TableCell>
-                          <TableCell>{taller.unidad_base}</TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {talleres.map((taller) => (
+                      <TableRow
+                        key={taller.id}
+                        hover
+                        selected={taller.id === selectedItemId}
+                        onClick={() => setSelectedTallerId(taller.id)}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <TableCell sx={{ maxWidth: 220 }}>
+                          <Typography noWrap title={taller.nombre_taller}>
+                            {taller.nombre_taller}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 280 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                            title={taller.descripcion ?? "Sin descripcion"}
+                          >
+                            {taller.descripcion ?? "Sin descripcion"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                          {pesoFormatter.format(taller.total_peso)}
+                        </TableCell>
+                        <TableCell align="right">
+                          {taller.detalles_count}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -422,17 +476,11 @@ const TallerWorkflow = ({
         </Paper>
       </Stack>
 
-      {calculo && selectedTallerId && (
+      {calculo && selectedTallerId && tallerSeleccionado && (
         <TallerCalculoTable
-          titulo="Cálculo del taller seleccionado"
+          titulo={`Cálculo del taller · ${tallerSeleccionado.nombre_taller}`}
           calculo={calculo}
-          observaciones={
-            talleres.find((t) => t.id === selectedTallerId)?.observaciones ??
-            null
-          }
-          unidadBase={
-            talleres.find((t) => t.id === selectedTallerId)?.unidad_base ?? "KG"
-          }
+          observaciones={tallerSeleccionado.descripcion ?? null}
         />
       )}
     </Stack>
