@@ -109,7 +109,7 @@ def _startup():
     FROM taller_detalles td
     JOIN cortes c ON c.id = td.corte_id
     JOIN talleres t ON t.id = td.taller_id
-    JOIN items i ON i.id = t.item_id;
+    JOIN items i ON i.id = td.item_id;
     """
     )
     with engine.begin() as conn:
