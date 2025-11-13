@@ -68,7 +68,7 @@ const Login = () => {
         sx={{
           width: "100%",
           maxWidth: 450,
-          borderRadius: 4,
+          borderRadius: 2,
           p: { xs: 4, sm: 5 },
           boxShadow: (theme) => theme.shadows[20],
         }}

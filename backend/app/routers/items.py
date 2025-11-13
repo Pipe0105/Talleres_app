@@ -2,7 +2,6 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..dependencies import get_current_active_user
 from ..models import Item
 from ..schemas import ItemOut
 
@@ -10,7 +9,6 @@ from ..schemas import ItemOut
 router = APIRouter(
     prefix="/items",
     tags=["items"],
-    dependencies=[Depends(get_current_active_user)],
 )
 
 @router.get("/", response_model=list[ItemOut])
