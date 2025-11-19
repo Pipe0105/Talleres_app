@@ -263,6 +263,7 @@ export const adminGetUsers = async (): Promise<UserProfile[]> => {
 };
 
 export interface AdminUpdateUserPayload {
+  email?: string;
   full_name?: string;
   password?: string;
   is_active?: boolean;
@@ -275,4 +276,8 @@ export const adminUpdateUser = async (
 ): Promise<UserProfile> => {
   const { data } = await api.patch<unknown>(`/users/${userId}`, payload);
   return mapUser(data);
+};
+
+export const adminDeleteUser = async (userId: string): Promise<void> => {
+  await api.delete(`´/users/${userId}`);
 };

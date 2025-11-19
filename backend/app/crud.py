@@ -50,11 +50,14 @@ def update_user(
     db: Session,
     user: models.User,
     *,
+    email: Optional[str] = None,
     full_name: Optional[str] = None,
     hashed_password: Optional[str] = None,
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
 ) -> models.User:
+    if email is not None:
+        user.email = email
     if full_name is not None:
         user.full_name = full_name
     if hashed_password is not None:
@@ -68,3 +71,6 @@ def update_user(
     db.flush()
     db.refresh(user)
     return user
+
+def delete_user(db: Session, user: models.User) -> None:
+    db.delete(user)

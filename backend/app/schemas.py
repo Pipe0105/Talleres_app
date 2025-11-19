@@ -89,6 +89,7 @@ class UserAdminCreate(UserCreate):
     is_admin: bool = False
     
 class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
