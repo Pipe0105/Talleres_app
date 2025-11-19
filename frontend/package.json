@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./scripts/run-with-default-env.mjs vite",
-    "build": "node ./scripts/run-with-default-env.mjs vite build",
-    "preview": "node ./scripts/run-with-default-env.mjs vite preview"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
