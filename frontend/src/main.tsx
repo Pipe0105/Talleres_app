@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import App from "./App";
 import "./index.css";
+import { AuthProvider } from "./context/AuthContext";
 import { appTheme } from "./theme";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>

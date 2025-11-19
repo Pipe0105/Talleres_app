@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ensureDefaultEnv = () => {
@@ -31,9 +31,10 @@ const main = async () => {
     );
   }
 
-  const require = createRequire(import.meta.url);
   const vitePackagePath = require.resolve("vite/package.json");
-  const viteBin = join(dirname(vitePackagePath), "bin", "vite.js");
+  const viteBin = fileURLToPath(
+    new URL("../node_modules/vite/bin/vite.js", import.meta.url)
+  );
 
   const child = spawn(process.execPath, [viteBin, ...commandArgs], {
     stdio: "inherit",

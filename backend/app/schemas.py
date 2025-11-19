@@ -75,12 +75,24 @@ class UserCreate(UserBase):
 class UserOut(UserBase):
     id: int
     is_active: bool
+    is_admin: bool
     creado_en: datetime
+    actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)
     
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
+class UserAdminCreate(UserCreate):
+    is_active: bool = True
+    is_admin: bool = False
+    
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
     
 class Token(BaseModel):
     access_token: str

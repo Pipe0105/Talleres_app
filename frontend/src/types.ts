@@ -63,5 +63,7 @@ export interface UserProfile {
   email: string;
   full_name: string | null;
   is_active: boolean;
+  is_admin: boolean;
   creado_en: string;
+  actualizado_en: string;
 }

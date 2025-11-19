@@ -55,6 +55,25 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
+const toBoolean = (value: unknown, fallback = false): boolean => {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value !== 0;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "no"].includes(normalized)) {
+      return false;
+    }
+  }
+  return fallback;
+};
+
 const toStringOr = (value: unknown, fallback: string): string => {
   if (typeof value === "string") {
     return value;
@@ -135,6 +154,16 @@ const mapCalculo = (raw: any): TallerCalculoRow => ({
   valor_estimado: toNumber(raw?.valor_estimado),
 });
 
+const mapUser = (raw: any): UserProfile => ({
+  id: toStringOr(raw?.id, ""),
+  email: toStringOr(raw?.email, ""),
+  full_name: raw?.full_name ?? null,
+  is_active: toBoolean(raw?.is_active, true),
+  is_admin: toBoolean(raw?.is_admin, false),
+  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
+});
+
 export const login = async (
   email: string,
   password: string
@@ -166,8 +195,8 @@ export const register = async (payload: RegisterUserPayload) => {
 };
 
 export const getCurrentUser = async (): Promise<UserProfile> => {
-  const { data } = await api.get<UserProfile>("/auth/me");
-  return data;
+  const { data } = await api.get<unknown>("/auth/me");
+  return mapUser(data);
 };
 
 export const getItems = async (): Promise<Item[]> => {
@@ -214,4 +243,36 @@ export const getTallerCalculo = async (
 ): Promise<TallerCalculoRow[]> => {
   const { data } = await api.get<unknown[]>(`/talleres/${tallerId}/calculo`);
   return (Array.isArray(data) ? data : []).map(mapCalculo);
+};
+
+export interface AdminCreateUserPayload extends RegisterUserPayload {
+  is_admin?: boolean;
+  is_active?: boolean;
+}
+
+export const adminCreateUser = async (
+  payload: AdminCreateUserPayload
+): Promise<UserProfile> => {
+  const { data } = await api.post<unknown>("/users", payload);
+  return mapUser(data);
+};
+
+export const adminGetUsers = async (): Promise<UserProfile[]> => {
+  const { data } = await api.get<unknown>("/users");
+  return (Array.isArray(data) ? data : []).map(mapUser);
+};
+
+export interface AdminUpdateUserPayload {
+  full_name?: string;
+  password?: string;
+  is_active?: boolean;
+  is_admin?: boolean;
+}
+
+export const adminUpdateUser = async (
+  userId: string,
+  payload: AdminUpdateUserPayload
+): Promise<UserProfile> => {
+  const { data } = await api.patch<unknown>(`/users/${userId}`, payload);
+  return mapUser(data);
 };

@@ -21,7 +21,7 @@ from .config import (
     FRONTEND_ORIGINS,
 )
 from .database import Base, SessionLocal, engine
-from .routers import auth, upload, items, cortes, talleres
+from .routers import auth, upload, items, cortes, talleres, users
 from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ def _ensure_default_admin() -> None:
                 email=ADMIN_EMAIL,
                 hashed_password=hashed_password,
                 full_name=ADMIN_FULL_NAME,
+                is_admin=True,
             )
             db.commit()
             logger.info("Default admin user created: %s", ADMIN_EMAIL)
@@ -82,6 +83,13 @@ def _ensure_default_admin() -> None:
 def _startup():
     # Crear tablas
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS users "
+                "ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
     # Crear/asegurar vista v_taller_calculo (idem potente)
     create_view_sql = dedent(
         """
@@ -124,3 +132,4 @@ app.include_router(upload.router, prefix=API_PREFIX)
 app.include_router(items.router, prefix=API_PREFIX)
 app.include_router(cortes.router, prefix=API_PREFIX)
 app.include_router(talleres.router, prefix=API_PREFIX)
+app.include_router(users.router, prefix=API_PREFIX)

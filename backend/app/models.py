@@ -79,6 +79,7 @@ class User(Base):
     full_name = Column(Text)
     hashed_password = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default="true")
+    is_admin = Column(Boolean, nullable=False, server_default="false")
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     actualizado_en = Column(
         TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { login, register } from "../api/talleresApi";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Login = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { refresh } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -37,6 +39,7 @@ const Login = () => {
       }
 
       await login(email, password);
+      await refresh();
       setSuccess("Inicio de sesión exitoso. Redirigiendo…");
       setTimeout(() => navigate("/"), 600);
     } catch (err) {
