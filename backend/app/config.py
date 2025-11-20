@@ -17,7 +17,6 @@ def _build_database_url() -> str:
     
     return f"{driver}://{user}:{password}@{host}:{port}/{db_name}"
 
-DATABASE_URL = _build_database_url()
 
 def _load_frontend_origins() -> List[str]:
     origins_raw = os.getenv("FRONTEND_ORIGINS")
@@ -32,6 +31,7 @@ def _load_frontend_origins() -> List[str]:
             
     return origins or ["http://localhost:5173"]
 
+DATABASE_URL = _build_database_url()
 FRONTEND_ORIGINS = _load_frontend_origins()
 
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")

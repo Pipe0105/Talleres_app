@@ -10,7 +10,7 @@ from .database import get_db
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{API_PREFIX}/auth/token")
 
-async def get_current_user(
+def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> models.User:
@@ -50,6 +50,6 @@ def get_current_admin_user(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere permisos de administrador"
+            detail="Se requiere permisos de administrador",
         )
     return current_user

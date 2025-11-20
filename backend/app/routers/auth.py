@@ -14,7 +14,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> UserOut:
     existing = crud.get_user_by_email(db, payload.email)
     if existing:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El correo ya esta registrado")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo ya esta registrado",
+        )
     
     hashed_password = get_password_hash(payload.password)
     user = crud.create_user(
@@ -32,12 +35,16 @@ def login_for_access_token(
 ) -> Token:
     user = crud.get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="credenciales incorrectas")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="credenciales incorrectas",
+        )
     
     access_token = create_access_token(str(user.id))
     return Token(access_token=access_token, token_type="bearer")
 
-@router.get("me", response_model=UserOut)
-async def read_current_user(current_user: models.User = Depends(get_current_active_user)
+@router.get("/me", response_model=UserOut)
+async def read_current_user(
+    current_user: models.User = Depends(get_current_active_user),
 ) -> UserOut:
     return current_user
