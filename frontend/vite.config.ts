@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     : null;
 
   const backendTarget =
-    backendFromEnv ?? derivedFromApiUrl ?? "http://localhost:8000";
+    backendFromEnv ?? derivedFromApiUrl ?? "http://localhost:8080";
 
   return {
     plugins: [react()],

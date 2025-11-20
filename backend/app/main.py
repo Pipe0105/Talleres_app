@@ -76,6 +76,7 @@ def _ensure_default_admin() -> None:
             db.rollback()
             logger.exception("Failed to create default admin user.")
             raise
+
     
 
 

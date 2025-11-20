@@ -65,13 +65,16 @@ class TallerCalculoRow(BaseModel):
     delta_pct: float
     valor_estimado: float
 
+
 class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
-    
+
+
 class UserCreate(UserBase):
     password: str
-    
+
+
 class UserOut(UserBase):
     id: int
     is_active: bool
@@ -79,27 +82,45 @@ class UserOut(UserBase):
     creado_en: datetime
     actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)
-    
+
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
-    
+
+
 class UserAdminCreate(UserCreate):
     is_active: bool = True
     is_admin: bool = False
-    
+
+
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
-    
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
 
 class TokenPayload(BaseModel):
     sub: int
     exp: Optional[int] = None
     model_config = ConfigDict(extra="ignore")
+    
+    
+class ListaPreciosOut(BaseModel):
+    id: int
+    codigo_producto: str
+    descripcion: str
+    precio: float | None
+    especie: str | None
+    fecha_vigencia: datetime | None
+    fuente: str | None
+    activo: bool | None
+
+    model_config = ConfigDict(from_attributes=True)

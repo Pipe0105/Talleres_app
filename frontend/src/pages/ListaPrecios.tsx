@@ -20,9 +20,9 @@ import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
 import { sanitizeSearchQuery } from "../utils/security";
 
-const currencyFormatter = new Intl.NumberFormat("es-CL", {
+const currencyFormatter = new Intl.NumberFormat("es-CO", {
   style: "currency",
-  currency: "CLP",
+  currency: "COP",
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
@@ -92,7 +92,7 @@ const ListaPrecios = () => {
     }
 
     return sortedItems.filter((item) => {
-      const codigo = item.item_code.toLowerCase();
+      const codigo = item.codigo_producto.toLowerCase();
       const descripcion = item.descripcion.toLowerCase();
       return codigo.includes(query) || descripcion.includes(query);
     });
@@ -103,9 +103,9 @@ const ListaPrecios = () => {
     let latest: Date | null = null;
 
     sortedItems.forEach((item) => {
-      if (!item.actualizado_en) return;
+      if (!item.fecha_vigencia) return;
 
-      const parsed = new Date(item.actualizado_en);
+      const parsed = new Date(item.fecha_vigencia);
       if (Number.isNaN(parsed.getTime())) return;
 
       if (!latest || parsed.getTime() > latest.getTime()) {
@@ -184,21 +184,19 @@ const ListaPrecios = () => {
           </TableHead>
           <TableBody>
             {filteredItems.map((item) => {
-              const precio = currencyFormatter.format(item.precio_venta);
+              console.log("ITEM RECIBIDO:", item);
+              console.log("PRECIO RAW:", item.precio, typeof item.precio);
+              const precio = currencyFormatter.format(Number(item.precio));
 
               return (
                 <TableRow key={item.id} hover>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {item.item_code}
+                    {item.codigo_producto}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" color="text.primary">
-                      {item.descripcion}
-                    </Typography>
+                    <Typography variant="body2">{item.descripcion}</Typography>
                   </TableCell>
-                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                    {precio}
-                  </TableCell>
+                  <TableCell align="right">{precio}</TableCell>
                 </TableRow>
               );
             })}

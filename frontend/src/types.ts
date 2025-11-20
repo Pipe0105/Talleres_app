@@ -1,9 +1,12 @@
 export interface Item {
-  id: string;
-  item_code: string;
+  id: number;
+  codigo_producto: string;
   descripcion: string;
-  precio_venta: number;
-  actualizado_en: string;
+  precio: number;
+  especie: string;
+  fecha_vigencia: string;
+  fuente: string;
+  activo: boolean;
 }
 
 export interface corte {

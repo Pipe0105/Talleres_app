@@ -118,11 +118,14 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 const mapItem = (raw: any): Item => ({
-  id: toStringOr(raw?.id, ""),
-  item_code: toStringOr(raw?.item_code, ""),
+  id: toNumber(raw?.id, 0),
+  codigo_producto: toStringOr(raw?.codigo_producto, ""),
   descripcion: toStringOr(raw?.descripcion, ""),
-  precio_venta: toNumber(raw?.precio_venta),
-  actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
+  precio: toNumber(raw?.precio, 0),
+  especie: toStringOr(raw?.especie, ""),
+  fecha_vigencia: toStringOr(raw?.fecha_vigencia, ""),
+  fuente: toStringOr(raw?.fuente, ""),
+  activo: toBoolean(raw?.activo, true),
 });
 
 const mapCorte = (raw: any): corte => ({
@@ -169,8 +172,12 @@ export const login = async (
   password: string
 ): Promise<AuthToken> => {
   const payload = new URLSearchParams();
+  payload.set("grant_type", "password");
   payload.set("username", email);
   payload.set("password", password);
+  payload.set("scope", "");
+  payload.set("client_id", "");
+  payload.set("client_secret", "");
 
   const { data } = await api.post<AuthToken>("/auth/token", payload, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -178,10 +185,6 @@ export const login = async (
 
   setAuthToken(data.access_token);
   return data;
-};
-
-export const logout = () => {
-  setAuthToken(null);
 };
 
 export interface RegisterUserPayload {

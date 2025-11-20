@@ -84,3 +84,16 @@ class User(Base):
     actualizado_en = Column(
         TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
     )
+    
+class ListaPrecios(Base):
+    __tablename__ = "lista_precios"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    codigo_producto = Column(Text, nullable=False)
+    descripcion = Column(Text, nullable=False)
+    precio = Column(Numeric(12, 2), nullable=True)
+    especie = Column(Text, nullable=True)
+    fecha_vigencia = Column(TIMESTAMP, nullable=True)
+    fuente = Column(Text, nullable=True)
+    activo = Column(Boolean, nullable=True)
+    
