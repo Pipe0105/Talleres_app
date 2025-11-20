@@ -14,6 +14,7 @@ interface NavItem {
   label: string;
   to: string;
   isActive?: boolean;
+  icon?: ReactNode;
 }
 
 interface AppLayoutProps {
@@ -60,13 +61,17 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             <Stack direction="row" spacing={1.5} alignItems="center">
               {navItems.map((item) => (
                 <Button
-                  key={item.to}
-                  component={RouterLink}
-                  to={item.to}
+                  key={item.to ?? item.label}
+                  {...(item.to ? { component: RouterLink, to: item.to } : {})}
                   variant={item.isActive ? "contained" : "text"}
                   color={item.isActive ? "primary" : "inherit"}
                   aria-current={item.isActive ? "page" : undefined}
-                  sx={{ fontWeight: 600 }}
+                  startIcon={item.icon}
+                  sx={{
+                    fontWeight: 600,
+                    gap: 1,
+                  }}
+                  disabled={item.disabled}
                 >
                   {item.label}
                 </Button>

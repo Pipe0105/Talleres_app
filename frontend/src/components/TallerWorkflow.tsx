@@ -240,7 +240,7 @@ const TallerWorkflow = ({
         if (!Number.isFinite(parsed) || parsed <= 0) {
           return null;
         }
-        return { corte_id: corte.id, peso: parsed };
+        return { item_id: corte.item_id, corte_id: corte.id, peso: parsed };
       })
       .filter(
         (

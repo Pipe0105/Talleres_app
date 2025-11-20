@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import AppLayout from "./layout/AppLayout";
 import Home from "./pages/home/Home";
 import Talleres from "./pages/Talleres";
@@ -15,23 +16,40 @@ const App = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
   const isLoginRoute = location.pathname === "/login";
+  const displayName = user?.full_name?.trim() || user?.email;
 
   const navigationConfig = [
     { label: "Inicio", to: "/" },
     { label: "Desposte", to: "/talleres/desposte" },
     { label: "Informes", to: "/informes-historicos" },
     { label: "Lista de precios", to: "/lista-precios" },
-    ...(user?.is_admin ? [{ label: "Usuarios", to: "/admin/usuarios" }] : []),
-    user
-      ? { label: "Cerrar sesión", to: "/logout" }
-      : { label: "Iniciar sesión", to: "/login" },
+    ...(user?.is_admin
+      ? [
+          {
+            label: "Usuarios",
+            to: "/usuarios",
+            icon: <GroupOutlinedIcon fontSize="small" />,
+          },
+        ]
+      : []),
+    ...(user
+      ? [
+          {
+            label: displayName || "Usuario",
+            to: undefined,
+            disabled: true,
+          },
+          { label: "Cerrar sesión", to: "/logout" },
+        ]
+      : [{ label: "Iniciar sesión", to: "/login" }]),
   ];
 
   const navItems = navigationConfig.map((item) => {
-    const isActive =
-      item.to === "/"
+    const isActive = item.to
+      ? item.to === "/"
         ? location.pathname === "/"
-        : location.pathname.startsWith(item.to);
+        : location.pathname.startsWith(item.to)
+      : false;
     return { ...item, isActive };
   });
 
@@ -68,7 +86,7 @@ const App = () => {
         <Route path="/informes-historicos" element={<InformesHistoricos />} />
         <Route path="/lista-precios" element={<ListaPrecios />} />
         <Route
-          path="/admin/usuarios"
+          path="/usuarios"
           element={
             user ? (
               user.is_admin ? (
@@ -80,6 +98,10 @@ const App = () => {
               <Navigate to="/login" replace />
             )
           }
+        />
+        <Route
+          path="/admin/usuarios"
+          element={<Navigate to="/usuarios" replace />}
         />
         <Route path="/logout" element={<Logout />}></Route>
         <Route path="*" element={<Navigate to="/" replace />} />
