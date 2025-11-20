@@ -12,8 +12,6 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
-  Grid,
-  Paper,
   Stack,
   Switch,
   Table,
@@ -26,10 +24,10 @@ import {
   Typography,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import { useAuth } from "../../context/AuthContext";
 import {
   adminCreateUser,
@@ -38,7 +36,7 @@ import {
   adminUpdateUser,
 } from "../../api/talleresApi";
 import type { UserProfile } from "../../types";
-import { Email } from "@mui/icons-material";
+import { Person } from "@mui/icons-material";
 
 interface NewUserForm {
   email: string;
@@ -73,6 +71,7 @@ const UsersAdmin = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<UserProfile | null>(null);
   const [editForm, setEditForm] = useState<EditUserForm | null>(null);
@@ -114,6 +113,7 @@ const UsersAdmin = () => {
       });
       setFormSuccess("Usuario creado correctamente.");
       setFormState(INITIAL_FORM_STATE);
+      setCreateDialogOpen(false);
       await loadUsers();
     } catch (error) {
       console.error(error);
@@ -215,11 +215,24 @@ const UsersAdmin = () => {
     [currentUser?.id]
   );
 
+  const openCreateDialog = () => {
+    setFormError(null);
+    setFormSuccess(null);
+    setCreateDialogOpen(true);
+  };
+
+  const closeCreateDialog = () => {
+    if (submitting) return;
+    setCreateDialogOpen(false);
+    setFormError(null);
+  };
+
   return (
     <Stack spacing={4}>
       <Stack
         direction={{ xs: "column", md: "row" }}
         justifyContent="space-between"
+        alignItems={{ md: "center" }}
         spacing={2}
       >
         <Box>
@@ -231,114 +244,34 @@ const UsersAdmin = () => {
             talleres.
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={loadUsers}
-          disabled={loading}
-        >
-          Actualizar
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddAlt1Icon />}
+            onClick={openCreateDialog}
+          >
+            Crear usuario
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadUsers}
+            disabled={loading}
+          >
+            Actualizar
+          </Button>
+        </Stack>
       </Stack>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={5}>
-          <Card>
-            <CardHeader
-              avatar={<AdminPanelSettingsIcon color="primary" />}
-              title="Crear un nuevo usuario"
-              subheader="Define el rol y estado de la cuenta."
-            />
-            <CardContent>
-              <Stack component="form" spacing={3} onSubmit={handleSubmit}>
-                <TextField
-                  label="Correo electrónico"
-                  type="email"
-                  value={formState.email}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      email: event.target.value,
-                    }))
-                  }
-                  required
-                  fullWidth
-                />
-                <TextField
-                  label="Contraseña temporal"
-                  type="password"
-                  value={formState.password}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      password: event.target.value,
-                    }))
-                  }
-                  required
-                  fullWidth
-                />
-                <TextField
-                  label="Nombre completo"
-                  value={formState.fullName}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      fullName: event.target.value,
-                    }))
-                  }
-                  fullWidth
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formState.isAdmin}
-                      onChange={(event) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          isAdmin: event.target.checked,
-                        }))
-                      }
-                    />
-                  }
-                  label="Otorgar permisos de administrador"
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formState.isActive}
-                      onChange={(event) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          isActive: event.target.checked,
-                        }))
-                      }
-                    />
-                  }
-                  label="Cuenta activa"
-                />
-                {formError && <Alert severity="error">{formError}</Alert>}
-                {formSuccess && <Alert severity="success">{formSuccess}</Alert>}
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={submitting}
-                  size="large"
-                >
-                  {submitting ? "Guardando…" : "Crear usuario"}
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Paper sx={{ p: 3 }}>
-            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-              <PersonOutlineIcon color="action" />
-              <Typography variant="h6" fontWeight={600}>
-                Usuarios registrados
-              </Typography>
-            </Stack>
+      <Stack spacing={2}>
+        {formSuccess && <Alert severity="success">{formSuccess}</Alert>}
+        <Card>
+          <CardHeader
+            avatar={<PersonOutlineIcon color="primary" />}
+            title="Usuarios registrados"
+            subheader="Gestiona el estado y permisos de cada miembro."
+          />
+          <CardContent>
             {listError && <Alert severity="error">{listError}</Alert>}
             <Table size="small">
               <TableHead>
@@ -483,9 +416,99 @@ const UsersAdmin = () => {
                 )}
               </TableBody>
             </Table>
-          </Paper>
-        </Grid>
-      </Grid>
+          </CardContent>
+        </Card>
+      </Stack>
+
+      <Dialog
+        open={createDialogOpen}
+        onClose={closeCreateDialog}
+        fullWidth
+        maxWidth="sm"
+      >
+        <Box component="form" onSubmit={handleSubmit}>
+          <DialogTitle>Crear un nuevo usuario</DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Stack spacing={3} mt={1}>
+              <TextField
+                label="Correo electrónico"
+                type="email"
+                value={formState.email}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    email: event.target.value,
+                  }))
+                }
+                required
+                fullWidth
+              />
+              <TextField
+                label="Contraseña temporal"
+                type="password"
+                value={formState.password}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    password: event.target.value,
+                  }))
+                }
+                required
+                fullWidth
+              />
+              <TextField
+                label="Nombre completo"
+                value={formState.fullName}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    fullName: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formState.isAdmin}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        isAdmin: event.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Otorgar permisos de administrador"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formState.isActive}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        isActive: event.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Cuenta activa"
+              />
+              {formError && <Alert severity="error">{formError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeCreateDialog} disabled={submitting}>
+              Cancelar
+            </Button>
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? "Guardando…" : "Crear usuario"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
       <Dialog
         open={Boolean(editTarget)}
         onClose={editSubmitting ? undefined : closeEditDialog}
