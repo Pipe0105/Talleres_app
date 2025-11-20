@@ -1,24 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  AlertTitle,
-  Chip,
-  CircularProgress,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Chip, Paper, Stack, TextField, Typography } from "@mui/material";
 import { getItems } from "../api/talleresApi";
 import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
 import { sanitizeSearchQuery } from "../utils/security";
+import ListaPreciosTable from "../components/ListaPreciosTable";
+import PageHeader from "../components/PageHeader";
 
 const currencyFormatter = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -131,100 +118,13 @@ const ListaPrecios = () => {
     setFilter(sanitizeSearchQuery(value));
   };
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <Stack alignItems="center" spacing={2} sx={{ py: 6 }}>
-          <CircularProgress size={32} />
-          <Typography variant="body2" color="text.secondary">
-            Cargando lista de precios…
-          </Typography>
-        </Stack>
-      );
-    }
-
-    if (error) {
-      return (
-        <Alert severity="error">
-          <AlertTitle>Error al cargar</AlertTitle>
-          <Typography variant="body2" color="text.secondary">
-            {error}
-          </Typography>
-        </Alert>
-      );
-    }
-
-    if (!sortedItems.length) {
-      return (
-        <Typography variant="body2" color="text.secondary">
-          No se encontraron productos para mostrar.
-        </Typography>
-      );
-    }
-
-    if (!filteredItems.length) {
-      return (
-        <Typography variant="body2" color="text.secondary">
-          No se encontraron productos que coincidan con tu búsqueda.
-        </Typography>
-      );
-    }
-
-    return (
-      <TableContainer sx={{ borderRadius: 3 }}>
-        <Table size="medium">
-          <TableHead>
-            <TableRow>
-              <TableCell width="20%">Código</TableCell>
-              <TableCell width="55%">Producto</TableCell>
-              <TableCell align="right" width="25%">
-                Precio unitario
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredItems.map((item) => {
-              console.log("ITEM RECIBIDO:", item);
-              console.log("PRECIO RAW:", item.precio, typeof item.precio);
-              const precio = currencyFormatter.format(Number(item.precio));
-
-              return (
-                <TableRow key={item.id} hover>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {item.codigo_producto}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{item.descripcion}</Typography>
-                  </TableCell>
-                  <TableCell align="right">{precio}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    );
-  };
-
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            justifyContent="space-between"
-          >
-            <div>
-              <Typography variant="h4" component="h1" gutterBottom>
-                Lista de Precios
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Consulta la información de precios vigentes directamente desde
-                la base de datos oficial.
-              </Typography>
-            </div>
+        <PageHeader
+          title="Lista de Precios"
+          description="Consulta la información de precios vigentes directamente desde la base de datos oficial."
+          action={
             <Chip
               color={lastUpdatedLabel ? "primary" : "default"}
               variant={lastUpdatedLabel ? "filled" : "outlined"}
@@ -234,8 +134,8 @@ const ListaPrecios = () => {
                   : "Fecha de actualización no disponible"
               }
             />
-          </Stack>
-        </Stack>
+          }
+        />
       </Paper>
       <Paper sx={{ p: { xs: 2, md: 3 } }}>
         <Stack spacing={2}>
@@ -254,7 +154,13 @@ const ListaPrecios = () => {
             value={filter}
             onChange={(event) => handleFilterChange(event.target.value)}
           />
-          {renderContent()}
+          <ListaPreciosTable
+            loading={loading}
+            error={error}
+            sortedItems={sortedItems}
+            filteredItems={filteredItems}
+            formatCurrency={(value) => currencyFormatter.format(Number(value))}
+          />
         </Stack>
       </Paper>
     </Stack>

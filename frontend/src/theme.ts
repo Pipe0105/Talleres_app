@@ -49,7 +49,7 @@ export const appTheme = createTheme({
     },
     background: {
       default: "#f8fafc",
-      paper: "#fffff",
+      paper: "#ffffff",
     },
     text: {
       primary: "#0f172a",

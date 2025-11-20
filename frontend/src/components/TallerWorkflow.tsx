@@ -1,20 +1,5 @@
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  AlertTitle,
-  Button,
-  MenuItem,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Paper, Stack, Typography } from "@mui/material";
 
 import {
   createTaller,
@@ -33,10 +18,9 @@ import {
 import { sanitizeInput } from "../utils/security";
 import TallerCalculoTable from "./TallerCalculoTable";
 
-const pesoFormatter = new Intl.NumberFormat("es-CO", {
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3,
-});
+import TallerForm from "./taller/TallerForm";
+import TallerList from "./taller/TallerList";
+import PageHeader from "./PageHeader";
 
 interface TallerWorkflowProps {
   title: string;
@@ -208,12 +192,21 @@ const TallerWorkflow = ({
     };
   }, [selectedTallerId]);
 
-  const handlePesoChange = (
-    corteId: string,
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = sanitizeInput(event.target.value, { maxLength: 18 });
-    setPesos((prev) => ({ ...prev, [corteId]: value }));
+  const handlePesoChange = (corteId: string, value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setPesos((prev) => ({ ...prev, [corteId]: sanitized }));
+  };
+
+  const handleNombreChange = (value: string) => {
+    setNombreTaller(sanitizeInput(value, { maxLength: 120 }));
+  };
+
+  const handleDescripcionChange = (value: string) => {
+    setDescripcion(sanitizeInput(value, { maxLength: 300 }));
+  };
+
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItemId(itemId);
   };
 
   const resetForm = () => {
@@ -299,14 +292,7 @@ const TallerWorkflow = ({
   return (
     <Stack spacing={4}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={1}>
-          <Typography variant="h4" component="h1">
-            {title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {description}
-          </Typography>
-        </Stack>
+        <PageHeader title={title} description={description} />
       </Paper>
 
       <Stack
@@ -314,172 +300,30 @@ const TallerWorkflow = ({
         spacing={4}
         alignItems="stretch"
       >
-        <Paper
-          component="form"
+        <TallerForm
+          items={items}
+          cortes={cortes}
+          pesos={pesos}
+          selectedItemId={selectedItemId}
+          nombreTaller={nombreTaller}
+          descripcion={descripcion}
+          loadingItems={loading}
+          loadingCortes={loadingCortes}
+          submitting={submitting}
+          error={error}
           onSubmit={handleSubmit}
-          sx={{ flex: 1, p: { xs: 3, md: 4 } }}
-        >
-          <Stack spacing={3}>
-            <div>
-              <Typography variant="h6" component="h2">
-                Registrar nuevo taller
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completa los campos para crear un nuevo taller con los cortes
-                configurados para el material seleccionado.
-              </Typography>
-            </div>
+          onSelectItem={handleSelectItem}
+          onNombreChange={handleNombreChange}
+          onDescripcionChange={handleDescripcionChange}
+          onPesoChange={handlePesoChange}
+        />
 
-            <TextField
-              select
-              label="Material"
-              value={selectedItemId}
-              onChange={(event) => setSelectedItemId(event.target.value)}
-              required
-              disabled={loading || items.length === 0}
-            >
-              {items.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.descripcion} · {item.codigo_producto}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField
-                label="Nombre del taller"
-                value={nombreTaller}
-                onChange={(event) =>
-                  setNombreTaller(
-                    sanitizeInput(event.target.value, { maxLength: 120 })
-                  )
-                }
-                required
-                fullWidth
-                helperText="Ej. Taller desposte res 2024"
-              />
-              <TextField
-                label="Descripción (opcional)"
-                value={descripcion}
-                onChange={(event) =>
-                  setDescripcion(
-                    sanitizeInput(event.target.value, { maxLength: 300 })
-                  )
-                }
-                multiline
-                minRows={2}
-                fullWidth
-              />
-            </Stack>
-
-            <Stack spacing={2}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Pesos por corte
-              </Typography>
-              {loadingCortes ? (
-                <Typography variant="body2" color="text.secondary">
-                  Cargando cortes asociados…
-                </Typography>
-              ) : cortes.length ? (
-                cortes.map((corte) => (
-                  <TextField
-                    key={corte.id}
-                    label={`${
-                      corte.nombre_corte
-                    } · % objetivo ${corte.porcentaje_default.toFixed(2)}%`}
-                    type="number"
-                    inputProps={{ step: 0.001, min: 0 }}
-                    value={pesos[corte.id] ?? ""}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                      handlePesoChange(corte.id, event)
-                    }
-                    helperText="Ingresa el peso en kilogramos"
-                  />
-                ))
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No hay cortes registrados para este material. Registra cortes
-                  en la API antes de crear talleres.
-                </Typography>
-              )}
-            </Stack>
-
-            {error && (
-              <Alert severity="error">
-                <AlertTitle>Error</AlertTitle>
-                {error}
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={submitting || loadingCortes}
-            >
-              {submitting ? "Registrando taller…" : "Registrar taller"}
-            </Button>
-          </Stack>
-        </Paper>
-
-        <Paper sx={{ flex: 1, p: { xs: 3, md: 4 } }}>
-          <Stack spacing={2}>
-            <Typography variant="h6" component="h2">
-              Talleres registrados
-            </Typography>
-            {talleres.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                {emptyMessage}
-              </Typography>
-            ) : (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Nombre</TableCell>
-                      <TableCell>Descripcion</TableCell>
-                      <TableCell align="right">Total procesado (kg)</TableCell>
-                      <TableCell align="right"># Detalles</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {talleres.map((taller) => (
-                      <TableRow
-                        key={taller.id}
-                        hover
-                        selected={taller.id === selectedTallerId}
-                        onClick={() => setSelectedTallerId(taller.id)}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        <TableCell sx={{ maxWidth: 220 }}>
-                          <Typography noWrap title={taller.nombre_taller}>
-                            {taller.nombre_taller}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 280 }}>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            noWrap
-                            title={taller.descripcion ?? "Sin descripcion"}
-                          >
-                            {taller.descripcion ?? "Sin descripcion"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                          {pesoFormatter.format(taller.total_peso)}
-                        </TableCell>
-                        <TableCell align="right">
-                          {taller.detalles_count}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </Stack>
-        </Paper>
+        <TallerList
+          talleres={talleres}
+          selectedTallerId={selectedTallerId}
+          emptyMessage={emptyMessage}
+          onSelect={setSelectedTallerId}
+        />
       </Stack>
 
       {calculo && selectedTallerId && tallerSeleccionado && (

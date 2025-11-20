@@ -341,7 +341,7 @@ const UsersAdmin = () => {
                               : "Conceder permisos de administrador"
                           }
                         >
-                          <span>
+                          <span hidden>
                             <Button
                               variant="outlined"
                               size="small"
