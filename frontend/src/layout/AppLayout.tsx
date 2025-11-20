@@ -12,9 +12,10 @@ import { Link as RouterLink } from "react-router-dom";
 
 interface NavItem {
   label: string;
-  to: string;
+  to?: string;
   isActive?: boolean;
   icon?: ReactNode;
+  disabled?: boolean;
 }
 
 interface AppLayoutProps {

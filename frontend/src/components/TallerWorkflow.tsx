@@ -86,7 +86,7 @@ const TallerWorkflow = ({
         setItems(itemsData);
         setTalleres(talleresData);
         if (itemsData.length) {
-          setSelectedItemId((current) => current || itemsData[0].id);
+          setSelectedItemId((current) => current || String(itemsData[0].id));
           setNombreTaller(
             (current) =>
               current ||
@@ -162,14 +162,18 @@ const TallerWorkflow = ({
     if (!selectedItemId) {
       return;
     }
-    const selectedItem = items.find((item) => item.id === selectedItemId);
+
+    const selectedItem = items.find(
+      (item) => item.id === Number(selectedItemId)
+    );
     if (selectedItem) {
-      setNombreTaller(
-        (current) =>
-          current || sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
+      setNombreTaller((current) =>
+        current?.trim()
+          ? current
+          : sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
       );
     }
-  });
+  }, [items, selectedItemId]);
 
   useEffect(() => {
     if (!selectedTallerId) {
@@ -216,7 +220,9 @@ const TallerWorkflow = ({
     setPesos({});
     setDescripcion("");
     setNombreTaller(() => {
-      const selectedItem = items.find((item) => item.id === selectedItemId);
+      const selectedItem = items.find(
+        (item) => item.id === Number(selectedItemId)
+      );
       return selectedItem
         ? sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
         : "";
@@ -334,7 +340,7 @@ const TallerWorkflow = ({
             >
               {items.map((item) => (
                 <MenuItem key={item.id} value={item.id}>
-                  {item.descripcion} · {item.item_code}
+                  {item.descripcion} · {item.codigo_producto}
                 </MenuItem>
               ))}
             </TextField>
@@ -441,7 +447,7 @@ const TallerWorkflow = ({
                       <TableRow
                         key={taller.id}
                         hover
-                        selected={taller.id === selectedItemId}
+                        selected={taller.id === selectedTallerId}
                         onClick={() => setSelectedTallerId(taller.id)}
                         sx={{ cursor: "pointer" }}
                       >
