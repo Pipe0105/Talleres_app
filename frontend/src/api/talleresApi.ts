@@ -95,6 +95,10 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
+export const logout = () => {
+  setAuthToken(null);
+};
+
 export const getAuthToken = (): string | null => inMemoryToken;
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
