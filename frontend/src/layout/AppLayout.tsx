@@ -3,11 +3,14 @@ import {
   AppBar,
   Box,
   Button,
+  Chip,
   Container,
+  Paper,
   Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 
 interface NavItem {
@@ -34,50 +37,160 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
     >
       <AppBar
         position="sticky"
-        color="inherit"
+        color="transparent"
         elevation={0}
         sx={(theme) => ({
-          backdropFilter: "blur(12px)",
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          boxShadow: theme.customShadows.surface,
+          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, #0a1f44 55%, #041125 100%)`,
+          color: theme.palette.common.white,
+          boxShadow: theme.customShadows.frosted,
+          borderBottom: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
+          overflow: "hidden",
+          zIndex: theme.zIndex.drawer + 1,
+          "&::after": {
+            content: "''",
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: -32,
+            height: 64,
+            background: theme.gradients.page,
+            clipPath: "ellipse(75% 100% at 50% 0%)",
+            opacity: 0.9,
+          },
         })}
       >
         <Container
           maxWidth={false}
           sx={(theme) => ({
+            position: "relative",
             maxWidth: theme.layout.contentMaxWidth,
             px: { xs: 2, md: 4 },
           })}
         >
           {" "}
-          <Toolbar disableGutters sx={{ py: 2, gap: 3 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight={700} color="primary.main">
-                Talleres Desposte
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Panel para visualizar y registrar talleres de desposte.
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              {navItems.map((item) => (
-                <Button
-                  key={item.to ?? item.label}
-                  {...(item.to ? { component: RouterLink, to: item.to } : {})}
-                  variant={item.isActive ? "contained" : "text"}
-                  color={item.isActive ? "primary" : "inherit"}
-                  aria-current={item.isActive ? "page" : undefined}
-                  startIcon={item.icon}
-                  sx={{
-                    fontWeight: 600,
-                    gap: 1,
-                  }}
-                  disabled={item.disabled}
+          <Toolbar
+            disableGutters
+            sx={{
+              py: { xs: 2.5, md: 3 },
+              gap: 3,
+              alignItems: "center",
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              sx={{ flexGrow: 1 }}
+            >
+              <Box
+                sx={(theme) => ({
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: theme.gradients.callout,
+                  display: "grid",
+                  placeItems: "center",
+                  color: theme.palette.common.white,
+                  boxShadow: theme.customShadows.frosted,
+                  border: `1px solid ${alpha(
+                    theme.palette.common.white,
+                    0.25
+                  )}`,
+                })}
+              >
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={800}
+                  letterSpacing={0.6}
                 >
-                  {item.label}
-                </Button>
-              ))}
+                  TD
+                </Typography>
+              </Box>
+              <Box>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={{ mb: 0.25 }}
+                >
+                  <Typography variant="h6" fontWeight={800} color="inherit">
+                    Talleres Desposte
+                  </Typography>
+                  <Chip
+                    label="Operativo"
+                    size="small"
+                    color="default"
+                    sx={(theme) => ({
+                      backgroundColor: alpha(theme.palette.common.white, 0.2),
+                      color: theme.palette.common.white,
+                      borderRadius: 10,
+                      px: 0.5,
+                      border: `1px solid ${alpha(
+                        theme.palette.common.white,
+                        0.3
+                      )}`,
+                      fontWeight: 700,
+                    })}
+                  />
+                </Stack>
+                <Typography
+                  variant="body2"
+                  sx={{ color: alpha("#e0ecff", 0.9) }}
+                >
+                  Un panel especializado para visualizar y registrar talleres de
+                  desposte.
+                </Typography>
+              </Box>
             </Stack>
+
+            <Paper
+              elevation={0}
+              sx={(theme) => ({
+                backgroundColor: alpha(theme.palette.common.white, 0.12),
+                border: `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
+                backdropFilter: "blur(10px)",
+                px: 0.75,
+                py: 0.5,
+                borderRadius: 999,
+                boxShadow: theme.customShadows.surface,
+              })}
+            >
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                {navItems.map((item) => (
+                  <Button
+                    key={item.to ?? item.label}
+                    {...(item.to ? { component: RouterLink, to: item.to } : {})}
+                    variant={item.isActive ? "contained" : "text"}
+                    color={item.isActive ? "secondary" : "inherit"}
+                    aria-current={item.isActive ? "page" : undefined}
+                    startIcon={item.icon}
+                    sx={(theme) => ({
+                      fontWeight: 700,
+                      gap: 1,
+                      px: 1.75,
+                      borderRadius: 999,
+                      backgroundColor: item.isActive
+                        ? theme.palette.common.white
+                        : "transparent",
+                      color: item.isActive
+                        ? theme.palette.primary.main
+                        : theme.palette.common.white,
+                      boxShadow: item.isActive
+                        ? theme.customShadows.surface
+                        : "none",
+                      "&:hover": {
+                        backgroundColor: item.isActive
+                          ? alpha(theme.palette.common.white, 0.92)
+                          : alpha(theme.palette.common.white, 0.12),
+                      },
+                    })}
+                    disabled={item.disabled}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </Stack>
+            </Paper>
           </Toolbar>
         </Container>
       </AppBar>

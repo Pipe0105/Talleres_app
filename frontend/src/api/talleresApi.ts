@@ -14,16 +14,32 @@ import { safeStorage } from "../utils/storage";
 
 const TOKEN_STORAGE_KEY = "talleres.authToken";
 
-const normalizeBaseUrl = (rawUrl: string): string => rawUrl.replace(/\/$/, "");
+const normalizeBaseUrl = (rawUrl: string): string => rawUrl.replace(/\/+$/, "");
+
+const ensureApiPrefix = (rawUrl: string): string => {
+  const normalized = normalizeBaseUrl(rawUrl);
+  if (/\/api($|\/)/.test(normalized)) {
+    return normalized;
+  }
+  return `${normalized}/api`;
+};
 
 const resolveBaseUrl = (): string => {
   const envBaseUrl = import.meta.env.VITE_API_URL;
   if (typeof envBaseUrl === "string" && envBaseUrl.trim().length > 0) {
-    return normalizeBaseUrl(envBaseUrl.trim());
+    return ensureApiPrefix(envBaseUrl.trim());
+  }
+
+  const envBackendOrigin = import.meta.env.VITE_BACKEND_ORIGIN;
+  if (
+    typeof envBackendOrigin === "string" &&
+    envBackendOrigin.trim().length > 0
+  ) {
+    return ensureApiPrefix(envBackendOrigin.trim());
   }
 
   if (typeof window !== "undefined") {
-    return `${normalizeBaseUrl(window.location.origin)}/api`;
+    return ensureApiPrefix(window.location.origin);
   }
 
   return "http://localhost:8000/api";
