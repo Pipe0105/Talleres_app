@@ -178,11 +178,43 @@ const ListaPrecios = () => {
             value={filter}
             onChange={(event) => handleFilterChange(event.target.value)}
           />
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <FormControl fullWidth>
+              <InputLabel id="sort-order-label">Ordenar por</InputLabel>
+              <Select
+                labelId="sort-order-label"
+                value={sortOrder}
+                label="Ordenar por"
+                onChange={(event) =>
+                  setSortOrder(event.target.value as typeof sortOrder)
+                }
+              >
+                <MenuItem value="descripcion">Nombre (A-Z)</MenuItem>
+                <MenuItem value="precio-asc">Precio de menor a mayor</MenuItem>
+                <MenuItem value="precio-desc">Precio de mayor a menor</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel id="species-filter-label">Especie</InputLabel>
+              <Select
+                labelId="species-filter-label"
+                value={species}
+                label="Especie"
+                onChange={(event) =>
+                  setSpecies(event.target.value as typeof species)
+                }
+              >
+                <MenuItem value="todas">Todas</MenuItem>
+                <MenuItem value="res">Res</MenuItem>
+                <MenuItem value="cerdo">Cerdo</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
           <ListaPreciosTable
             loading={loading}
             error={error}
-            sortedItems={sortedItems}
-            filteredItems={filteredItems}
+            items={items}
+            visibleItems={filteredItems}
             formatCurrency={(value) => currencyFormatter.format(Number(value))}
           />
         </Stack>
