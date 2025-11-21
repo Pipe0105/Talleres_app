@@ -20,8 +20,12 @@ const App = () => {
 
   const navigationConfig = [
     { label: "Inicio", to: "/" },
-    { label: "Desposte", to: "/talleres/desposte" },
-    { label: "Informes", to: "/informes-historicos" },
+    ...(user
+      ? [
+          { label: "Desposte", to: "/talleres/desposte" },
+          { label: "Informes", to: "/informes-historicos" },
+        ]
+      : []),
     { label: "Lista de precios", to: "/lista-precios" },
     ...(user?.is_admin
       ? [
@@ -43,6 +47,7 @@ const App = () => {
         ]
       : [{ label: "Iniciar sesión", to: "/login" }]),
   ];
+  
 
   const navItems = navigationConfig.map((item) => {
     const isActive = item.to
