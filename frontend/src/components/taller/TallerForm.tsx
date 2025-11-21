@@ -3,7 +3,6 @@ import {
   Alert,
   AlertTitle,
   Button,
-  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -13,39 +12,37 @@ import {
 import { corte, Item } from "../../types";
 
 interface TallerFormProps {
-  items: Item[];
   cortes: corte[];
   pesos: Record<string, string>;
   selectedItemId: string;
+  selectedItem: Item | null;
   nombreTaller: string;
   descripcion: string;
-  loadingItems: boolean;
   loadingCortes: boolean;
   submitting: boolean;
   error: string | null;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onSelectItem: (itemId: string) => void;
   onNombreChange: (value: string) => void;
   onDescripcionChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
+  onOpenSelector: () => void;
 }
 
 const TallerForm = ({
-  items,
   cortes,
   pesos,
   selectedItemId,
+  selectedItem,
   nombreTaller,
   descripcion,
-  loadingItems,
   loadingCortes,
   submitting,
   error,
   onSubmit,
-  onSelectItem,
   onNombreChange,
   onDescripcionChange,
   onPesoChange,
+  onOpenSelector,
 }: TallerFormProps) => (
   <Paper
     component="form"
@@ -63,20 +60,26 @@ const TallerForm = ({
         </Typography>
       </div>
 
-      <TextField
-        select
-        label="Material"
-        value={selectedItemId}
-        onChange={(event) => onSelectItem(event.target.value)}
-        required
-        disabled={loadingItems || items.length === 0}
-      >
-        {items.map((item) => (
-          <MenuItem key={item.id} value={item.id}>
-            {item.descripcion} · {item.codigo_producto}
-          </MenuItem>
-        ))}
-      </TextField>
+      <Stack spacing={1}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+            Material seleccionado
+          </Typography>
+          <Button variant="outlined" onClick={onOpenSelector}>
+            Cambiar material
+          </Button>
+        </Stack>
+        {selectedItem ? (
+          <Typography>
+            {selectedItem.descripcion} · {selectedItem.codigo_producto}
+          </Typography>
+        ) : (
+          <Alert severity="warning">
+            Usa el botón "Registrar nuevo taller" para elegir un material antes
+            de completar los datos.
+          </Alert>
+        )}
+      </Stack>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
@@ -85,6 +88,7 @@ const TallerForm = ({
           onChange={(event) => onNombreChange(event.target.value)}
           required
           fullWidth
+          disabled={!selectedItem}
           helperText="Ej. Taller desposte res 2024"
         />
         <TextField
@@ -94,6 +98,7 @@ const TallerForm = ({
           multiline
           minRows={2}
           fullWidth
+          disabled={!selectedItem}
         />
       </Stack>
 

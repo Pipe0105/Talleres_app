@@ -18,9 +18,11 @@ import {
 import { sanitizeInput } from "../utils/security";
 import TallerCalculoTable from "./TallerCalculoTable";
 
+import MaterialSelector from "./taller/MaterialSelector";
 import TallerForm from "./taller/TallerForm";
 import TallerList from "./taller/TallerList";
 import PageHeader from "./PageHeader";
+import { EspecieKey } from "../data/materialesTaller";
 
 interface TallerWorkflowProps {
   title: string;
@@ -37,6 +39,10 @@ const TallerWorkflow = ({
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [cortes, setCortes] = useState<corte[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [selectedSpecies, setSelectedSpecies] = useState<EspecieKey | null>(
+    null
+  );
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const [nombreTaller, setNombreTaller] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [pesos, setPesos] = useState<Record<string, string>>({});
@@ -54,6 +60,16 @@ const TallerWorkflow = ({
     return talleres.find((taller) => taller.id === selectedTallerId) ?? null;
   }, [talleres, selectedTallerId]);
 
+  const selectedItem = useMemo(() => {
+    if (!selectedItemId) {
+      return null;
+    }
+    return items.find((item) => item.id === Number(selectedItemId)) ?? null;
+  }, [items, selectedItemId]);
+
+  const normalizeSpecies = (value: string): EspecieKey =>
+    value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
+
   useEffect(() => {
     let isMounted = true;
 
@@ -69,14 +85,6 @@ const TallerWorkflow = ({
         }
         setItems(itemsData);
         setTalleres(talleresData);
-        if (itemsData.length) {
-          setSelectedItemId((current) => current || String(itemsData[0].id));
-          setNombreTaller(
-            (current) =>
-              current ||
-              sanitizeInput(itemsData[0].descripcion, { maxLength: 120 })
-          );
-        }
         setError(null);
       } catch (err) {
         console.error(err);
@@ -207,15 +215,33 @@ const TallerWorkflow = ({
 
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
+    const item = items.find((candidate) => candidate.id === Number(itemId));
+    if (item) {
+      setSelectedSpecies(normalizeSpecies(item.especie));
+      setNombreTaller(
+        sanitizeInput(item.descripcion, { maxLength: 120 }) || nombreTaller
+      );
+    }
+  };
+
+  const handleSpeciesChange = (species: EspecieKey) => {
+    setSelectedSpecies(species);
+    setSelectedItemId("");
+    setPesos({});
+    setCortes([]);
+    setDescripcion("");
+    setNombreTaller("");
+  };
+
+  const handleMaterialSelect = (itemId: string) => {
+    handleSelectItem(itemId);
+    setSelectorOpen(false);
   };
 
   const resetForm = () => {
     setPesos({});
     setDescripcion("");
     setNombreTaller(() => {
-      const selectedItem = items.find(
-        (item) => item.id === Number(selectedItemId)
-      );
       return selectedItem
         ? sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
         : "";
@@ -295,27 +321,39 @@ const TallerWorkflow = ({
         <PageHeader title={title} description={description} />
       </Paper>
 
+      <Paper sx={{ p: { xs: 3, md: 4 } }}>
+        <MaterialSelector
+          items={items}
+          selectedSpecies={selectedSpecies}
+          onSpeciesChange={handleSpeciesChange}
+          selectedItemId={selectedItemId}
+          onSelectMaterial={handleMaterialSelect}
+          open={selectorOpen}
+          onToggle={() => setSelectorOpen((prev) => !prev)}
+          loadingItems={loading}
+        />
+      </Paper>
+
       <Stack
         direction={{ xs: "column", lg: "row" }}
         spacing={4}
         alignItems="stretch"
       >
         <TallerForm
-          items={items}
           cortes={cortes}
           pesos={pesos}
           selectedItemId={selectedItemId}
+          selectedItem={selectedItem}
           nombreTaller={nombreTaller}
           descripcion={descripcion}
-          loadingItems={loading}
           loadingCortes={loadingCortes}
           submitting={submitting}
           error={error}
           onSubmit={handleSubmit}
-          onSelectItem={handleSelectItem}
           onNombreChange={handleNombreChange}
           onDescripcionChange={handleDescripcionChange}
           onPesoChange={handlePesoChange}
+          onOpenSelector={() => setSelectorOpen(true)}
         />
 
         <TallerList

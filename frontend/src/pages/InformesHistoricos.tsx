@@ -382,8 +382,10 @@ const InformesHistoricos = () => {
 
       const matchesDelta =
         deltaFilter === "all" ||
-        (deltaFilter === "above" && row.porcentaje_real >= row.porcentaje_default) ||
-        (deltaFilter === "below" && row.porcentaje_real < row.porcentaje_default);
+        (deltaFilter === "above" &&
+          row.porcentaje_real >= row.porcentaje_default) ||
+        (deltaFilter === "below" &&
+          row.porcentaje_real < row.porcentaje_default);
 
       return matchesQuery && matchesMinPeso && matchesMaxPeso && matchesDelta;
     });
@@ -563,7 +565,80 @@ const InformesHistoricos = () => {
           )}
           {!loadingCalculo && calculo && selectedTaller && (
             <Stack spacing={3}>
-              
+              <Stack spacing={2}>
+                <div>
+                  <Typography variant="h6" component="h3">
+                    Filtra el detalle del informe
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Filtra para encontrar el corte especifico
+                  </Typography>
+                </div>
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={2}
+                  sx={{ width: "100%" }}
+                >
+                  <TextField
+                    label="Buscar por corte, descripcion o codigo"
+                    placeholder="Ej. bola, lomo"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    fullWidth
+                  />
+                  <TextField
+                    select
+                    label="Variacion vs objetivo"
+                    value={deltaFilter}
+                    onChange={(event) =>
+                      setDeltaFilter(
+                        event.target.value as "all" | "above" | "below"
+                      )
+                    }
+                    helperText="Filtra segun si el porcentaje real esta sobre o bajo el objetivo"
+                    sx={{ minWidth: { md: 260 } }}
+                  >
+                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="above">Sobre o igual al objetivo</MenuItem>
+                    <MenuItem value="below">Por debajo del objetivo</MenuItem>
+                  </TextField>
+                </Stack>
+
+                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                  <TextField
+                    label="Peso minimo (KG)"
+                    type="number"
+                    value={minPeso}
+                    onChange={(event) => setMinPeso(event.target.value)}
+                    inputProps={{ min: 0, step: "0.001" }}
+                    helperText="Muestra cortes con peso igual o superor al valor"
+                  />
+                  <TextField
+                    label="Peso maximo (KG)"
+                    type="number"
+                    value={maxPeso}
+                    onChange={(event) => setMaxPeso(event.target.value)}
+                    inputProps={{ min: 0, stepp: "0.001" }}
+                    helperText="Muestra cortes con peso igual o inferior al valor"
+                  />
+                </Stack>
+              </Stack>
+
+              {!filteredCalculo.length ? (
+                <Alert severity="info">
+                  No se encontraron cortes que cumplan con los filtos
+                  seleccionados.
+                </Alert>
+              ) : (
+                <TallerCalculoTable
+                  titulo={`Detaller del taller · ${selectedTaller.label}`}
+                  calculo={filteredCalculo}
+                  observaciones={
+                    talleres.find((t) => t.id === selectedTaller.id)
+                      ?.descripcion ?? null
+                  }
+                />
+              )}
 
               <Stack spacing={2}>
                 <div>
