@@ -198,7 +198,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       <Box
         component="main"
         sx={(theme) => ({
-          py: theme.layout.pagePaddingY,
+          pt: 8, pb: theme.layout.pagePaddingY,
         })}
       >
         <Container

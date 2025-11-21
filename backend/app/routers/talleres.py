@@ -19,7 +19,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_user)],
 )
 
-@router.post("/", response_model=TallerOut)
+@router.post("", response_model=TallerOut)
 def crear_taller(payload: TallerCreatePayload, db: Session = Depends(get_db)):
     if not payload.detalles:
         raise HTTPException(status_code=400, detail="debes incluir al menos un detaller")
