@@ -16,11 +16,14 @@ from ..schemas import (
 router = APIRouter(
     prefix="/talleres",
     tags=["talleres"],
-    dependencies=[Depends(get_current_active_user)],
 )
 
 @router.post("", response_model=TallerOut)
-def crear_taller(payload: TallerCreatePayload, db: Session = Depends(get_db)):
+def crear_taller(
+    payload: TallerCreatePayload,
+    db: Session = Depends(get_db),
+    _: None = Depends(get_current_active_user),
+):
     if not payload.detalles:
         raise HTTPException(status_code=400, detail="debes incluir al menos un detaller")
     
