@@ -35,29 +35,21 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         backgroundImage: theme.gradients.page,
       })}
     >
-      <AppBar
-        position="sticky"
-        color="transparent"
-        elevation={0}
-        sx={(theme) => ({
-          background: `linear-gradient(120deg, ${theme.palette.primary.main} 0%, #0a1f44 55%, #041125 100%)`,
-          color: theme.palette.common.white,
-          boxShadow: theme.customShadows.frosted,
-          borderBottom: `1px solid ${alpha(theme.palette.common.white, 0.08)}`,
-          overflow: "hidden",
-          zIndex: theme.zIndex.drawer + 1,
-          "&::after": {
-            content: "''",
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: -32,
-            height: 64,
-            background: theme.gradients.page,
-            clipPath: "ellipse(75% 100% at 50% 0%)",
-            opacity: 0.9,
-          },
-        })}
+<AppBar
+  position="sticky"
+  elevation={0}
+  sx={(theme) => ({
+    background: `linear-gradient(
+      120deg,
+      ${theme.palette.primary.main} 0%,
+      #0a1f44 55%,
+      #041125 100%
+    )`,
+    backdropFilter: "blur(14px)",
+    borderRadius: 0,
+    borderBottom: "1px solid rgba(255,255,255,0.18)",
+    boxShadow: "0px 6px 22px rgba(0,0,0,0.35)",
+  })}
       >
         <Container
           maxWidth={false}
@@ -113,7 +105,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   alignItems="center"
                   sx={{ mb: 0.25 }}
                 >
-                  <Typography variant="h6" fontWeight={800} color="inherit">
+                  <Typography variant="h6" fontSize={30}  fontWeight={700} color="inherit">
                     Talleres Desposte
                   </Typography>
                   <Chip
@@ -135,7 +127,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 </Stack>
                 <Typography
                   variant="body2"
-                  sx={{ color: alpha("#e0ecff", 0.9) }}
+                  sx={{ color: alpha("#f2f7ffff", 0.9) }}
                 >
                   Un panel especializado para visualizar y registrar talleres de
                   desposte.
@@ -170,8 +162,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       px: 1.75,
                       borderRadius: 999,
                       backgroundColor: item.isActive
-                        ? theme.palette.common.white
+                        ? "rgba(255, 255, 255, 0.70)"
                         : "transparent",
+                      backdropFilter: item.isActive ? "blur(2px)" : "none",
+
                       color: item.isActive
                         ? theme.palette.primary.main
                         : theme.palette.common.white,
@@ -198,7 +192,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       <Box
         component="main"
         sx={(theme) => ({
-          pt: 8, pb: theme.layout.pagePaddingY,
+          py: theme.layout.pagePaddingY,
         })}
       >
         <Container

@@ -10,7 +10,7 @@ router = APIRouter(
     tags=["items"],
 )
 
-@router.get("/", response_model=list[ListaPreciosOut])
+@router.get("", response_model=list[ListaPreciosOut])
 def listar_items(db: Session = Depends(get_db)):
     registros = db.query(ListaPrecios).order_by(ListaPrecios.codigo_producto).all()
 
