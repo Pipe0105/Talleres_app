@@ -18,16 +18,16 @@ import { Item } from "../types";
 interface ListaPreciosTableProps {
   loading: boolean;
   error: string | null;
-  sortedItems: Item[];
-  filteredItems: Item[];
+  items: Item[];
+  visibleItems: Item[];
   formatCurrency: (value: number | string) => string;
 }
 
 const ListaPreciosTable = ({
   loading,
   error,
-  sortedItems,
-  filteredItems,
+  items,
+  visibleItems,
   formatCurrency,
 }: ListaPreciosTableProps): ReactNode => {
   if (loading) {
@@ -52,7 +52,7 @@ const ListaPreciosTable = ({
     );
   }
 
-  if (!sortedItems.length) {
+  if (!items.length) {
     return (
       <Typography variant="body2" color="text.secondary">
         No se encontraron productos para mostrar
@@ -60,7 +60,7 @@ const ListaPreciosTable = ({
     );
   }
 
-  if (!filteredItems.length) {
+  if (!visibleItems.length) {
     return (
       <Typography variant="body2" color="text.secondary">
         No se encontraron productos que coincidan con tu busqueda
@@ -81,7 +81,7 @@ const ListaPreciosTable = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {filteredItems.map((item) => (
+          {visibleItems.map((item) => (
             <TableRow key={item.id} hover>
               <TableCell sx={{ whiteSpace: "nowrap" }}>
                 {item.codigo_producto}

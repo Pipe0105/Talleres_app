@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Chip, Paper, Stack, TextField, Typography } from "@mui/material";
+import {
+  Chip,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { getItems } from "../api/talleresApi";
 import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
@@ -25,6 +35,10 @@ const ListaPrecios = () => {
   const [filter, setFilter] = useState(() =>
     sanitizeSearchQuery(safeStorage.getItem(STORAGE_KEYS.filter) ?? "")
   );
+  const [sortOrder, setSortOrder] = useState<
+    "descripcion" | "precio-asc" | "precio-desc"
+  >("descripcion");
+  const [species, setSpecies] = useState<"todas" | "res" | "cerdo">("todas");
 
   useEffect(() => {
     let isMounted = true;
@@ -61,35 +75,45 @@ const ListaPrecios = () => {
     safeStorage.setItem(STORAGE_KEYS.filter, filter);
   }, [filter]);
 
-  const sortedItems = useMemo(
-    () =>
-      [...items].sort((a, b) =>
-        a.descripcion.localeCompare(b.descripcion, "es", {
-          sensitivity: "base",
-        })
-      ),
-    [items]
-  );
-
   const filteredItems = useMemo(() => {
     const query = filter.trim().toLowerCase();
+    const normalizedSpecies = species.toLowerCase();
 
-    if (!query) {
-      return sortedItems;
-    }
-
-    return sortedItems.filter((item) => {
+    const matchesQuery = (item: Item) => {
+      if (!query) return true;
       const codigo = item.codigo_producto.toLowerCase();
       const descripcion = item.descripcion.toLowerCase();
       return codigo.includes(query) || descripcion.includes(query);
-    });
-  }, [filter, sortedItems]);
+    };
+
+    const matchesSpecies = (item: Item) => {
+      if (normalizedSpecies === "todas") return true;
+      return item.especie.toLowerCase() === normalizedSpecies;
+    };
+
+    const sortByOrder = (a: Item, b: Item) => {
+      if (sortOrder === "precio-asc") {
+        return Number(a.precio) - Number(b.precio);
+      }
+      if (sortOrder === "precio-desc") {
+        return Number(b.precio) - Number(a.precio);
+      }
+
+      return a.descripcion.localeCompare(b.descripcion, "es", {
+        sensitivity: "base",
+      });
+    };
+
+    return [...items]
+      .filter((item) => matchesQuery(item) && matchesSpecies(item))
+      .sort(sortByOrder);
+  }, [filter, items, sortOrder, species]);
 
   // 👇 Aquí está el cambio clave: se especifica el tipo <Date | null>
   const lastUpdatedDate = useMemo<Date | null>(() => {
     let latest: Date | null = null;
 
-    sortedItems.forEach((item) => {
+    items.forEach((item) => {
       if (!item.fecha_vigencia) return;
 
       const parsed = new Date(item.fecha_vigencia);
@@ -101,7 +125,7 @@ const ListaPrecios = () => {
     });
 
     return latest;
-  }, [sortedItems]);
+  }, [items]);
 
   const lastUpdatedLabel = useMemo(() => {
     if (!lastUpdatedDate) {
