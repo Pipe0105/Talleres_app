@@ -35,21 +35,21 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         backgroundImage: theme.gradients.page,
       })}
     >
-<AppBar
-  position="sticky"
-  elevation={0}
-  sx={(theme) => ({
-    background: `linear-gradient(
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={(theme) => ({
+          background: `linear-gradient(
       120deg,
       ${theme.palette.primary.main} 0%,
       #0a1f44 55%,
       #041125 100%
     )`,
-    backdropFilter: "blur(14px)",
-    borderRadius: 0,
-    borderBottom: "1px solid rgba(255,255,255,0.18)",
-    boxShadow: "0px 6px 22px rgba(0,0,0,0.35)",
-  })}
+          backdropFilter: "blur(14px)",
+          borderRadius: 0,
+          borderBottom: "1px solid rgba(255,255,255,0.18)",
+          boxShadow: "0px 6px 22px rgba(0,0,0,0.35)",
+        })}
       >
         <Container
           maxWidth={false}
@@ -105,25 +105,14 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   alignItems="center"
                   sx={{ mb: 0.25 }}
                 >
-                  <Typography variant="h6" fontSize={30}  fontWeight={700} color="inherit">
+                  <Typography
+                    variant="h6"
+                    fontSize={30}
+                    fontWeight={700}
+                    color="inherit"
+                  >
                     Talleres Desposte
                   </Typography>
-                  <Chip
-                    label="Operativo"
-                    size="small"
-                    color="default"
-                    sx={(theme) => ({
-                      backgroundColor: alpha(theme.palette.common.white, 0.2),
-                      color: theme.palette.common.white,
-                      borderRadius: 10,
-                      px: 0.5,
-                      border: `1px solid ${alpha(
-                        theme.palette.common.white,
-                        0.3
-                      )}`,
-                      fontWeight: 700,
-                    })}
-                  />
                 </Stack>
                 <Typography
                   variant="body2"

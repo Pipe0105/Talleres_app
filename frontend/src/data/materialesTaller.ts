@@ -9,130 +9,62 @@ export interface MaterialConfig {
   children?: MaterialConfig[];
 }
 
+const defaultSecondaryCuts: MaterialConfig[] = [
+  { label: "Recorte fino" },
+  { label: "Recorte grueso" },
+  { label: "Gordana" },
+  { label: "Grasa" },
+  { label: "Descarne" },
+  { label: "Hueso" },
+  { label: "Chinchurria" },
+  { label: "Corte descartado" },
+];
+
+const createChildren = (extras: MaterialConfig[] = []): MaterialConfig[] =>
+  [...defaultSecondaryCuts, ...extras].map((child) => ({ ...child }));
+
+const createPrimary = (
+  label: string,
+  extras: MaterialConfig[] = []
+): MaterialConfig => ({
+  label,
+  principal: true,
+  children: createChildren(extras),
+});
+
+const resPrimaryCuts = [
+  "Pulpa",
+  "Costilla",
+  "Espaldilla",
+  "Pecho",
+  "Lomo Redondo",
+  "Cadera",
+  "Morrillo",
+  "Sobrebarriga",
+  "Punta de Anca",
+  "Pierna",
+];
+
+const cerdoPrimaryCuts = [
+  "Cabeza",
+  "Costilla",
+  "Pernil",
+  "Panceta",
+  "Lomo",
+  "Tocineta",
+  "Espaldilla",
+];
+
+const cerdoSecondaryExtras: MaterialConfig[] = [
+  { label: "Recorte" },
+  { label: "Costichi" },
+];
+
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
-  res: [
-    { label: "PAJARILLA ESPECIAL", codigo: "5050", principal: true },
-    { label: "BOLA NEGRA ESPECIAL", codigo: "5220", principal: true },
-    {
-      label: "COLITA DE CADERA",
-      codigo: "5200",
-      principal: true,
-      children: [
-        { label: "CADERA ESPECIAL", codigo: "3501" },
-        { label: "CADERA NORMAL", codigo: "3502" },
-      ],
-    },
-    { label: "CHOCHO", codigo: "3503", principal: true },
-    {
-      label: "COSTILLA PAR",
-      codigo: "5821",
-      principal: true,
-      children: [
-        { label: "COSTILLA FAJA", codigo: "5052" },
-        { label: "COSTILLA FAJA REMPL", codigo: "3443" },
-      ],
-    },
-    {
-      label: "ESPALDILLA",
-      codigo: "5210",
-      principal: true,
-      children: [{ label: "RABO BISTE", codigo: "5200" }],
-    },
-    {
-      label: "FALDA ALM",
-      codigo: "5210",
-      principal: true,
-      children: [
-        { label: "FALDA C/PUNTA", codigo: "5200" },
-        { label: "FALDA S/PUNTA", codigo: "5200" },
-      ],
-    },
-    { label: "HAMBURGUESA NORMAL", codigo: "3520", principal: true },
-    { label: "LOMO BIFE", codigo: "5220", principal: true },
-    { label: "LOMO AJALORIN", codigo: "5210", principal: true },
-    { label: "LOMO ANGOSTO", codigo: "5200", principal: true },
-    {
-      label: "RIBEYE ESPEJITO",
-      codigo: "5220",
-      principal: true,
-      children: [{ label: "TOMAHAWK", codigo: "5200" }],
-    },
-    {
-      label: "PECHO",
-      codigo: "5200",
-      principal: true,
-      children: [{ label: "PECHO SIN HUESO", codigo: "5200" }],
-    },
-    {
-      label: "PORTER HOUSE",
-      codigo: "5200",
-      principal: true,
-      children: [{ label: "T-BONE", codigo: "5210" }],
-    },
-    {
-      label: "PUYAS",
-      codigo: "5210",
-      principal: true,
-      children: [
-        { label: "PUNTA ANCHA", codigo: "5200" },
-        { label: "PUNTA DELGADA", codigo: "5200" },
-      ],
-    },
-    {
-      label: "SOLOMO",
-      codigo: "5200",
-      principal: true,
-      children: [{ label: "TRONCO / LIBRILLO", codigo: "5200" }],
-    },
-  ],
-  cerdo: [
-    {
-      label: "BRAZO",
-      codigo: "9324",
-      principal: true,
-      children: [
-        { label: "RECORTE", codigo: "33647" },
-        { label: "EMPELLA", codigo: "5800" },
-      ],
-    },
-    {
-      label: "COSTILLA",
-      codigo: "10251",
-      principal: true,
-      children: [
-        { label: "COSTICHI", codigo: "70165" },
-        { label: "EMPELLA", codigo: "5800" },
-        { label: "GARRA", codigo: "7860" },
-      ],
-    },
-    {
-      label: "LOMO",
-      codigo: "5810",
-      principal: true,
-      children: [
-        { label: "RECORTE", codigo: "33647" },
-        { label: "EMPELLA", codigo: "5800" },
-      ],
-    },
-    {
-      label: "PERNIL",
-      codigo: "35164",
-      principal: true,
-      children: [
-        { label: "RECORTE", codigo: "33647" },
-        { label: "EMPELLA", codigo: "5800" },
-      ],
-    },
-    {
-      label: "TOCINETA",
-      codigo: "5828",
-      principal: true,
-      children: [
-        { label: "RECORTE", codigo: "33647" },
-        { label: "EMPELLA", codigo: "5800" },
-      ],
-    },
-  ],
+  res: resPrimaryCuts.map((label) => createPrimary(label)),
+  cerdo: cerdoPrimaryCuts.map((label) =>
+    createPrimary(label, cerdoSecondaryExtras)
+  ),
 };
 
 const normalize = (value: string): string =>
