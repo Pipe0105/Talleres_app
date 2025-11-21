@@ -68,6 +68,7 @@ def crear_taller(
     
     return TallerOut(id=taller.id, nombre_taller=taller.nombre_taller, descripcion=taller.descripcion)
 
+@router.get("", response_model=list[TallerListItem])
 @router.get("/", response_model=list[TallerListItem])
 def listar_talleres(db: Session = Depends(get_db)):
     resultados = (

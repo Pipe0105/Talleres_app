@@ -169,6 +169,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       color: item.isActive
                         ? theme.palette.primary.main
                         : theme.palette.common.white,
+                      cursor: item.disabled ? "default" : undefined,
+                      pointerEvents: item.disabled ? "none" : undefined,
+                      "&.Mui-disabled": {
+                        color: theme.palette.common.white,
+                        opacity: 1,
+                      },
                       boxShadow: item.isActive
                         ? theme.customShadows.surface
                         : "none",

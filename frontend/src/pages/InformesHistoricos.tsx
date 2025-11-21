@@ -7,6 +7,7 @@ import {
   CircularProgress,
   FormControlLabel,
   FormGroup,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -263,6 +264,12 @@ const InformesHistoricos = () => {
   const [selectedFields, setSelectedFields] = useState<string[]>(
     exportFieldDefinitions.map((field) => field.key)
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [minPeso, setMinPeso] = useState("");
+  const [maxPeso, setMaxPeso] = useState("");
+  const [deltaFilter, setDeltaFilter] = useState<"all" | "above" | "below">(
+    "all"
+  );
 
   const tallerOptions = useMemo<TallerOption[]>(() => {
     return talleres.map((taller) => ({
@@ -346,7 +353,41 @@ const InformesHistoricos = () => {
 
   useEffect(() => {
     setSelectedFields(exportFieldDefinitions.map((field) => field.key));
+    setSearchQuery("");
+    setMinPeso("");
+    setMaxPeso("");
+    setDeltaFilter("all");
   }, [selectedTaller]);
+
+  const filteredCalculo = useMemo(() => {
+    if (!calculo) {
+      return [];
+    }
+
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const minPesoValue = parseFloat(minPeso);
+    const maxPesoValue = parseFloat(maxPeso);
+
+    return calculo.filter((row) => {
+      const matchesQuery =
+        !normalizedQuery ||
+        [row.nombre_corte, row.descripcion, row.item_code]
+          .map((value) => normalizeWhitespace(value).toLowerCase())
+          .some((value) => value.includes(normalizedQuery));
+
+      const matchesMinPeso =
+        Number.isNaN(minPesoValue) || row.peso >= minPesoValue;
+      const matchesMaxPeso =
+        Number.isNaN(maxPesoValue) || row.peso <= maxPesoValue;
+
+      const matchesDelta =
+        deltaFilter === "all" ||
+        (deltaFilter === "above" && row.porcentaje_real >= row.porcentaje_default) ||
+        (deltaFilter === "below" && row.porcentaje_real < row.porcentaje_default);
+
+      return matchesQuery && matchesMinPeso && matchesMaxPeso && matchesDelta;
+    });
+  }, [calculo, deltaFilter, maxPeso, minPeso, searchQuery]);
 
   const selectedFieldDefinitions = useMemo(
     () =>
@@ -357,16 +398,16 @@ const InformesHistoricos = () => {
   );
 
   const formattedRows = useMemo(() => {
-    if (!calculo) {
+    if (!filteredCalculo.length) {
       return [];
     }
 
-    return calculo.map((row) =>
+    return filteredCalculo.map((row) =>
       selectedFieldDefinitions.map((field) =>
         normalizeWhitespace(field.getValue(row))
       )
     );
-  }, [calculo, selectedFieldDefinitions]);
+  }, [filteredCalculo, selectedFieldDefinitions]);
 
   const headers = useMemo(
     () => selectedFieldDefinitions.map((field) => field.label),
@@ -522,14 +563,7 @@ const InformesHistoricos = () => {
           )}
           {!loadingCalculo && calculo && selectedTaller && (
             <Stack spacing={3}>
-              <TallerCalculoTable
-                titulo={`Detalle del taller · ${selectedTaller.label}`}
-                calculo={calculo}
-                observaciones={
-                  talleres.find((t) => t.id === selectedTaller.id)
-                    ?.descripcion ?? null
-                }
-              />
+              
 
               <Stack spacing={2}>
                 <div>
