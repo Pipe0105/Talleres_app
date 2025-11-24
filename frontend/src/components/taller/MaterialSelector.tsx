@@ -43,8 +43,7 @@ const MaterialButton = ({
   selectedId: string;
 }) => {
   const isSelected = option.item && selectedId === String(option.item.id);
-  const isPrimary = Boolean(option.config.principal);
-  const isDisabled = !option.item || !isPrimary;
+  const isDisabled = !option.item;
 
   return (
     <Stack spacing={1} sx={{ width: "100%" }}>
@@ -52,9 +51,7 @@ const MaterialButton = ({
         variant={isSelected ? "contained" : "outlined"}
         color={option.config.principal ? "secondary" : "inherit"}
         disabled={isDisabled}
-        onClick={() =>
-          option.item && isPrimary && onSelect(String(option.item.id))
-        }
+        onClick={() => option.item && onSelect(String(option.item.id))}
         sx={{ justifyContent: "flex-start" }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
@@ -69,25 +66,8 @@ const MaterialButton = ({
               No encontrado en API
             </Typography>
           )}
-          {option.item && !isPrimary && (
-            <Typography variant="body2" color="text.secondary">
-              Subcorte
-            </Typography>
-          )}
         </Stack>
       </Button>
-      {option.children && option.children.length > 0 && (
-        <Stack pl={2} spacing={1}>
-          {option.children.map((child) => (
-            <MaterialButton
-              key={child.config.label}
-              option={child}
-              onSelect={onSelect}
-              selectedId={selectedId}
-            />
-          ))}
-        </Stack>
-      )}
     </Stack>
   );
 };
@@ -121,12 +101,8 @@ const MaterialSelector = ({
           <Stack spacing={2}>
             <Typography variant="h6">Selecciona el material</Typography>
             <Typography variant="body2" color="text.secondary">
-              Primero elige la especie y luego el corte principal o subcorte al
-              que quieres asociar el taller.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Los subcortes se listan como referencia y se completan dentro de
-              los cortes principales
+              Primero elige la especie y luego el corte principal al que quieres
+              asociar el taller.
             </Typography>
 
             <Stack direction="row" spacing={2}>
