@@ -43,7 +43,8 @@ const MaterialButton = ({
   selectedId: string;
 }) => {
   const isSelected = option.item && selectedId === String(option.item.id);
-  const isDisabled = !option.item;
+  const isPrimary = Boolean(option.config.principal);
+  const isDisabled = !option.item || !isPrimary;
 
   return (
     <Stack spacing={1} sx={{ width: "100%" }}>
@@ -51,7 +52,9 @@ const MaterialButton = ({
         variant={isSelected ? "contained" : "outlined"}
         color={option.config.principal ? "secondary" : "inherit"}
         disabled={isDisabled}
-        onClick={() => option.item && onSelect(String(option.item.id))}
+        onClick={() =>
+          option.item && isPrimary && onSelect(String(option.item.id))
+        }
         sx={{ justifyContent: "flex-start" }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
@@ -64,6 +67,11 @@ const MaterialButton = ({
           {!option.item && (
             <Typography variant="body2" color="error">
               No encontrado en API
+            </Typography>
+          )}
+          {option.item && !isPrimary && (
+            <Typography variant="body2" color="text.secondary">
+              Subcorte
             </Typography>
           )}
         </Stack>
@@ -115,6 +123,10 @@ const MaterialSelector = ({
             <Typography variant="body2" color="text.secondary">
               Primero elige la especie y luego el corte principal o subcorte al
               que quieres asociar el taller.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Los subcortes se listan como referencia y se completan dentro de
+              los cortes principales
             </Typography>
 
             <Stack direction="row" spacing={2}>
