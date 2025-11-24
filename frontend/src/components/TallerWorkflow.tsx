@@ -44,7 +44,6 @@ const TallerWorkflow = ({
   );
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [nombreTaller, setNombreTaller] = useState("");
-  const [descripcion, setDescripcion] = useState("");
   const [pesos, setPesos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [loadingCortes, setLoadingCortes] = useState(false);
@@ -209,10 +208,6 @@ const TallerWorkflow = ({
     setNombreTaller(sanitizeInput(value, { maxLength: 120 }));
   };
 
-  const handleDescripcionChange = (value: string) => {
-    setDescripcion(sanitizeInput(value, { maxLength: 300 }));
-  };
-
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
     const item = items.find((candidate) => candidate.id === Number(itemId));
@@ -229,7 +224,6 @@ const TallerWorkflow = ({
     setSelectedItemId("");
     setPesos({});
     setCortes([]);
-    setDescripcion("");
     setNombreTaller("");
   };
 
@@ -240,7 +234,6 @@ const TallerWorkflow = ({
 
   const resetForm = () => {
     setPesos({});
-    setDescripcion("");
     setNombreTaller(() => {
       return selectedItem
         ? sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
@@ -287,13 +280,8 @@ const TallerWorkflow = ({
       return;
     }
 
-    const descripcionNormalizada = descripcion
-      ? sanitizeInput(descripcion, { maxLength: 300 })
-      : undefined;
-
     const payload: CrearTallerPayload = {
       nombre_taller: nombreNormalizado,
-      descripcion: descripcionNormalizada,
       detalles,
     };
 
@@ -345,13 +333,11 @@ const TallerWorkflow = ({
           selectedItemId={selectedItemId}
           selectedItem={selectedItem}
           nombreTaller={nombreTaller}
-          descripcion={descripcion}
           loadingCortes={loadingCortes}
           submitting={submitting}
           error={error}
           onSubmit={handleSubmit}
           onNombreChange={handleNombreChange}
-          onDescripcionChange={handleDescripcionChange}
           onPesoChange={handlePesoChange}
           onOpenSelector={() => setSelectorOpen(true)}
         />

@@ -18,13 +18,11 @@ interface TallerFormProps {
   selectedItemId: string;
   selectedItem: Item | null;
   nombreTaller: string;
-  descripcion: string;
   loadingCortes: boolean;
   submitting: boolean;
   error: string | null;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNombreChange: (value: string) => void;
-  onDescripcionChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
 }
@@ -35,13 +33,11 @@ const TallerForm = ({
   selectedItemId,
   selectedItem,
   nombreTaller,
-  descripcion,
   loadingCortes,
   submitting,
   error,
   onSubmit,
   onNombreChange,
-  onDescripcionChange,
   onPesoChange,
   onOpenSelector,
 }: TallerFormProps) => (
@@ -91,15 +87,6 @@ const TallerForm = ({
           fullWidth
           disabled={!selectedItem}
           helperText="Ej. Taller desposte res 2024"
-        />
-        <TextField
-          label="Descripción (opcional)"
-          value={descripcion}
-          onChange={(event) => onDescripcionChange(event.target.value)}
-          multiline
-          minRows={2}
-          fullWidth
-          disabled={!selectedItem}
         />
       </Stack>
 

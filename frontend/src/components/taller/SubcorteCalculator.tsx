@@ -48,8 +48,7 @@ const SubcorteCalculator = ({
   const handlePesoInicialChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoInicial(sanitized);
-    const numericValue = Number(sanitized.replace(/,/g, "."));
-    setPesoBloqueado(Number.isFinite(numericValue) && numericValue > 0);
+    setPesoBloqueado(false);
   };
 
   const handleSubPesoChange = (label: string, value: string) => {
@@ -103,6 +102,8 @@ const SubcorteCalculator = ({
 
   const perdidaPorcentaje =
     pesoInicialNumber && totalPorcentaje > 0 ? 100 - totalPorcentaje : null;
+  const puedeGuardarPeso =
+    pesoInicialNumber !== null && pesoInicialNumber > 0 && !pesoBloqueado;
 
   return (
     <Stack spacing={2}>
@@ -110,9 +111,8 @@ const SubcorteCalculator = ({
         Desglose del corte principal
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Ingresa primero el peso total del corte {primaryLabel.toLowerCase()}{" "}
-        para desbloquear los campos de recortes asociados (recorte y gordana) y
-        el peso final después del taller.
+        Ingresa el peso total del corte {primaryLabel.toLowerCase()} y guarda el
+        valor para habilitar los recortes asociados y el peso final.
       </Typography>
 
       <Stack
@@ -130,16 +130,18 @@ const SubcorteCalculator = ({
           disabled={disabled || pesoBloqueado}
           fullWidth
         />
-        {pesoBloqueado && (
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={() => setPesoBloqueado(false)}
-            disabled={disabled}
-          >
-            Editar peso
-          </Button>
-        )}
+        <Button
+          variant={pesoBloqueado ? "outlined" : "contained"}
+          color={pesoBloqueado ? "secondary" : "primary"}
+          onClick={() =>
+            setPesoBloqueado((prev) =>
+              prev ? false : pesoInicialNumber !== null && pesoInicialNumber > 0
+            )
+          }
+          disabled={disabled || (!pesoBloqueado && !puedeGuardarPeso)}
+        >
+          {pesoBloqueado ? "Editar peso" : "Guardar peso"}
+        </Button>
       </Stack>
 
       {!pesoBloqueado && (
