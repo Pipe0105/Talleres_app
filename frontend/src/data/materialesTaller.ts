@@ -5,6 +5,7 @@ export type EspecieKey = "res" | "cerdo";
 export interface MaterialConfig {
   label: string;
   codigo?: string;
+  aliases?: string[];
   principal?: boolean;
   children?: MaterialConfig[];
 }
@@ -72,20 +73,63 @@ const normalize = (value: string): string =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
+
+const simplify = (value: string): string =>
+  value
+    .replace(/\b(DE|DEL|LA|EL|LOS|LAS|Y)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const normalizeCodigo = (codigo: string): string =>
+  codigo.replace(/[^0-9A-Z]/gi, "").toUpperCase();
+
+const speciesFromValue = (value: string): EspecieKey | null => {
+  const normalized = normalize(value);
+
+  if (/CERD|PORC/.test(normalized)) {
+    return "cerdo";
+  }
+
+  if (/RES|VACUN|BOVIN/.test(normalized)) {
+    return "res";
+  }
+
+  return null;
+};
 
 const matchesMaterial = (item: Item, material: MaterialConfig): boolean => {
   const normalizedDescription = normalize(item.descripcion);
+  const simplifiedDescription = simplify(normalizedDescription);
   const normalizedLabel = normalize(material.label);
 
-  if (
-    material.codigo &&
-    normalize(item.codigo_producto) === normalize(material.codigo)
-  ) {
-    return true;
+  const simplifiedLabel = simplify(normalizedLabel);
+  const normalizedAliases = (material.aliases ?? []).map(normalize);
+
+  if (material.codigo) {
+    const materialCode = normalizeCodigo(material.codigo);
+    const itemCode = normalizeCodigo(item.codigo_producto);
+    if (materialCode && materialCode === itemCode) {
+      return true;
+    }
   }
 
-  return normalizedDescription === normalizedLabel;
+  const descriptionTargets = [
+    normalizedLabel,
+    simplifiedLabel,
+    ...normalizedAliases.flatMap((alias) => [alias, simplify(alias)]),
+  ];
+
+  return descriptionTargets.some(
+    (target) =>
+      target.length > 0 &&
+      (normalizedDescription === target ||
+        simplifiedDescription === target ||
+        normalizedDescription.includes(target) ||
+        simplifiedDescription.includes(target))
+  );
 };
 
 export interface ResolvedMaterialOption {
@@ -99,9 +143,10 @@ export const resolveMaterialOptions = (
   especie: EspecieKey
 ): ResolvedMaterialOption[] => {
   const allowedMaterials = materialesPorEspecie[especie];
-  const filteredItems = items.filter(
-    (item) => normalize(item.especie) === normalize(especie)
-  );
+  const filteredItems = items.filter((item) => {
+    const resolvedSpecies = speciesFromValue(item.especie);
+    return resolvedSpecies === especie || resolvedSpecies === null;
+  });
 
   const mapOption = (option: MaterialConfig): ResolvedMaterialOption => {
     const matchedItem =
