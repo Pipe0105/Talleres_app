@@ -21,8 +21,26 @@ const defaultSecondaryCuts: MaterialConfig[] = [
   { label: "Corte descartado" },
 ];
 
+const resSecondaryExtras: MaterialConfig[] = [
+  { label: "33647 Recorte" },
+  { label: "22835 Gordana" },
+  { label: "1108 Pulpa" },
+  { label: "6415 Caderita Normal" },
+  { label: "33642 Costilla Light" },
+  { label: "31622 Desperdicio" },
+  { label: "5854 Muchacho" },
+  { label: "5808 Pulpa Normal" },
+];
+
+const cerdoSecondaryExtras: MaterialConfig[] = [
+  { label: "33647 Recorte" },
+  { label: "5800 Empella" },
+];
+
 const createChildren = (extras: MaterialConfig[] = []): MaterialConfig[] =>
-  [...defaultSecondaryCuts, ...extras].map((child) => ({ ...child }));
+  [...defaultSecondaryCuts, ...extras].map((child) => ({
+    ...child,
+  }));
 
 const createPrimary = (
   label: string,
@@ -34,35 +52,42 @@ const createPrimary = (
 });
 
 const resPrimaryCuts = [
-  "Pulpa",
-  "Costilla",
-  "Espaldilla",
-  "Pecho",
+  "Ampolleta Normal",
+  "Bola Negra Especial",
+  "Caderita Especial",
+  "Costilla Normal",
+  "Costilla Especial",
+  "Costilla Light",
+  "Hueso Promo",
+  "Espaldilla Paloma",
+  "Lomo Caracha",
   "Lomo Redondo",
-  "Cadera",
-  "Morrillo",
-  "Sobrebarriga",
-  "Punta de Anca",
-  "Pierna",
+  "Morrillo Kilo",
+  "Muchacho",
+  "Pulpa Normal",
+  "Punta a Anca",
+  "Ampolleta",
+  "Punta Falda",
+  "Sobaco",
+  "Sobrebarriga Kilo",
+  "Pecho Kilo",
+  "Espaldilla",
+  "Pepino Kilo",
+  "Lomo Viche Especial",
 ];
 
 const cerdoPrimaryCuts = [
-  "Cabeza",
+  "Brazo",
   "Costilla",
-  "Pernil",
-  "Panceta",
+  "Costichi",
+  "Garra",
   "Lomo",
+  "Pernil",
   "Tocineta",
-  "Espaldilla",
-];
-
-const cerdoSecondaryExtras: MaterialConfig[] = [
-  { label: "Recorte" },
-  { label: "Costichi" },
 ];
 
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
-  res: resPrimaryCuts.map((label) => createPrimary(label)),
+  res: resPrimaryCuts.map((label) => createPrimary(label, resSecondaryExtras)),
   cerdo: cerdoPrimaryCuts.map((label) =>
     createPrimary(label, cerdoSecondaryExtras)
   ),
