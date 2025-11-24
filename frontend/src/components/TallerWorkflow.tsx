@@ -108,6 +108,7 @@ const TallerWorkflow = ({
     if (!selectedItemId) {
       setCortes([]);
       setPesos({});
+      setError(null);
       return;
     }
 
@@ -121,6 +122,7 @@ const TallerWorkflow = ({
           return;
         }
         setCortes(response);
+        setError(null);
         setPesos((prev) => {
           const next: Record<string, string> = {};
           response.forEach((corte) => {
@@ -340,13 +342,6 @@ const TallerWorkflow = ({
           onNombreChange={handleNombreChange}
           onPesoChange={handlePesoChange}
           onOpenSelector={() => setSelectorOpen(true)}
-        />
-
-        <TallerList
-          talleres={talleres}
-          selectedTallerId={selectedTallerId}
-          emptyMessage={emptyMessage}
-          onSelect={setSelectedTallerId}
         />
       </Stack>
 

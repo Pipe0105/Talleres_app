@@ -133,6 +133,18 @@ const matchesMaterial = (item: Item, material: MaterialConfig): boolean => {
   const simplifiedLabel = simplify(normalizedLabel);
   const normalizedAliases = (material.aliases ?? []).map(normalize);
 
+  const descriptionIncludesAllTokens = (target: string): boolean => {
+    const tokens = target.split(" ").filter(Boolean);
+    return (
+      tokens.length > 0 &&
+      tokens.every(
+        (token) =>
+          normalizedDescription.includes(token) ||
+          simplifiedDescription.includes(token)
+      )
+    );
+  };
+
   if (material.codigo) {
     const materialCode = normalizeCodigo(material.codigo);
     const itemCode = normalizeCodigo(item.codigo_producto);
@@ -147,14 +159,19 @@ const matchesMaterial = (item: Item, material: MaterialConfig): boolean => {
     ...normalizedAliases.flatMap((alias) => [alias, simplify(alias)]),
   ];
 
-  return descriptionTargets.some(
-    (target) =>
-      target.length > 0 &&
-      (normalizedDescription === target ||
-        simplifiedDescription === target ||
-        normalizedDescription.includes(target) ||
-        simplifiedDescription.includes(target))
-  );
+  return descriptionTargets.some((target) => {
+    if (!target.length) {
+      return false;
+    }
+
+    return (
+      normalizedDescription === target ||
+      simplifiedDescription === target ||
+      normalizedDescription.includes(target) ||
+      simplifiedDescription.includes(target) ||
+      descriptionIncludesAllTokens(target)
+    );
+  });
 };
 
 export interface ResolvedMaterialOption {
