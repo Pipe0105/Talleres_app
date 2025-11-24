@@ -133,9 +133,6 @@ const TallerWorkflow = ({
       } catch (err) {
         console.error(err);
         if (isMounted) {
-          setError(
-            "No fue posible obtener los cortes asociados al material seleccionado."
-          );
         }
       } finally {
         if (isMounted) {
