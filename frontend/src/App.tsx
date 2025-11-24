@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Box, CircularProgress } from "@mui/material";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AppLayout from "./layout/AppLayout";
 import Home from "./pages/home/Home";
 import Talleres from "./pages/Talleres";
@@ -10,6 +11,7 @@ import ListaPrecios from "./pages/ListaPrecios";
 import Login from "./pages/Login";
 import Logout from "./pages/Logout";
 import UsersAdmin from "./pages/admin/UsersAdmin";
+import UserProfile from "./pages/UserProfile";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
@@ -40,14 +42,13 @@ const App = () => {
       ? [
           {
             label: displayName || "Usuario",
-            to: undefined,
-            disabled: true,
+            to: "/perfil",
+            icon: <PersonOutlineIcon fontSize="small" />,
           },
           { label: "Cerrar sesión", to: "/logout" },
         ]
       : [{ label: "Iniciar sesión", to: "/login" }]),
   ];
-  
 
   const navItems = navigationConfig.map((item) => {
     const isActive = item.to
@@ -90,6 +91,10 @@ const App = () => {
         <Route path="/talleres/desposte" element={<TalleresDesposte />} />
         <Route path="/informes-historicos" element={<InformesHistoricos />} />
         <Route path="/lista-precios" element={<ListaPrecios />} />
+        <Route
+          path="/perfil"
+          element={user ? <UserProfile /> : <Navigate to="/login" replace />}
+        ></Route>
         <Route
           path="/usuarios"
           element={
