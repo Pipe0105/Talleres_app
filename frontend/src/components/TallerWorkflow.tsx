@@ -316,7 +316,8 @@ const TallerWorkflow = ({
           selectedItemId={selectedItemId}
           onSelectMaterial={handleMaterialSelect}
           open={selectorOpen}
-          onToggle={() => setSelectorOpen((prev) => !prev)}
+          onOpen={() => setSelectorOpen(true)}
+          onClose={() => setSelectorOpen(false)}
           loadingItems={loading}
         />
       </Paper>

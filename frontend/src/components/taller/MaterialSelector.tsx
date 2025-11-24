@@ -3,12 +3,14 @@ import {
   Alert,
   Box,
   Button,
-  Collapse,
+  Drawer,
   Divider,
   Grid,
+  IconButton,
   Stack,
   Typography,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 import {
   EspecieKey,
@@ -29,7 +31,8 @@ interface MaterialSelectorProps {
   selectedItemId: string;
   onSelectMaterial: (itemId: string) => void;
   open: boolean;
-  onToggle: () => void;
+  onOpen: () => void;
+  onClose: () => void;
   loadingItems: boolean;
 }
 
@@ -79,7 +82,8 @@ const MaterialSelector = ({
   selectedItemId,
   onSelectMaterial,
   open,
-  onToggle,
+  onOpen,
+  onClose,
   loadingItems,
 }: MaterialSelectorProps) => {
   const speciesToUse = selectedSpecies ?? "res";
@@ -87,75 +91,86 @@ const MaterialSelector = ({
 
   return (
     <Stack spacing={2}>
+      <Stack spacing={1}>
+        <Typography variant="h6">Alta de talleres</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Abre el menú lateral para seleccionar el material antes de llenar el
+          formulario.
+        </Typography>
+      </Stack>
       <Button
         variant="contained"
         size="large"
-        onClick={onToggle}
+        onClick={onOpen}
         disabled={loadingItems}
       >
         Registrar nuevo taller
       </Button>
 
-      <Collapse in={open} unmountOnExit>
-        <PaperSection>
-          <Stack spacing={2}>
-            <Typography variant="h6">Selecciona el material</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Primero elige la especie y luego el corte principal al que quieres
-              asociar el taller.
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        PaperProps={{ sx: { width: { xs: "100vw", sm: 520 } } }}
+      >
+        <Box
+          sx={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            p: { xs: 2, sm: 3 },
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="h6" sx={{ flex: 1 }}>
+              Selecciona el material
             </Typography>
-
-            <Stack direction="row" spacing={2}>
-              {(Object.keys(speciesLabels) as EspecieKey[]).map((key) => (
-                <Button
-                  key={key}
-                  variant={speciesToUse === key ? "contained" : "outlined"}
-                  onClick={() => onSpeciesChange(key)}
-                >
-                  {speciesLabels[key]}
-                </Button>
-              ))}
-            </Stack>
-
-            <Divider />
-
-            <Grid container spacing={2}>
-              {resolvedOptions.map((option) => (
-                <Grid item xs={12} md={6} key={option.config.label}>
-                  <MaterialButton
-                    option={option}
-                    onSelect={onSelectMaterial}
-                    selectedId={selectedItemId}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-
-            <Alert severity="info">
-              Si algún material aparece deshabilitado es porque no se encontró
-              en la lista de materiales disponibles de la API. Verifica que el
-              código y la descripción coincidan con el catálogo.
-            </Alert>
+            <IconButton aria-label="Cerrar selector" onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
           </Stack>
-        </PaperSection>
-      </Collapse>
+
+          <Typography variant="body2" color="text.secondary">
+            Primero elige la especie y luego el corte principal al que quieres
+            asociar el taller.
+          </Typography>
+
+          <Stack direction="row" spacing={2}>
+            {(Object.keys(speciesLabels) as EspecieKey[]).map((key) => (
+              <Button
+                key={key}
+                variant={speciesToUse === key ? "contained" : "outlined"}
+                onClick={() => onSpeciesChange(key)}
+              >
+                {speciesLabels[key]}
+              </Button>
+            ))}
+          </Stack>
+
+          <Divider />
+
+          <Grid container spacing={2}>
+            {resolvedOptions.map((option) => (
+              <Grid item xs={12} md={6} key={option.config.label}>
+                <MaterialButton
+                  option={option}
+                  onSelect={onSelectMaterial}
+                  selectedId={selectedItemId}
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          <Alert severity="info">
+            Si algún material aparece deshabilitado es porque no se encontró en
+            la lista de materiales disponibles de la API. Verifica que el código
+            y la descripción coincidan con el catálogo.
+          </Alert>
+        </Box>
+      </Drawer>
     </Stack>
   );
 };
-
-const PaperSection = ({ children }: { children: React.ReactNode }) => (
-  <Box
-    component={"div"}
-    sx={{
-      border: 1,
-      borderColor: "divider",
-      borderRadius: 2,
-      p: { xs: 2, md: 3 },
-      backgroundColor: "background.paper",
-    }}
-  >
-    {children}
-  </Box>
-);
 
 export default MaterialSelector;
