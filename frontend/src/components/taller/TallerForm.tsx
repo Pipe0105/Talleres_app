@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 
 import { corte, Item } from "../../types";
+import SubcorteCalculator from "./SubcorteCalculator";
 
 interface TallerFormProps {
   cortes: corte[];
@@ -101,6 +102,13 @@ const TallerForm = ({
           disabled={!selectedItem}
         />
       </Stack>
+
+      {selectedItem && (
+        <SubcorteCalculator
+          primaryLabel={selectedItem.descripcion}
+          secondaryCuts={["Recorte", "Gordana"]}
+        ></SubcorteCalculator>
+      )}
 
       <Stack spacing={2}>
         <Typography variant="subtitle1" fontWeight={600}>
