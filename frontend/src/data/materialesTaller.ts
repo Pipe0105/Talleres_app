@@ -32,7 +32,8 @@ const resSecondaryExtras: MaterialConfig[] = [
   { label: "5808 Pulpa Normal" },
 ];
 
-const cerdoSecondaryExtras: MaterialConfig[] = [
+const cerdoSharedExtras: MaterialConfig[] = [
+  { label: "Recorte" },
   { label: "33647 Recorte" },
   { label: "5800 Empella" },
 ];
@@ -106,14 +107,17 @@ const resPrimaryCuts = [
   "Lomo Viche Especial",
 ];
 
-const cerdoPrimaryCuts = [
-  "Brazo",
-  "Costilla",
-  "Costichi",
-  "Garra",
-  "Lomo",
-  "Pernil",
-  "Tocineta",
+const cerdoPrimaryCuts: { label: string; extras?: MaterialConfig[] }[] = [
+  { label: "Brazo" },
+  {
+    label: "Costilla",
+    extras: [...cerdoSharedExtras, { label: "Costichi" }, { label: "Garra" }],
+  },
+  { label: "Costichi" },
+  { label: "Garra" },
+  { label: "Lomo" },
+  { label: "Pernil" },
+  { label: "Tocineta" },
 ];
 
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
@@ -126,8 +130,8 @@ export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
       )
     )
   ),
-  cerdo: cerdoPrimaryCuts.map((label) =>
-    createPrimary(label, cerdoSecondaryExtras)
+  cerdo: cerdoPrimaryCuts.map(({ label, extras }) =>
+    createPrimary(label, extras ?? cerdoSharedExtras)
   ),
 };
 

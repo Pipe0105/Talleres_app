@@ -19,9 +19,25 @@ interface SubcorteCalculatorProps {
 }
 
 const DEFAULT_SECONDARY_CUTS = ["Recorte", "Gordana"];
+const currencyFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
 
 const formatPercentage = (value: number | null): string =>
   value !== null ? `${value.toFixed(2)}%` : "—";
+
+const formatCurrency = (value: number | null): string =>
+  value !== null ? currencyFormatter.format(value) : "—";
+
+const parseInputNumber = (value?: string): number | null => {
+  const parsed = Number(value?.replace(/,/g, "."));
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+};
 
 const SubcorteCalculator = ({
   primaryLabel,
@@ -30,20 +46,24 @@ const SubcorteCalculator = ({
 }: SubcorteCalculatorProps) => {
   const [pesoInicial, setPesoInicial] = useState("");
   const [pesoFinal, setPesoFinal] = useState("");
+  const [precioFinal, setPrecioFinal] = useState("");
   const [pesoBloqueado, setPesoBloqueado] = useState(false);
   const [subPesos, setSubPesos] = useState<Record<string, string>>({});
+  const [subPrecios, setSubPrecios] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setPesoInicial("");
     setPesoFinal("");
+    setPrecioFinal("");
     setPesoBloqueado(false);
     setSubPesos({});
+    setSubPrecios({});
   }, [primaryLabel, JSON.stringify(secondaryCuts)]);
 
-  const pesoInicialNumber = useMemo(() => {
-    const parsed = Number(pesoInicial.replace(/,/g, "."));
-    return Number.isFinite(parsed) ? parsed : null;
-  }, [pesoInicial]);
+  const pesoInicialNumber = useMemo(
+    () => parseInputNumber(pesoInicial),
+    [pesoInicial]
+  );
 
   const handlePesoInicialChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
@@ -56,9 +76,19 @@ const SubcorteCalculator = ({
     setSubPesos((prev) => ({ ...prev, [label]: sanitized }));
   };
 
+  const handleSubPrecioChange = (label: string, value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setSubPrecios((prev) => ({ ...prev, [label]: sanitized }));
+  };
+
   const handlePesoFinalChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoFinal(sanitized);
+  };
+
+  const handlePrecioFinalChange = (value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setPrecioFinal(sanitized);
   };
 
   const calculatePercentage = useCallback(
@@ -66,22 +96,37 @@ const SubcorteCalculator = ({
       if (!pesoInicialNumber || pesoInicialNumber <= 0) {
         return null;
       }
-      const parsed = Number(rawValue?.replace(/,/g, "."));
-      if (!Number.isFinite(parsed) || parsed < 0) {
-        return null;
-      }
-      return (parsed / pesoInicialNumber) * 100;
+      const parsed = parseInputNumber(rawValue);
+      return parsed !== null ? (parsed / pesoInicialNumber) * 100 : null;
     },
     [pesoInicialNumber]
   );
 
-  const subcortePercentages = useMemo(
+  const calculateValor = useCallback(
+    (
+      pesoRaw: string | undefined,
+      precioRaw: string | undefined
+    ): number | null => {
+      const peso = parseInputNumber(pesoRaw);
+      const precio = parseInputNumber(precioRaw);
+
+      if (peso === null || precio === null) {
+        return null;
+      }
+
+      return peso * precio;
+    },
+    []
+  );
+
+  const subcorteDatos = useMemo(
     () =>
       secondaryCuts.map((label) => ({
         label,
         porcentaje: calculatePercentage(subPesos[label]),
+        valor: calculateValor(subPesos[label], subPrecios[label]),
       })),
-    [secondaryCuts, subPesos, calculatePercentage]
+    [secondaryCuts, subPesos, subPrecios, calculatePercentage, calculateValor]
   );
 
   const porcentajeFinal = useMemo(
@@ -90,7 +135,7 @@ const SubcorteCalculator = ({
   );
 
   const totalPorcentaje = useMemo(() => {
-    const subcorteTotal = subcortePercentages
+    const subcorteTotal = subcorteDatos
       .map((entry) => entry.porcentaje)
       .filter((value): value is number => value !== null)
       .reduce((acc, value) => acc + value, 0);
@@ -98,12 +143,31 @@ const SubcorteCalculator = ({
     return porcentajeFinal !== null
       ? subcorteTotal + porcentajeFinal
       : subcorteTotal;
-  }, [porcentajeFinal, subcortePercentages]);
+  }, [porcentajeFinal, subcorteDatos]);
 
   const perdidaPorcentaje =
     pesoInicialNumber && totalPorcentaje > 0 ? 100 - totalPorcentaje : null;
   const puedeGuardarPeso =
     pesoInicialNumber !== null && pesoInicialNumber > 0 && !pesoBloqueado;
+
+  const valorFinal = useMemo(
+    () => calculateValor(pesoFinal, precioFinal),
+    [calculateValor, pesoFinal, precioFinal]
+  );
+
+  const valorSubcortes = useMemo(
+    () =>
+      subcorteDatos
+        .map((entry) => entry.valor)
+        .filter((valor): valor is number => valor !== null)
+        .reduce((acc, valor) => acc + valor, 0),
+    [subcorteDatos]
+  );
+
+  const valorTotal = useMemo(
+    () => (valorFinal !== null ? valorSubcortes + valorFinal : valorSubcortes),
+    [valorFinal, valorSubcortes]
+  );
 
   return (
     <Stack spacing={2}>
@@ -154,33 +218,56 @@ const SubcorteCalculator = ({
         <Stack spacing={2}>
           <Divider textAlign="left">Subcortes vinculados</Divider>
           {secondaryCuts.map((label) => {
-            const porcentaje = subcortePercentages.find(
-              (entry) => entry.label === label
-            )?.porcentaje;
+            const datos = subcorteDatos.find((entry) => entry.label === label);
+            const porcentaje = datos?.porcentaje ?? null;
 
             return (
-              <Stack
-                key={label}
-                direction={{ xs: "column", sm: "row" }}
-                spacing={2}
-                alignItems={{ xs: "flex-start", sm: "center" }}
-              >
-                <TextField
-                  label={`Peso de ${label}`}
-                  value={subPesos[label] ?? ""}
-                  onChange={(event) =>
-                    handleSubPesoChange(label, event.target.value)
-                  }
-                  type="number"
-                  inputProps={{ step: 0.001, min: 0 }}
-                  helperText={`Peso registrado para ${label.toLowerCase()}`}
-                  disabled={disabled}
-                  fullWidth
-                />
-                <Chip
-                  label={formatPercentage(porcentaje ?? null)}
-                  color={porcentaje !== null ? "success" : "default"}
-                />
+              <Stack key={label} spacing={1.5}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                >
+                  <TextField
+                    label={`Peso de ${label}`}
+                    value={subPesos[label] ?? ""}
+                    onChange={(event) =>
+                      handleSubPesoChange(label, event.target.value)
+                    }
+                    type="number"
+                    inputProps={{ step: 0.001, min: 0 }}
+                    helperText={`Peso registrado para ${label.toLowerCase()}`}
+                    disabled={disabled}
+                    fullWidth
+                  />
+                  <Chip
+                    label={formatPercentage(porcentaje)}
+                    color={porcentaje !== null ? "success" : "default"}
+                  />
+                </Stack>
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                >
+                  <TextField
+                    label={`Precio de ${label}`}
+                    value={subPrecios[label] ?? ""}
+                    onChange={(event) =>
+                      handleSubPrecioChange(label, event.target.value)
+                    }
+                    type="number"
+                    inputProps={{ step: 100, min: 0 }}
+                    helperText={`Monto asignado al ${label.toLowerCase()}`}
+                    disabled={disabled}
+                    fullWidth
+                  />
+                  <Chip
+                    label={`Valor: ${formatCurrency(datos?.valor ?? null)}`}
+                    color={datos?.valor ? "primary" : "default"}
+                  />
+                </Stack>
               </Stack>
             );
           })}
@@ -207,6 +294,27 @@ const SubcorteCalculator = ({
             />
           </Stack>
 
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          >
+            <TextField
+              label="Precio del corte final"
+              value={precioFinal}
+              onChange={(event) => handlePrecioFinalChange(event.target.value)}
+              type="number"
+              inputProps={{ step: 100, min: 0 }}
+              helperText="Monto obtenido por el corte principal terminado"
+              disabled={disabled}
+              fullWidth
+            />
+            <Chip
+              label={`Valor: ${formatCurrency(valorFinal)}`}
+              color={valorFinal !== null ? "primary" : "default"}
+            />
+          </Stack>
+
           <Alert severity="info">
             <AlertTitle>Resumen de porcentajes</AlertTitle>
             <Stack spacing={0.5}>
@@ -224,6 +332,23 @@ const SubcorteCalculator = ({
                 <Typography color="text.secondary">
                   Agrega los pesos de recorte, gordana y peso final para ver el
                   porcentaje consolidado.
+                </Typography>
+              )}
+              <Divider flexItem sx={{ my: 0.5 }} />
+              <Typography>
+                Valor de subcortes registrados:{" "}
+                <strong>{formatCurrency(valorSubcortes || null)}</strong>
+              </Typography>
+              {valorFinal !== null && (
+                <Typography>
+                  Valor del corte final:{" "}
+                  <strong>{formatCurrency(valorFinal)}</strong>
+                </Typography>
+              )}
+              {(valorSubcortes > 0 || valorFinal) && (
+                <Typography>
+                  Valor total estimado:{" "}
+                  <strong>{formatCurrency(valorTotal || null)}</strong>
                 </Typography>
               )}
             </Stack>
