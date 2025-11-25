@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Drawer,
   Divider,
   Grid,
@@ -49,29 +50,58 @@ const MaterialButton = ({
   const isDisabled = !option.item;
 
   return (
-    <Stack spacing={1} sx={{ width: "100%" }}>
-      <Button
-        variant={isSelected ? "contained" : "outlined"}
-        color={option.config.principal ? "secondary" : "inherit"}
-        disabled={isDisabled}
-        onClick={() => option.item && onSelect(String(option.item.id))}
-        sx={{ justifyContent: "flex-start" }}
+    <Button
+      variant={isSelected ? "contained" : "outlined"}
+      color={option.config.principal ? "secondary" : "inherit"}
+      disabled={isDisabled}
+      onClick={() => option.item && onSelect(String(option.item.id))}
+      sx={{
+        justifyContent: "flex-start",
+        textAlign: "left",
+        p: 2,
+        minHeight: 120,
+        borderRadius: 2,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 1,
+        boxShadow: isSelected ? 4 : 0,
+        borderStyle: "solid",
+        borderWidth: 1,
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ width: "100%" }}
       >
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography fontWeight={600}>{option.config.label}</Typography>
-          {option.item && (
-            <Typography variant="body2" color="text.secondary">
-              {option.item.descripcion} · {option.item.codigo_producto}
-            </Typography>
-          )}
-          {!option.item && (
-            <Typography variant="body2" color="error">
-              No encontrado en API
-            </Typography>
-          )}
+        <Typography fontWeight={700}>{option.config.label}</Typography>
+        {option.config.principal && (
+          <Chip
+            size="small"
+            color="secondary"
+            label="Principal"
+            sx={{ fontWeight: 600 }}
+          />
+        )}
+      </Stack>
+      {option.item ? (
+        <Stack spacing={0.5} sx={{ width: "100%" }}>
+          <Typography variant="body1" fontWeight={600}>
+            {option.item.descripcion}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Codigo: {option.item.codigo_producto}
+          </Typography>
         </Stack>
-      </Button>
-    </Stack>
+      ) : (
+        <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
+          No encontrado en API. Verifica el codigo y la descripcion
+        </Alert>
+      )}
+    </Button>
   );
 };
 
@@ -111,15 +141,20 @@ const MaterialSelector = ({
         anchor="right"
         open={open}
         onClose={onClose}
-        PaperProps={{ sx: { width: { xs: "100vw", sm: 520 } } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100vw", sm: 640, md: 780 },
+            maxWidth: 820,
+          },
+        }}
       >
         <Box
           sx={{
             height: "100%",
             display: "flex",
             flexDirection: "column",
-            gap: 2,
-            p: { xs: 2, sm: 3 },
+            gap: 3,
+            p: { xs: 2.5, sm: 3 },
           }}
         >
           <Stack direction="row" spacing={1} alignItems="center">
@@ -136,7 +171,7 @@ const MaterialSelector = ({
             asociar el taller.
           </Typography>
 
-          <Stack direction="row" spacing={2}>
+          <Stack direction="row" spacing={2} flexWrap="wrap" rowGap={1}>
             {(Object.keys(speciesLabels) as EspecieKey[]).map((key) => (
               <Button
                 key={key}
@@ -150,7 +185,7 @@ const MaterialSelector = ({
 
           <Divider />
 
-          <Grid container spacing={2}>
+          <Grid container spacing={2.5}>
             {resolvedOptions.map((option) => (
               <Grid item xs={12} md={6} key={option.config.label}>
                 <MaterialButton
