@@ -253,7 +253,14 @@ const TallerWorkflow = ({
         if (!raw) {
           return null;
         }
-        const parsed = Number(raw.replace(/,/g, "."));
+
+        const trimmed = raw.replace(/\s+/g, "");
+        const usesComma = trimmed.includes(",");
+        const normalized = usesComma
+          ? trimmed.replace(/\./g, "").replace(/,/g, ".")
+          : trimmed.replace(/,/g, ".");
+
+        const parsed = Number.parseFloat(normalized);
         if (!Number.isFinite(parsed) || parsed <= 0) {
           return null;
         }

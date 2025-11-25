@@ -1,10 +1,11 @@
 import React from "react";
 import {
   Alert,
-  Box,
   Button,
   Chip,
-  Drawer,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
   IconButton,
@@ -124,7 +125,7 @@ const MaterialSelector = ({
       <Stack spacing={1}>
         <Typography variant="h6">Alta de talleres</Typography>
         <Typography variant="body2" color="text.secondary">
-          Abre el menú lateral para seleccionar el material antes de llenar el
+          Abre el selector para elegir el material antes de llenar el
           formulario.
         </Typography>
       </Stack>
@@ -137,26 +138,14 @@ const MaterialSelector = ({
         Registrar nuevo taller
       </Button>
 
-      <Drawer
-        anchor="right"
+      <Dialog
         open={open}
         onClose={onClose}
-        PaperProps={{
-          sx: {
-            width: { xs: "100vw", sm: 640, md: 780 },
-            maxWidth: 820,
-          },
-        }}
+        fullWidth
+        maxWidth="lg"
+        PaperProps={{ sx: { borderRadius: 3, p: { xs: 2.5, sm: 3 } } }}
       >
-        <Box
-          sx={{
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            gap: 3,
-            p: { xs: 2.5, sm: 3 },
-          }}
-        >
+        <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h6" sx={{ flex: 1 }}>
               Selecciona el material
@@ -165,45 +154,48 @@ const MaterialSelector = ({
               <CloseIcon />
             </IconButton>
           </Stack>
-
           <Typography variant="body2" color="text.secondary">
             Primero elige la especie y luego el corte principal al que quieres
             asociar el taller.
           </Typography>
+        </DialogTitle>
 
-          <Stack direction="row" spacing={2} flexWrap="wrap" rowGap={1}>
-            {(Object.keys(speciesLabels) as EspecieKey[]).map((key) => (
-              <Button
-                key={key}
-                variant={speciesToUse === key ? "contained" : "outlined"}
-                onClick={() => onSpeciesChange(key)}
-              >
-                {speciesLabels[key]}
-              </Button>
-            ))}
+        <DialogContent dividers>
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={2} flexWrap="wrap" rowGap={1}>
+              {(Object.keys(speciesLabels) as EspecieKey[]).map((key) => (
+                <Button
+                  key={key}
+                  variant={speciesToUse === key ? "contained" : "outlined"}
+                  onClick={() => onSpeciesChange(key)}
+                >
+                  {speciesLabels[key]}
+                </Button>
+              ))}
+            </Stack>
+
+            <Divider />
+
+            <Grid container spacing={2.5}>
+              {resolvedOptions.map((option) => (
+                <Grid item xs={12} md={6} key={option.config.label}>
+                  <MaterialButton
+                    option={option}
+                    onSelect={onSelectMaterial}
+                    selectedId={selectedItemId}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            <Alert severity="info">
+              Si algún material aparece deshabilitado es porque no se encontró
+              en la lista de materiales disponibles de la API. Verifica que el
+              código y la descripción coincidan con el catálogo.
+            </Alert>
           </Stack>
-
-          <Divider />
-
-          <Grid container spacing={2.5}>
-            {resolvedOptions.map((option) => (
-              <Grid item xs={12} md={6} key={option.config.label}>
-                <MaterialButton
-                  option={option}
-                  onSelect={onSelectMaterial}
-                  selectedId={selectedItemId}
-                />
-              </Grid>
-            ))}
-          </Grid>
-
-          <Alert severity="info">
-            Si algún material aparece deshabilitado es porque no se encontró en
-            la lista de materiales disponibles de la API. Verifica que el código
-            y la descripción coincidan con el catálogo.
-          </Alert>
-        </Box>
-      </Drawer>
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 };
