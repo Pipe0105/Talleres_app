@@ -37,10 +37,24 @@ const cerdoSecondaryExtras: MaterialConfig[] = [
   { label: "5800 Empella" },
 ];
 
+const mergeMaterialConfigs = (
+  ...groups: MaterialConfig[][]
+): MaterialConfig[] => {
+  const seen = new Set<string>();
+  return groups.flat().reduce<MaterialConfig[]>((result, config) => {
+    const key = config.label.trim().toUpperCase();
+    if (seen.has(key)) {
+      return result;
+    }
+
+    seen.add(key);
+    result.push({ ...config });
+    return result;
+  }, []);
+};
+
 const createChildren = (extras: MaterialConfig[] = []): MaterialConfig[] =>
-  [...defaultSecondaryCuts, ...extras].map((child) => ({
-    ...child,
-  }));
+  mergeMaterialConfigs(defaultSecondaryCuts, extras);
 
 const createPrimary = (
   label: string,
@@ -50,6 +64,22 @@ const createPrimary = (
   principal: true,
   children: createChildren(extras),
 });
+
+const resPrimarySpecificExtras: Record<string, MaterialConfig[]> = {
+  "Bola Negra Especial": [{ label: "Pulpa" }],
+  "Caderita Especial": [{ label: "Caderita Normal" }],
+  "Costilla Normal": [
+    { label: "Costilla Especial" },
+    { label: "Costilla Light" },
+    { label: "Hueso promo" },
+  ],
+  "Lomo Redondo": [{ label: " Desperdicio" }],
+  "Pulpa Normal": [{ label: "Desperdicio" }],
+  "Punta de Anca": [{ label: "Ampolleta " }],
+  "Punta Falda": [{ label: "Pulpa" }],
+  "Pecho kilo": [{ label: "Espaldilla" }],
+  "Pepino Kilo": [{ label: "Pulpa Normal" }],
+};
 
 const resPrimaryCuts = [
   "Ampolleta Normal",
@@ -87,7 +117,15 @@ const cerdoPrimaryCuts = [
 ];
 
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
-  res: resPrimaryCuts.map((label) => createPrimary(label, resSecondaryExtras)),
+  res: resPrimaryCuts.map((label) =>
+    createPrimary(
+      label,
+      mergeMaterialConfigs(
+        resSecondaryExtras,
+        resPrimarySpecificExtras[label] ?? []
+      )
+    )
+  ),
   cerdo: cerdoPrimaryCuts.map((label) =>
     createPrimary(label, cerdoSecondaryExtras)
   ),
