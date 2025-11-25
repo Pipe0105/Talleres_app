@@ -59,13 +59,12 @@ const MaterialButton = ({
       sx={{
         justifyContent: "flex-start",
         textAlign: "left",
-        p: 2,
-        minHeight: 120,
+        p: 1.5,
+        minHeight: 110,
         borderRadius: 2,
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-start",
-        gap: 1,
+        gap: 0.75,
         boxShadow: isSelected ? 4 : 0,
         borderStyle: "solid",
         borderWidth: 1,
@@ -78,7 +77,9 @@ const MaterialButton = ({
         justifyContent="space-between"
         sx={{ width: "100%" }}
       >
-        <Typography fontWeight={700}>{option.config.label}</Typography>
+        <Typography fontWeight={700} variant="body1">
+          {option.config.label}
+        </Typography>
         {option.config.principal && (
           <Chip
             size="small"
@@ -90,7 +91,7 @@ const MaterialButton = ({
       </Stack>
       {option.item ? (
         <Stack spacing={0.5} sx={{ width: "100%" }}>
-          <Typography variant="body1" fontWeight={600}>
+          <Typography variant="body2" fontWeight={600}>
             {option.item.descripcion}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -119,6 +120,7 @@ const MaterialSelector = ({
 }: MaterialSelectorProps) => {
   const speciesToUse = selectedSpecies ?? "res";
   const resolvedOptions = resolveMaterialOptions(items, speciesToUse);
+  const filteredOptions = resolvedOptions.filter((option) => option.item);
 
   return (
     <Stack spacing={2}>
@@ -176,22 +178,28 @@ const MaterialSelector = ({
 
             <Divider />
 
-            <Grid container spacing={2.5}>
-              {resolvedOptions.map((option) => (
-                <Grid item xs={12} md={6} key={option.config.label}>
-                  <MaterialButton
-                    option={option}
-                    onSelect={onSelectMaterial}
-                    selectedId={selectedItemId}
-                  />
-                </Grid>
-              ))}
-            </Grid>
+            {filteredOptions.length ? (
+              <Grid container spacing={2}>
+                {filteredOptions.map((option) => (
+                  <Grid item xs={12} md={6} key={option.config.label}>
+                    <MaterialButton
+                      option={option}
+                      onSelect={onSelectMaterial}
+                      selectedId={selectedItemId}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Alert severity="warning">
+                No se encontraron materiales disponibles en la API para esta
+                especie. Verifica que el catálogo esté actualizado.
+              </Alert>
+            )}
 
             <Alert severity="info">
-              Si algún material aparece deshabilitado es porque no se encontró
-              en la lista de materiales disponibles de la API. Verifica que el
-              código y la descripción coincidan con el catálogo.
+              Solo se muestran los materiales encontrados en la API para
+              mantener el selector ordenado y evitar opciones inválidas.
             </Alert>
           </Stack>
         </DialogContent>
