@@ -20,25 +20,27 @@ const cerdoSecondaryDefaults: MaterialConfig[] = [
   { label: "Empella" },
 ];
 
-const resSecondaryExtras: MaterialConfig[] = [
-  { label: "1108 Pulpa" },
-  { label: "6415 Caderita Normal" },
-  { label: "33642 Costilla Light" },
-  { label: "31622 Desperdicio" },
-  { label: "5854 Muchacho" },
-  { label: "5808 Pulpa Normal" },
+const recorteBase: MaterialConfig = {
+  label: "Recorte",
+  codigo: "33647",
+  aliases: ["33647 Recorte"],
+};
+
+const gordanaBase: MaterialConfig = {
+  label: "Gordana",
+  codigo: "22835",
+  aliases: ["22835 Gordana"],
+};
+
+const cerdoCommonSecondaryCuts: MaterialConfig[] = [
+  { label: "Recorte", codigo: "33647", aliases: ["33647 Recorte"] },
+  { label: "Empella", codigo: "5800", aliases: ["5800 Empella"] },
 ];
 
-const resBaseSecondaryCuts: MaterialConfig[] = [
-  ...cerdoSecondaryDefaults,
-  { label: "Recorte", aliases: ["33647 Recorte"] },
-  { label: "Gordana", aliases: ["22835 Gordana"] },
-];
-
-const cerdoBaseSecondaryCuts: MaterialConfig[] = [
-  ...cerdoSecondaryDefaults,
-  { label: "Recorte", aliases: ["33647 Recorte"] },
-  { label: "Empella", aliases: ["5800 Empella"] },
+const cerdoCostillaSecondaryCuts: MaterialConfig[] = [
+  { label: "Costichi", codigo: "70165", aliases: ["70165 Costichi"] },
+  { label: "Empella", codigo: "5800", aliases: ["5800 Empella"] },
+  { label: "Garra", codigo: "7860", aliases: ["7860 Garra"] },
 ];
 
 const normalizeMaterialKey = (value: string): string =>
@@ -75,85 +77,205 @@ const createPrimary = (
   label: string,
   defaults: MaterialConfig[],
   baseChildren: MaterialConfig[],
-  extras: MaterialConfig[] = []
+  extras: MaterialConfig[] = [],
+  codigo?: string
 ): MaterialConfig => ({
   label,
   principal: true,
+  codigo,
   children: createChildren(defaults, extras),
 });
 
-const resPrimarySpecificExtras: Record<string, MaterialConfig[]> = {
-  "Bola Negra Especial": [{ label: "Pulpa" }],
-  "Caderita Especial": [{ label: "Caderita Normal" }],
-  "Costilla Normal": [
-    { label: "Costilla Especial" },
-    { label: "Costilla Light" },
-    { label: "Hueso promo" },
-  ],
-  "Lomo Redondo": [{ label: " Desperdicio" }],
-  "Pulpa Normal": [{ label: "Desperdicio" }],
-  "Punta de Anca": [{ label: "Ampolleta " }],
-  "Punta Falda": [{ label: "Pulpa" }],
-  "Pecho ": [{ label: "Espaldilla" }],
-  "Pepino ": [{ label: "Pulpa Normal" }],
+const resSecondaryCuts = {
+  recorte: recorteBase,
+  gordana: gordanaBase,
+  recorteMuchacho: {
+    label: "Recorte 5843",
+    codigo: "5843",
+    aliases: ["5843 Recorte", "Recorte Muchacho"],
+  },
+  pulpa: {
+    label: "Pulpa",
+    codigo: "11018",
+    aliases: ["11018 Pulpa", "Pulpa Normal"],
+  },
+  caderitaNormal: {
+    label: "Caderita Normal",
+    codigo: "7833",
+    aliases: ["7833 Caderita Normal"],
+  },
+  costillaEspecial: {
+    label: "Costilla Especial",
+    codigo: "6415",
+    aliases: ["6415 Costilla Especial"],
+  },
+  costillaLight: {
+    label: "Costilla Light",
+    codigo: "33642",
+    aliases: ["33642 Costilla Light"],
+  },
+  huesoPromo: {
+    label: "Hueso Promo",
+    codigo: "37508",
+    aliases: ["37508 Hueso Promo"],
+  },
+  desperdicio: {
+    label: "Desperdicio",
+    codigo: "31682",
+    aliases: ["31682 Desperdicio"],
+  },
+  ampolletaNormal: {
+    label: "Ampolleta Normal",
+    codigo: "7776",
+    aliases: ["7776 Ampolleta"],
+  },
+  espadilla: {
+    label: "Espadilla/Paloma",
+    codigo: "5834",
+    aliases: ["5834 Espadilla", "Espaldilla", "Paloma"],
+  },
 };
 
-const resPrimaryCuts = [
-  "Ampolleta Normal",
-  "Bola Negra Especial",
-  "Caderita Especial",
-  "Costilla Normal",
-  "Costilla Especial",
-  "Costilla Light",
-  "Hueso Promo",
-  "Espaldilla Paloma",
-  "Lomo Caracha",
-  "Lomo Redondo",
-  "Morrillo ",
-  "Muchacho",
-  "Pulpa Normal",
-  "Punta a Anca",
-  "Ampolleta",
-  "Punta Falda",
-  "Sobaco",
-  "Sobrebarriga",
-  "Pecho",
-  "Espaldilla",
-  "Pepino",
-  "Lomo Viche Especial",
+const withRecorteGordana = (...extras: MaterialConfig[]): MaterialConfig[] =>
+  mergeMaterialConfigs([recorteBase, gordanaBase, ...extras]);
+
+const resPrimaryCuts: MaterialConfig[] = [
+  {
+    label: "Ampolleta Normal",
+    codigo: "7776",
+    principal: true,
+    children: withRecorteGordana(),
+  },
+  {
+    label: "Bola Negra Especial",
+    codigo: "5585",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.pulpa),
+    aliases: ["Bola Negra Espec"],
+  },
+  {
+    label: "Caderita Especial",
+    codigo: "25493",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.caderitaNormal),
+  },
+  {
+    label: "Costilla Normal",
+    codigo: "6415",
+    principal: true,
+    children: withRecorteGordana(
+      resSecondaryCuts.costillaEspecial,
+      resSecondaryCuts.costillaLight,
+      resSecondaryCuts.huesoPromo
+    ),
+  },
+  {
+    label: "Espadilla/Paloma",
+    codigo: "5834",
+    principal: true,
+    children: withRecorteGordana(),
+    aliases: ["Espadilla", "Paloma"],
+  },
+  {
+    label: "Lomo Caracha",
+    codigo: "5856",
+    principal: true,
+    children: withRecorteGordana(),
+  },
+  {
+    label: "Lomo Redondo",
+    codigo: "5871",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.desperdicio),
+  },
+  {
+    label: "Morrillo",
+    codigo: "7843",
+    principal: true,
+    children: withRecorteGordana(),
+    aliases: ["Morrillo*Kilo"],
+  },
+  {
+    label: "Muchacho",
+    codigo: "5854",
+    principal: true,
+    children: mergeMaterialConfigs([
+      resSecondaryCuts.recorteMuchacho,
+      gordanaBase,
+    ]),
+  },
+  {
+    label: "Pulpa Normal",
+    codigo: "11018",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.desperdicio),
+  },
+  {
+    label: "Punta de Anca",
+    codigo: "7767",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.ampolletaNormal),
+    aliases: ["Punta Anca"],
+  },
+  {
+    label: "Punta Falda",
+    codigo: "7768",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.pulpa),
+  },
+  {
+    label: "Sobaco",
+    codigo: "8037",
+    principal: true,
+    children: withRecorteGordana(),
+  },
+  {
+    label: "Sobrebarriga",
+    codigo: "5837",
+    principal: true,
+    children: withRecorteGordana(),
+  },
+  {
+    label: "Pecho",
+    codigo: "5844",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.espadilla),
+  },
+  {
+    label: "Pepino",
+    codigo: "8005",
+    principal: true,
+    children: withRecorteGordana(resSecondaryCuts.pulpa),
+  },
+  {
+    label: "Lomo Viche Especial",
+    codigo: "5848",
+    principal: true,
+    children: withRecorteGordana(),
+  },
 ];
 
-const cerdoPrimaryCuts: { label: string; extras?: MaterialConfig[] }[] = [
-  { label: "Brazo" },
+const cerdoPrimaryCuts: {
+  label: string;
+  codigo: string;
+  children: MaterialConfig[];
+  extras?: MaterialConfig[];
+}[] = [
+  { label: "Brazo", codigo: "9324", children: cerdoCommonSecondaryCuts },
   {
     label: "Costilla",
-    extras: [{ label: "Costichi" }, { label: "Garra" }],
+    codigo: "10251",
+    children: cerdoCostillaSecondaryCuts,
   },
-  { label: "Costichi" },
-  { label: "Garra" },
-  { label: "Lomo" },
-  { label: "Pernil" },
-  { label: "Tocineta" },
+  { label: "Lomo", codigo: "5810", children: cerdoCommonSecondaryCuts },
+  { label: "Pernil", codigo: "35164", children: cerdoCommonSecondaryCuts },
+  { label: "Tocineta", codigo: "5828", children: cerdoCommonSecondaryCuts },
 ];
 
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
-  res: resPrimaryCuts.map((label) =>
-    createPrimary(
-      label,
-      resSecondaryDefaults,
-      resBaseSecondaryCuts,
-      mergeMaterialConfigs(
-        resSecondaryExtras,
-        resPrimarySpecificExtras[label] ?? []
-      )
-    )
-  ),
-  cerdo: cerdoPrimaryCuts.map(({ label, extras }) =>
-    createPrimary(
-      label,
-      cerdoSecondaryDefaults,
-      extras ?? cerdoSecondaryDefaults
-    )
+  res: resPrimaryCuts,
+  cerdo: cerdoPrimaryCuts.map(({ label, extras, codigo, children }) =>
+    createPrimary(label, children, extras, codigo)
   ),
 };
 
