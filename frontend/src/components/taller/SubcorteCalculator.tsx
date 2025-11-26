@@ -93,7 +93,7 @@ const SubcorteCalculator = ({
       }
 
       seen.add(key);
-      return false;
+      return true;
     });
   }, [secondaryCuts]);
 

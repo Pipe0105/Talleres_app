@@ -2,7 +2,7 @@ import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { ReactNode, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { User } from "../types";
+import { UserProfile } from "../types";
 
 export interface NavigationItem {
   label: string;
@@ -13,7 +13,7 @@ export interface NavigationItem {
 }
 
 interface UseNavigationItemsOptions {
-  user: User | null;
+  user: UserProfile | null;
   displayName: string;
   currentPath?: string;
 }
