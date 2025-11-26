@@ -46,7 +46,6 @@ const SubcorteCalculator = ({
 }: SubcorteCalculatorProps) => {
   const [pesoInicial, setPesoInicial] = useState("");
   const [pesoFinal, setPesoFinal] = useState("");
-  const [precioFinal, setPrecioFinal] = useState("");
   const [pesoBloqueado, setPesoBloqueado] = useState(false);
   const [subPesos, setSubPesos] = useState<Record<string, string>>({});
   const [subPrecios, setSubPrecios] = useState<Record<string, string>>({});
@@ -77,11 +76,6 @@ const SubcorteCalculator = ({
     setPesoFinal(sanitized);
   };
 
-  const handlePrecioFinalChange = (value: string) => {
-    const sanitized = sanitizeInput(value, { maxLength: 18 });
-    setPrecioFinal(sanitized);
-  };
-
   const cutsToUse = secondaryCuts.length
     ? secondaryCuts
     : DEFAULT_SECONDARY_CUTS;
@@ -104,7 +98,6 @@ const SubcorteCalculator = ({
   useEffect(() => {
     setPesoInicial("");
     setPesoFinal("");
-    setPrecioFinal("");
     setPesoBloqueado(false);
     setSubPesos({});
     setSubPrecios({});
@@ -175,11 +168,6 @@ const SubcorteCalculator = ({
   const puedeGuardarPeso =
     pesoInicialNumber !== null && pesoInicialNumber > 0 && !pesoBloqueado;
 
-  const valorFinal = useMemo(
-    () => calculateValor(pesoFinal, precioFinal),
-    [calculateValor, pesoFinal, precioFinal]
-  );
-
   const valorSubcortes = useMemo(
     () =>
       subcorteDatos
@@ -187,11 +175,6 @@ const SubcorteCalculator = ({
         .filter((valor): valor is number => valor !== null)
         .reduce((acc, valor) => acc + valor, 0),
     [subcorteDatos]
-  );
-
-  const valorTotal = useMemo(
-    () => (valorFinal !== null ? valorSubcortes + valorFinal : valorSubcortes),
-    [valorFinal, valorSubcortes]
   );
 
   return (
@@ -324,22 +307,6 @@ const SubcorteCalculator = ({
             spacing={2}
             alignItems={{ xs: "flex-start", sm: "center" }}
           >
-            <TextField
-              label="Precio del corte final"
-              value={precioFinal}
-              onChange={(event) => handlePrecioFinalChange(event.target.value)}
-              type="number"
-              inputProps={{ step: 100, min: 0 }}
-              helperText="Monto obtenido por el corte principal terminado"
-              disabled={disabled}
-              fullWidth
-            />
-            <Chip
-              label={`Valor: ${formatCurrency(valorFinal)}`}
-              color={valorFinal !== null ? "primary" : "default"}
-            />
-          </Stack>
-
           <Alert severity="info">
             <AlertTitle>Resumen de porcentajes</AlertTitle>
             <Stack spacing={0.5}>
@@ -364,18 +331,6 @@ const SubcorteCalculator = ({
                 Valor de subcortes registrados:{" "}
                 <strong>{formatCurrency(valorSubcortes || null)}</strong>
               </Typography>
-              {valorFinal !== null && (
-                <Typography>
-                  Valor del corte final:{" "}
-                  <strong>{formatCurrency(valorFinal)}</strong>
-                </Typography>
-              )}
-              {(valorSubcortes > 0 || valorFinal) && (
-                <Typography>
-                  Valor total estimado:{" "}
-                  <strong>{formatCurrency(valorTotal || null)}</strong>
-                </Typography>
-              )}
             </Stack>
           </Alert>
         </Stack>

@@ -81,9 +81,24 @@ const TallerWorkflow = ({
       return [];
     }
 
+    const seen = new Set<string>();
+
     return selectedOption.children
       .map((child) => child.config.label?.trim())
-      .filter((label): label is string => Boolean(label));
+      .filter((label): label is string => {
+        if (!label) {
+          return false;
+        }
+
+        const key = label.toUpperCase();
+
+        if (seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
   }, [items, selectedItemId, selectedSpecies]);
 
   const normalizeSpecies = (value: string): EspecieKey =>
