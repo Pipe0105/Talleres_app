@@ -24,6 +24,14 @@ const speciesLabels: Record<EspecieKey, string> = {
   res: "Res",
   cerdo: "Cerdo",
 };
+const limpiarDescripcion = (texto = "") => {
+  return texto
+    .split(" ")
+    .filter((palabra) => !palabra.toUpperCase().includes("KILO"))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
 
 interface MaterialSelectorProps {
   items: Item[];
@@ -93,7 +101,7 @@ const MaterialButton = ({
         {option.item ? (
           <Stack spacing={0.5} justifyContent="center" sx={{ width: "100%" }}>
             <Typography variant="body2" fontWeight={600}>
-              {option.item.descripcion}
+              {limpiarDescripcion(option.item.descripcion)}
             </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center">
               <Typography variant="body2" color="text.secondary">

@@ -10,7 +10,7 @@ export interface MaterialConfig {
   children?: MaterialConfig[];
 }
 
-const defaultSecondaryCuts: MaterialConfig[] = [
+const sharedSecondaryCuts: MaterialConfig[] = [
   { label: "Recorte fino" },
   { label: "Recorte grueso" },
   { label: "Gordana" },
@@ -22,8 +22,6 @@ const defaultSecondaryCuts: MaterialConfig[] = [
 ];
 
 const resSecondaryExtras: MaterialConfig[] = [
-  { label: "33647 Recorte" },
-  { label: "22835 Gordana" },
   { label: "1108 Pulpa" },
   { label: "6415 Caderita Normal" },
   { label: "33642 Costilla Light" },
@@ -32,19 +30,34 @@ const resSecondaryExtras: MaterialConfig[] = [
   { label: "5808 Pulpa Normal" },
 ];
 
-const cerdoSharedExtras: MaterialConfig[] = [
-  { label: "Recorte" },
-  { label: "33647 Recorte" },
-  { label: "5800 Empella" },
+const resBaseSecondaryCuts: MaterialConfig[] = [
+  ...sharedSecondaryCuts,
+  { label: "Recorte", aliases: ["33647 Recorte"] },
+  { label: "Gordana", aliases: ["22835 Gordana"] },
 ];
+
+const cerdoBaseSecondaryCuts: MaterialConfig[] = [
+  ...sharedSecondaryCuts,
+  { label: "Recorte", aliases: ["33647 Recorte"] },
+  { label: "Empella", aliases: ["5800 Empella"] },
+];
+
+const normalizeMaterialKey = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^[0-9\s]+/, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
 
 const mergeMaterialConfigs = (
   ...groups: MaterialConfig[][]
 ): MaterialConfig[] => {
   const seen = new Set<string>();
   return groups.flat().reduce<MaterialConfig[]>((result, config) => {
-    const key = config.label.trim().toUpperCase();
-    if (seen.has(key)) {
+    const key = normalizeMaterialKey(config.label);
+    if (!key || seen.has(key)) {
       return result;
     }
 
@@ -54,16 +67,19 @@ const mergeMaterialConfigs = (
   }, []);
 };
 
-const createChildren = (extras: MaterialConfig[] = []): MaterialConfig[] =>
-  mergeMaterialConfigs(defaultSecondaryCuts, extras);
+const createChildren = (
+  base: MaterialConfig[],
+  extras: MaterialConfig[] = []
+): MaterialConfig[] => mergeMaterialConfigs(base, extras);
 
 const createPrimary = (
   label: string,
+  baseChildren: MaterialConfig[],
   extras: MaterialConfig[] = []
 ): MaterialConfig => ({
   label,
   principal: true,
-  children: createChildren(extras),
+  children: createChildren(baseChildren, extras),
 });
 
 const resPrimarySpecificExtras: Record<string, MaterialConfig[]> = {
@@ -111,7 +127,7 @@ const cerdoPrimaryCuts: { label: string; extras?: MaterialConfig[] }[] = [
   { label: "Brazo" },
   {
     label: "Costilla",
-    extras: [...cerdoSharedExtras, { label: "Costichi" }, { label: "Garra" }],
+    extras: [{ label: "Costichi" }, { label: "Garra" }],
   },
   { label: "Costichi" },
   { label: "Garra" },
@@ -124,6 +140,7 @@ export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
   res: resPrimaryCuts.map((label) =>
     createPrimary(
       label,
+      resBaseSecondaryCuts,
       mergeMaterialConfigs(
         resSecondaryExtras,
         resPrimarySpecificExtras[label] ?? []
@@ -131,7 +148,7 @@ export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
     )
   ),
   cerdo: cerdoPrimaryCuts.map(({ label, extras }) =>
-    createPrimary(label, extras ?? cerdoSharedExtras)
+    createPrimary(label, cerdoBaseSecondaryCuts, extras)
   ),
 };
 

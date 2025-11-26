@@ -349,27 +349,29 @@ const TallerWorkflow = ({
         />
       </Paper>
 
-      <Stack
-        direction={{ xs: "column", lg: "row" }}
-        spacing={4}
-        alignItems="stretch"
-      >
-        <TallerForm
-          cortes={cortes}
-          pesos={pesos}
-          selectedItemId={selectedItemId}
-          selectedItem={selectedItem}
-          nombreTaller={nombreTaller}
-          loadingCortes={loadingCortes}
-          submitting={submitting}
-          error={error}
-          secondaryCuts={secondaryCuts}
-          onSubmit={handleSubmit}
-          onNombreChange={handleNombreChange}
-          onPesoChange={handlePesoChange}
-          onOpenSelector={() => setSelectorOpen(true)}
-        />
-      </Stack>
+      {selectedItem && (
+        <Stack
+          direction={{ xs: "column", lg: "row" }}
+          spacing={4}
+          alignItems="stretch"
+        >
+          <TallerForm
+            cortes={cortes}
+            pesos={pesos}
+            selectedItemId={selectedItemId}
+            selectedItem={selectedItem}
+            nombreTaller={nombreTaller}
+            loadingCortes={loadingCortes}
+            submitting={submitting}
+            error={error}
+            secondaryCuts={secondaryCuts}
+            onSubmit={handleSubmit}
+            onNombreChange={handleNombreChange}
+            onPesoChange={handlePesoChange}
+            onOpenSelector={() => setSelectorOpen(true)}
+          />
+        </Stack>
+      )}
 
       {calculo && selectedTallerId && tallerSeleccionado && (
         <TallerCalculoTable
