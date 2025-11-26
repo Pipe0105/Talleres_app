@@ -78,8 +78,8 @@ const resPrimarySpecificExtras: Record<string, MaterialConfig[]> = {
   "Pulpa Normal": [{ label: "Desperdicio" }],
   "Punta de Anca": [{ label: "Ampolleta " }],
   "Punta Falda": [{ label: "Pulpa" }],
-  "Pecho kilo": [{ label: "Espaldilla" }],
-  "Pepino Kilo": [{ label: "Pulpa Normal" }],
+  "Pecho ": [{ label: "Espaldilla" }],
+  "Pepino ": [{ label: "Pulpa Normal" }],
 };
 
 const resPrimaryCuts = [
@@ -93,17 +93,17 @@ const resPrimaryCuts = [
   "Espaldilla Paloma",
   "Lomo Caracha",
   "Lomo Redondo",
-  "Morrillo Kilo",
+  "Morrillo ",
   "Muchacho",
   "Pulpa Normal",
   "Punta a Anca",
   "Ampolleta",
   "Punta Falda",
   "Sobaco",
-  "Sobrebarriga Kilo",
-  "Pecho Kilo",
+  "Sobrebarriga",
+  "Pecho",
   "Espaldilla",
-  "Pepino Kilo",
+  "Pepino",
   "Lomo Viche Especial",
 ];
 
