@@ -76,7 +76,6 @@ const createChildren = (
 const createPrimary = (
   label: string,
   defaults: MaterialConfig[],
-  baseChildren: MaterialConfig[],
   extras: MaterialConfig[] = [],
   codigo?: string
 ): MaterialConfig => ({
