@@ -317,8 +317,9 @@ const InformesHistoricos = () => {
 
     void fetchCalculo();
 
-  useEffect(() => {
-    void fetchTalleres();
+    return () => {
+      isMounted = false;
+    };
   }, [selectedTaller]);
 
   useEffect(() => {
@@ -475,7 +476,8 @@ const InformesHistoricos = () => {
         description={null}
       >
         <Typography variant="body2" color="text.secondary">
-          Usa las tarjetas de filtros y exportación para trabajar con los datos que más importan a tu equipo.
+          Usa las tarjetas de filtros y exportación para trabajar con los datos
+          que más importan a tu equipo.
         </Typography>
       </PageSection>
 
@@ -508,7 +510,8 @@ const InformesHistoricos = () => {
         <Stack spacing={2.5}>
           {!selectedTaller ? (
             <Alert severity="info">
-              Selecciona un taller para ver su cálculo consolidado y los indicadores de porcentaje.
+              Selecciona un taller para ver su cálculo consolidado y los
+              indicadores de porcentaje.
             </Alert>
           ) : loadingCalculo ? (
             <Stack spacing={1} alignItems="center" justifyContent="center">
@@ -527,7 +530,8 @@ const InformesHistoricos = () => {
             </Alert>
           ) : !filteredCalculo.length ? (
             <Alert severity="info">
-              No se encontraron cortes que cumplan con los filtros seleccionados.
+              No se encontraron cortes que cumplan con los filtros
+              seleccionados.
             </Alert>
           ) : (
             <TallerCalculoTable
