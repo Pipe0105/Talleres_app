@@ -10,15 +10,14 @@ export interface MaterialConfig {
   children?: MaterialConfig[];
 }
 
-const sharedSecondaryCuts: MaterialConfig[] = [
-  { label: "Recorte fino" },
-  { label: "Recorte grueso" },
+const resSecondaryDefaults: MaterialConfig[] = [
+  { label: "Recorte" },
   { label: "Gordana" },
-  { label: "Grasa" },
-  { label: "Descarne" },
-  { label: "Hueso" },
-  { label: "Chinchurria" },
-  { label: "Corte descartado" },
+];
+
+const cerdoSecondaryDefaults: MaterialConfig[] = [
+  { label: "Recorte" },
+  { label: "Empella" },
 ];
 
 const resSecondaryExtras: MaterialConfig[] = [
@@ -31,13 +30,13 @@ const resSecondaryExtras: MaterialConfig[] = [
 ];
 
 const resBaseSecondaryCuts: MaterialConfig[] = [
-  ...sharedSecondaryCuts,
+  ...cerdoSecondaryDefaults,
   { label: "Recorte", aliases: ["33647 Recorte"] },
   { label: "Gordana", aliases: ["22835 Gordana"] },
 ];
 
 const cerdoBaseSecondaryCuts: MaterialConfig[] = [
-  ...sharedSecondaryCuts,
+  ...cerdoSecondaryDefaults,
   { label: "Recorte", aliases: ["33647 Recorte"] },
   { label: "Empella", aliases: ["5800 Empella"] },
 ];
@@ -68,18 +67,19 @@ const mergeMaterialConfigs = (
 };
 
 const createChildren = (
-  base: MaterialConfig[],
+  defaults: MaterialConfig[],
   extras: MaterialConfig[] = []
-): MaterialConfig[] => mergeMaterialConfigs(base, extras);
+): MaterialConfig[] => mergeMaterialConfigs(defaults, extras);
 
 const createPrimary = (
   label: string,
+  defaults: MaterialConfig[],
   baseChildren: MaterialConfig[],
   extras: MaterialConfig[] = []
 ): MaterialConfig => ({
   label,
   principal: true,
-  children: createChildren(baseChildren, extras),
+  children: createChildren(defaults, extras),
 });
 
 const resPrimarySpecificExtras: Record<string, MaterialConfig[]> = {
@@ -140,6 +140,7 @@ export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
   res: resPrimaryCuts.map((label) =>
     createPrimary(
       label,
+      resSecondaryDefaults,
       resBaseSecondaryCuts,
       mergeMaterialConfigs(
         resSecondaryExtras,
@@ -148,7 +149,11 @@ export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
     )
   ),
   cerdo: cerdoPrimaryCuts.map(({ label, extras }) =>
-    createPrimary(label, cerdoBaseSecondaryCuts, extras)
+    createPrimary(
+      label,
+      cerdoSecondaryDefaults,
+      extras ?? cerdoSecondaryDefaults
+    )
   ),
 };
 

@@ -43,6 +43,7 @@ interface MaterialSelectorProps {
   onOpen: () => void;
   onClose: () => void;
   loadingItems: boolean;
+  locked: boolean;
 }
 
 const MaterialButton = ({
@@ -132,6 +133,7 @@ const MaterialSelector = ({
   onOpen,
   onClose,
   loadingItems,
+  locked,
 }: MaterialSelectorProps) => {
   const speciesToUse = selectedSpecies ?? "res";
   const resolvedOptions = resolveMaterialOptions(items, speciesToUse);
@@ -148,14 +150,20 @@ const MaterialSelector = ({
           formulario.
         </Typography>
       </Stack>
-      <Button
-        variant="contained"
-        size="large"
-        onClick={onOpen}
-        disabled={loadingItems}
-      >
-        Registrar nuevo taller
-      </Button>
+      {locked ? (
+        <Alert severity="info" sx={{ m: 0 }}>
+          Guarda el taller actual para registrar uno nuevo.
+        </Alert>
+      ) : (
+        <Button
+          variant="contained"
+          size="large"
+          onClick={onOpen}
+          disabled={loadingItems}
+        >
+          Registrar nuevo taller
+        </Button>
+      )}
 
       <Dialog
         open={open}

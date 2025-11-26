@@ -23,7 +23,6 @@ import TallerForm from "./taller/TallerForm";
 import TallerList from "./taller/TallerList";
 import PageHeader from "./PageHeader";
 import { EspecieKey, resolveMaterialOptions } from "../data/materialesTaller";
-import { Label } from "@mui/icons-material";
 
 interface TallerWorkflowProps {
   title: string;
@@ -52,6 +51,7 @@ const TallerWorkflow = ({
   const [selectedTallerId, setSelectedTallerId] = useState<string | null>(null);
   const [calculo, setCalculo] = useState<TallerCalculoRow[] | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectorLocked, setSelectorLocked] = useState(false);
 
   const tallerSeleccionado = useMemo(() => {
     if (!selectedTallerId) {
@@ -244,11 +244,13 @@ const TallerWorkflow = ({
     setPesos({});
     setCortes([]);
     setNombreTaller("");
+    setSelectorLocked(false);
   };
 
   const handleMaterialSelect = (itemId: string) => {
     handleSelectItem(itemId);
     setSelectorOpen(false);
+    setSelectorLocked(true);
   };
 
   const resetForm = () => {
@@ -319,6 +321,7 @@ const TallerWorkflow = ({
       resetForm();
       const refreshedTalleres = await getTalleres();
       setTalleres(refreshedTalleres);
+      setSelectorLocked(false);
     } catch (err) {
       console.error(err);
       setError(
@@ -346,6 +349,7 @@ const TallerWorkflow = ({
           onOpen={() => setSelectorOpen(true)}
           onClose={() => setSelectorOpen(false)}
           loadingItems={loading}
+          locked={selectorLocked}
         />
       </Paper>
 
