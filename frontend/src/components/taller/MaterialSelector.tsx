@@ -59,11 +59,11 @@ const MaterialButton = ({
       sx={{
         justifyContent: "flex-start",
         textAlign: "left",
-        p: 1.5,
-        minHeight: 110,
+        width: "100%",
+        height: "100%",
         borderRadius: 2,
         display: "flex",
-        flexDirection: "column",
+        alignItems: "stretch",
         gap: 0.75,
         boxShadow: isSelected ? 4 : 0,
         borderStyle: "solid",
@@ -80,27 +80,28 @@ const MaterialButton = ({
         <Typography fontWeight={700} variant="body1">
           {option.config.label}
         </Typography>
-        {option.config.principal && (
-          <Chip
-            size="small"
-            color="secondary"
-            label="Principal"
-            sx={{ fontWeight: 600 }}
-          />
-        )}
       </Stack>
       {option.item ? (
         <Stack spacing={0.5} sx={{ width: "100%" }}>
           <Typography variant="body2" fontWeight={600}>
             {option.item.descripcion}
           </Typography>
+        </Stack>
+      ) : (
+        <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
+          No encontrado en API. Verifica el codigo y la descripcion
+        </Alert>
+      )}
+      {option.item ? (
+        <Stack>
+          {" "}
           <Typography variant="body2" color="text.secondary">
             Codigo: {option.item.codigo_producto}
           </Typography>
         </Stack>
       ) : (
         <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
-          No encontrado en API. Verifica el codigo y la descripcion
+          No encontrado en API.
         </Alert>
       )}
     </Button>
@@ -120,7 +121,9 @@ const MaterialSelector = ({
 }: MaterialSelectorProps) => {
   const speciesToUse = selectedSpecies ?? "res";
   const resolvedOptions = resolveMaterialOptions(items, speciesToUse);
-  const filteredOptions = resolvedOptions.filter((option) => option.item);
+  const filteredOptions = resolvedOptions.filter(
+    (option) => option.item && option.config.principal
+  );
 
   return (
     <Stack spacing={2}>
@@ -181,7 +184,13 @@ const MaterialSelector = ({
             {filteredOptions.length ? (
               <Grid container spacing={2}>
                 {filteredOptions.map((option) => (
-                  <Grid item xs={12} md={6} key={option.config.label}>
+                  <Grid
+                    item
+                    xs={12}
+                    md={6}
+                    key={option.config.label}
+                    sx={{ display: "flex", height: "100%" }}
+                  >
                     <MaterialButton
                       option={option}
                       onSelect={onSelectMaterial}

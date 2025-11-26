@@ -82,10 +82,14 @@ const SubcorteCalculator = ({
     setPrecioFinal(sanitized);
   };
 
+  const cutsToUse = secondaryCuts.length
+    ? secondaryCuts
+    : DEFAULT_SECONDARY_CUTS;
+
   const uniqueSecondaryCuts = useMemo(() => {
     const seen = new Set<string>();
 
-    return secondaryCuts.filter((cut) => {
+    return cutsToUse.filter((cut) => {
       const key = cut.trim().toUpperCase();
 
       if (seen.has(key)) {
@@ -95,7 +99,7 @@ const SubcorteCalculator = ({
       seen.add(key);
       return true;
     });
-  }, [secondaryCuts]);
+  }, [cutsToUse]);
 
   useEffect(() => {
     setPesoInicial("");

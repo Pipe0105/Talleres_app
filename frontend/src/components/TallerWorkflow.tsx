@@ -22,7 +22,8 @@ import MaterialSelector from "./taller/MaterialSelector";
 import TallerForm from "./taller/TallerForm";
 import TallerList from "./taller/TallerList";
 import PageHeader from "./PageHeader";
-import { EspecieKey } from "../data/materialesTaller";
+import { EspecieKey, resolveMaterialOptions } from "../data/materialesTaller";
+import { Label } from "@mui/icons-material";
 
 interface TallerWorkflowProps {
   title: string;
@@ -65,6 +66,25 @@ const TallerWorkflow = ({
     }
     return items.find((item) => item.id === Number(selectedItemId)) ?? null;
   }, [items, selectedItemId]);
+
+  const secondaryCuts = useMemo(() => {
+    if (!selectedSpecies) {
+      return [];
+    }
+
+    const resolvedOptions = resolveMaterialOptions(items, selectedSpecies);
+    const selectedOption = resolvedOptions.find(
+      (option) => option.item && String(option.item.id) === selectedItemId
+    );
+
+    if (!selectedOption?.children?.length) {
+      return [];
+    }
+
+    return selectedOption.children
+      .map((child) => child.config.label?.trim())
+      .filter((label): label is string => Boolean(label));
+  }, [items, selectedItemId, selectedSpecies]);
 
   const normalizeSpecies = (value: string): EspecieKey =>
     value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
@@ -343,6 +363,7 @@ const TallerWorkflow = ({
           loadingCortes={loadingCortes}
           submitting={submitting}
           error={error}
+          secondaryCuts={secondaryCuts}
           onSubmit={handleSubmit}
           onNombreChange={handleNombreChange}
           onPesoChange={handlePesoChange}

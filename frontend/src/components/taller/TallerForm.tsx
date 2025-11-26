@@ -21,6 +21,7 @@ interface TallerFormProps {
   loadingCortes: boolean;
   submitting: boolean;
   error: string | null;
+  secondaryCuts: string[];
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
@@ -36,6 +37,7 @@ const TallerForm = ({
   loadingCortes,
   submitting,
   error,
+  secondaryCuts,
   onSubmit,
   onNombreChange,
   onPesoChange,
@@ -93,7 +95,7 @@ const TallerForm = ({
       {selectedItem && (
         <SubcorteCalculator
           primaryLabel={selectedItem.descripcion}
-          secondaryCuts={["Recorte", "Gordana"]}
+          secondaryCuts={secondaryCuts}
         ></SubcorteCalculator>
       )}
 
