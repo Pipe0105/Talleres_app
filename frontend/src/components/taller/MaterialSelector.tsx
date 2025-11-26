@@ -2,7 +2,6 @@ import React from "react";
 import {
   Alert,
   Button,
-  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -64,46 +63,53 @@ const MaterialButton = ({
         borderRadius: 2,
         display: "flex",
         alignItems: "stretch",
-        gap: 0.75,
         boxShadow: isSelected ? 4 : 0,
         borderStyle: "solid",
         borderWidth: 1,
+        px: { xs: 1.5, sm: 2 },
+        py: 1.5,
       }}
     >
       <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        justifyContent="space-between"
+        direction={{ xs: "column", sm: "row" }}
+        spacing={{ xs: 1, sm: 2 }}
+        alignItems="stretch"
         sx={{ width: "100%" }}
       >
-        <Typography fontWeight={700} variant="body1">
-          {option.config.label}
-        </Typography>
+        <Stack
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            minWidth: { sm: 180 },
+            maxWidth: { sm: 200 },
+            textAlign: "center",
+          }}
+        >
+          <Typography fontWeight={700} variant="body1">
+            {option.config.label}
+          </Typography>
+        </Stack>
+
+        {option.item ? (
+          <Stack spacing={0.5} justifyContent="center" sx={{ width: "100%" }}>
+            <Typography variant="body2" fontWeight={600}>
+              {option.item.descripcion}
+            </Typography>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography variant="body2" color="text.secondary">
+                Codigo:
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {option.item.codigo_producto}
+              </Typography>
+            </Stack>
+          </Stack>
+        ) : (
+          <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
+            No encontrado en API. Verifica el codigo y la descripcion
+          </Alert>
+        )}
       </Stack>
-      {option.item ? (
-        <Stack spacing={0.5} sx={{ width: "100%" }}>
-          <Typography variant="body2" fontWeight={600}>
-            {option.item.descripcion}
-          </Typography>
-        </Stack>
-      ) : (
-        <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
-          No encontrado en API. Verifica el codigo y la descripcion
-        </Alert>
-      )}
-      {option.item ? (
-        <Stack>
-          {" "}
-          <Typography variant="body2" color="text.secondary">
-            Codigo: {option.item.codigo_producto}
-          </Typography>
-        </Stack>
-      ) : (
-        <Alert severity="warning" sx={{ width: "100%", m: 0 }}>
-          No encontrado en API.
-        </Alert>
-      )}
     </Button>
   );
 };
