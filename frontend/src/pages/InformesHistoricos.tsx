@@ -1,24 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Autocomplete,
-  Button,
-  Checkbox,
-  CircularProgress,
-  FormControlLabel,
-  FormGroup,
-  MenuItem,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-import TableRowsIcon from "@mui/icons-material/TableRows";
-import GridOnIcon from "@mui/icons-material/GridOn";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { Alert, CircularProgress, Stack, Typography } from "@mui/material";
 import { getTallerCalculo, getTalleres } from "../api/talleresApi";
 import { TallerCalculoRow, TallerListItem } from "../types";
 import TallerCalculoTable from "../components/TallerCalculoTable";
+import PageSection from "../components/PageSection";
+import PageHeader from "../components/PageHeader";
+import TallerSelectionCard, {
+  TallerOption,
+} from "../components/informes/TallerSelectionCard";
+import InformeFilters, {
+  DeltaFilter,
+} from "../components/informes/InformeFilters";
+import InformeExportPanel, {
+  ExportField,
+} from "../components/informes/InformeExportPanel";
 
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 3,
@@ -37,13 +32,11 @@ const currencyFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
-interface ExportField {
-  key: string;
-  label: string;
+interface ExportFieldDefinition extends ExportField {
   getValue: (row: TallerCalculoRow) => string;
 }
 
-const exportFieldDefinitions: ExportField[] = [
+const exportFieldDefinitions: ExportFieldDefinition[] = [
   {
     key: "nombre_corte",
     label: "Corte",
@@ -247,11 +240,6 @@ const downloadBlob = (blob: Blob, filename: string) => {
   URL.revokeObjectURL(url);
 };
 
-interface TallerOption {
-  id: string;
-  label: string;
-}
-
 const InformesHistoricos = () => {
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,9 +255,7 @@ const InformesHistoricos = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minPeso, setMinPeso] = useState("");
   const [maxPeso, setMaxPeso] = useState("");
-  const [deltaFilter, setDeltaFilter] = useState<"all" | "above" | "below">(
-    "all"
-  );
+  const [deltaFilter, setDeltaFilter] = useState<DeltaFilter>("all");
 
   const tallerOptions = useMemo<TallerOption[]>(() => {
     return talleres.map((taller) => ({
@@ -280,37 +266,22 @@ const InformesHistoricos = () => {
     }));
   }, [talleres]);
 
+  const fetchTalleres = async () => {
+    try {
+      setLoading(true);
+      const talleresData = await getTalleres();
+      setTalleres(talleresData);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("No fue posible cargar los informes desde la API.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const talleresData = await getTalleres();
-
-        if (!isMounted) {
-          return;
-        }
-
-        setTalleres(talleresData);
-        setError(null);
-      } catch (err) {
-        console.error(err);
-        if (isMounted) {
-          setError("No fue posible cargar los informes desde la API.");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void fetchData();
-
-    return () => {
-      isMounted = false;
-    };
+    void fetchTalleres();
   }, []);
 
   useEffect(() => {
@@ -346,9 +317,8 @@ const InformesHistoricos = () => {
 
     void fetchCalculo();
 
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    void fetchTalleres();
   }, [selectedTaller]);
 
   useEffect(() => {
@@ -493,222 +463,99 @@ const InformesHistoricos = () => {
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
   };
 
-  const exportDisabled =
-    !formattedRows.length || selectedFieldDefinitions.length === 0;
-
   return (
-    <Stack spacing={4}>
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={1}>
-          <Typography variant="h4" component="h1">
-            Informes históricos de talleres
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Consulta la información registrada de talleres anteriores. El
-            detalle proviene de la vista consolidada en la base de datos y
-            refleja los porcentajes reales versus los objetivos de cada corte.
-          </Typography>
-        </Stack>
-      </Paper>
+    <Stack spacing={3}>
+      <PageSection
+        title={
+          <PageHeader
+            title="Informes históricos de talleres"
+            description="Consulta la información registrada de talleres anteriores. El detalle proviene de la vista consolidada en la base de datos y refleja los porcentajes reales versus los objetivos de cada corte."
+          />
+        }
+        description={null}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Usa las tarjetas de filtros y exportación para trabajar con los datos que más importan a tu equipo.
+        </Typography>
+      </PageSection>
 
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={3}>
-          <div>
-            <Typography variant="h6" component="h2">
-              Selecciona un taller
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Busca por material o fecha para revisar el reparto de cortes y sus
-              valores estimados.{" "}
-            </Typography>
-          </div>
+      <TallerSelectionCard
+        options={tallerOptions}
+        value={selectedTaller}
+        loading={loading}
+        error={error}
+        onChange={setSelectedTaller}
+        onRetry={fetchTalleres}
+        helperText="Selecciona el taller que deseas revisar para habilitar los filtros y exportaciones."
+      />
 
-          {error && (
+      <InformeFilters
+        searchQuery={searchQuery}
+        minPeso={minPeso}
+        maxPeso={maxPeso}
+        deltaFilter={deltaFilter}
+        disabled={!selectedTaller || loadingCalculo}
+        onSearchChange={setSearchQuery}
+        onMinPesoChange={setMinPeso}
+        onMaxPesoChange={setMaxPeso}
+        onDeltaFilterChange={setDeltaFilter}
+      />
+
+      <PageSection
+        title="Detalle del taller seleccionado"
+        description="Visualiza el desempeño por corte con los filtros aplicados."
+      >
+        <Stack spacing={2.5}>
+          {!selectedTaller ? (
+            <Alert severity="info">
+              Selecciona un taller para ver su cálculo consolidado y los indicadores de porcentaje.
+            </Alert>
+          ) : loadingCalculo ? (
+            <Stack spacing={1} alignItems="center" justifyContent="center">
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                Obteniendo el cálculo del taller seleccionado...
+              </Typography>
+            </Stack>
+          ) : error ? (
             <Alert severity="error" onClose={() => setError(null)}>
               {error}
             </Alert>
-          )}
-
-          <Autocomplete
-            options={tallerOptions}
-            value={selectedTaller}
-            onChange={(_, value) => setSelectedTaller(value)}
-            loading={loading}
-            getOptionLabel={(option) => option.label}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Taller"
-                placeholder="Ej. Lomo vetado — 12/05/2024"
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {loading ? (
-                        <CircularProgress color="inherit" size={20} />
-                      ) : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-              />
-            )}
-          />
-
-          {loadingCalculo && (
-            <Stack alignItems="center" spacing={2}>
-              <CircularProgress size={28} />
-              <Typography variant="body2" color="text.secondary">
-                Cargando detalle del taller…
-              </Typography>
-            </Stack>
-          )}
-          {!loadingCalculo && calculo && selectedTaller && (
-            <Stack spacing={3}>
-              <Stack spacing={2}>
-                <div>
-                  <Typography variant="h6" component="h3">
-                    Filtra el detalle del informe
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Filtra para encontrar el corte especifico
-                  </Typography>
-                </div>
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={2}
-                  sx={{ width: "100%" }}
-                >
-                  <TextField
-                    label="Buscar por corte, descripcion o codigo"
-                    placeholder="Ej. bola, lomo"
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    select
-                    label="Variacion vs objetivo"
-                    value={deltaFilter}
-                    onChange={(event) =>
-                      setDeltaFilter(
-                        event.target.value as "all" | "above" | "below"
-                      )
-                    }
-                    helperText="Filtra segun si el porcentaje real esta sobre o bajo el objetivo"
-                    sx={{ minWidth: { md: 260 } }}
-                  >
-                    <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="above">Sobre o igual al objetivo</MenuItem>
-                    <MenuItem value="below">Por debajo del objetivo</MenuItem>
-                  </TextField>
-                </Stack>
-
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    label="Peso minimo (KG)"
-                    type="number"
-                    value={minPeso}
-                    onChange={(event) => setMinPeso(event.target.value)}
-                    inputProps={{ min: 0, step: "0.001" }}
-                    helperText="Muestra cortes con peso igual o superor al valor"
-                  />
-                  <TextField
-                    label="Peso maximo (KG)"
-                    type="number"
-                    value={maxPeso}
-                    onChange={(event) => setMaxPeso(event.target.value)}
-                    inputProps={{ min: 0, stepp: "0.001" }}
-                    helperText="Muestra cortes con peso igual o inferior al valor"
-                  />
-                </Stack>
-              </Stack>
-
-              {!filteredCalculo.length ? (
-                <Alert severity="info">
-                  No se encontraron cortes que cumplan con los filtos
-                  seleccionados.
-                </Alert>
-              ) : (
-                <TallerCalculoTable
-                  titulo={`Detaller del taller · ${selectedTaller.label}`}
-                  calculo={filteredCalculo}
-                  observaciones={
-                    talleres.find((t) => t.id === selectedTaller.id)
-                      ?.descripcion ?? null
-                  }
-                />
-              )}
-
-              <Stack spacing={2}>
-                <div>
-                  <Typography variant="h6" component="h3">
-                    Exportar informe
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Selecciona los campos que deseas incluir y descarga el
-                    detalle del taller en el formato que necesites.
-                  </Typography>
-                </div>
-
-                <FormGroup row>
-                  {exportFieldDefinitions.map((field) => (
-                    <FormControlLabel
-                      key={field.key}
-                      control={
-                        <Checkbox
-                          checked={selectedFields.includes(field.key)}
-                          onChange={() => handleFieldToggle(field.key)}
-                          size="small"
-                        />
-                      }
-                      label={field.label}
-                    />
-                  ))}
-                </FormGroup>
-
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  sx={{ width: "100%" }}
-                >
-                  <Button
-                    variant="outlined"
-                    startIcon={<TableRowsIcon />}
-                    onClick={handleExportCsv}
-                    disabled={exportDisabled}
-                  >
-                    Exportar CSV
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<GridOnIcon />}
-                    onClick={handleExportExcel}
-                    disabled={exportDisabled}
-                  >
-                    Exportar Excel
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<PictureAsPdfIcon />}
-                    onClick={handleExportPdf}
-                    disabled={exportDisabled}
-                  >
-                    Exportar PDF
-                  </Button>
-                </Stack>
-              </Stack>
-            </Stack>
-          )}
-
-          {!loading && !calculo && !selectedTaller && talleres.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              No hay talleres registrados en el sistema. Registra uno desde la
-              sección de talleres para visualizar sus detalles aquí.
-            </Typography>
+          ) : !calculo || calculo.length === 0 ? (
+            <Alert severity="info">
+              No se encontró cálculo para el taller seleccionado.
+            </Alert>
+          ) : !filteredCalculo.length ? (
+            <Alert severity="info">
+              No se encontraron cortes que cumplan con los filtros seleccionados.
+            </Alert>
+          ) : (
+            <TallerCalculoTable
+              titulo={`Detalle del taller · ${selectedTaller.label}`}
+              calculo={filteredCalculo}
+              observaciones={
+                talleres.find((t) => t.id === selectedTaller.id)?.descripcion ??
+                null
+              }
+            />
           )}
         </Stack>
-      </Paper>
+      </PageSection>
+
+      <InformeExportPanel
+        fields={exportFieldDefinitions}
+        selectedFields={selectedFields}
+        disabled={
+          !formattedRows.length ||
+          selectedFieldDefinitions.length === 0 ||
+          !selectedTaller ||
+          loadingCalculo
+        }
+        onToggleField={handleFieldToggle}
+        onExportCsv={handleExportCsv}
+        onExportExcel={handleExportExcel}
+        onExportPdf={handleExportPdf}
+      />
     </Stack>
   );
 };
