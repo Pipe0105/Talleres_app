@@ -51,15 +51,6 @@ const SubcorteCalculator = ({
   const [subPesos, setSubPesos] = useState<Record<string, string>>({});
   const [subPrecios, setSubPrecios] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setPesoInicial("");
-    setPesoFinal("");
-    setPrecioFinal("");
-    setPesoBloqueado(false);
-    setSubPesos({});
-    setSubPrecios({});
-  }, [primaryLabel, JSON.stringify(secondaryCuts)]);
-
   const pesoInicialNumber = useMemo(
     () => parseInputNumber(pesoInicial),
     [pesoInicial]
@@ -91,6 +82,30 @@ const SubcorteCalculator = ({
     setPrecioFinal(sanitized);
   };
 
+  const uniqueSecondaryCuts = useMemo(() => {
+    const seen = new Set<string>();
+
+    return secondaryCuts.filter((cut) => {
+      const key = cut.trim().toUpperCase();
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return false;
+    });
+  }, [secondaryCuts]);
+
+  useEffect(() => {
+    setPesoInicial("");
+    setPesoFinal("");
+    setPrecioFinal("");
+    setPesoBloqueado(false);
+    setSubPesos({});
+    setSubPrecios({});
+  }, [primaryLabel, JSON.stringify(uniqueSecondaryCuts)]);
+
   const calculatePercentage = useCallback(
     (rawValue: string | undefined): number | null => {
       if (!pesoInicialNumber || pesoInicialNumber <= 0) {
@@ -121,12 +136,18 @@ const SubcorteCalculator = ({
 
   const subcorteDatos = useMemo(
     () =>
-      secondaryCuts.map((label) => ({
+      uniqueSecondaryCuts.map((label) => ({
         label,
         porcentaje: calculatePercentage(subPesos[label]),
         valor: calculateValor(subPesos[label], subPrecios[label]),
       })),
-    [secondaryCuts, subPesos, subPrecios, calculatePercentage, calculateValor]
+    [
+      uniqueSecondaryCuts,
+      subPesos,
+      subPrecios,
+      calculatePercentage,
+      calculateValor,
+    ]
   );
 
   const porcentajeFinal = useMemo(
@@ -217,7 +238,7 @@ const SubcorteCalculator = ({
       {pesoBloqueado && (
         <Stack spacing={2}>
           <Divider textAlign="left">Subcortes vinculados</Divider>
-          {secondaryCuts.map((label) => {
+          {uniqueSecondaryCuts.map((label) => {
             const datos = subcorteDatos.find((entry) => entry.label === label);
             const porcentaje = datos?.porcentaje ?? null;
 
