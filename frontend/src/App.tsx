@@ -1,7 +1,4 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { Box, CircularProgress } from "@mui/material";
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import AppLayout from "./layout/AppLayout";
 import Home from "./pages/home/Home";
 import Talleres from "./pages/Talleres";
@@ -13,6 +10,9 @@ import Logout from "./pages/Logout";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
 import { useAuth } from "./context/AuthContext";
+import LoadingScreen from "./components/LoadingScreen";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useNavigationItems } from "./hooks/useNavigationItems";
 
 const App = () => {
   const location = useLocation();
@@ -20,58 +20,14 @@ const App = () => {
   const isLoginRoute = location.pathname === "/login";
   const displayName = user?.full_name?.trim() || user?.email;
 
-  const navigationConfig = [
-    { label: "Inicio", to: "/" },
-    ...(user
-      ? [
-          { label: "Desposte", to: "/talleres/desposte" },
-          { label: "Informes", to: "/informes-historicos" },
-        ]
-      : []),
-    { label: "Lista de precios", to: "/lista-precios" },
-    ...(user?.is_admin
-      ? [
-          {
-            label: "Usuarios",
-            to: "/usuarios",
-            icon: <GroupOutlinedIcon fontSize="small" />,
-          },
-        ]
-      : []),
-    ...(user
-      ? [
-          {
-            label: displayName || "Usuario",
-            to: "/perfil",
-            icon: <PersonOutlineIcon fontSize="small" />,
-          },
-          { label: "Cerrar sesión", to: "/logout" },
-        ]
-      : [{ label: "Iniciar sesión", to: "/login" }]),
-  ];
-
-  const navItems = navigationConfig.map((item) => {
-    const isActive = item.to
-      ? item.to === "/"
-        ? location.pathname === "/"
-        : location.pathname.startsWith(item.to)
-      : false;
-    return { ...item, isActive };
+  const navItems = useNavigationItems({
+    user,
+    displayName: displayName || "Usuario",
+    currentPath: location.pathname,
   });
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
+    return <LoadingScreen />;
   }
 
   if (isLoginRoute) {
@@ -93,20 +49,18 @@ const App = () => {
         <Route path="/lista-precios" element={<ListaPrecios />} />
         <Route
           path="/perfil"
-          element={user ? <UserProfile /> : <Navigate to="/login" replace />}
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
         ></Route>
         <Route
           path="/usuarios"
           element={
-            user ? (
-              user.is_admin ? (
-                <UsersAdmin />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            ) : (
-              <Navigate to="/login" replace />
-            )
+            <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+              <UsersAdmin />
+            </ProtectedRoute>
           }
         />
         <Route
