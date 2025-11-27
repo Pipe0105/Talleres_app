@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+
 import { Paper, Stack, Typography } from "@mui/material";
 
 import {
@@ -76,6 +77,27 @@ const TallerWorkflow = ({
 
     return new Map(entries);
   }, [cortes]);
+
+  const resolveCorteIdByLabel = useCallback(
+    (label: string) => {
+      const normalizedLabel = normalizeCorteName(label);
+      const directMatch = corteNameMap.get(normalizedLabel);
+      if (directMatch) {
+        return directMatch;
+      }
+
+      const fallbackMatch = cortes.find((corte) => {
+        const normalizedCorte = normalizeCorteName(corte.nombre_corte);
+        return (
+          normalizedCorte.includes(normalizedLabel) ||
+          normalizedLabel.includes(normalizedCorte)
+        );
+      });
+
+      return fallbackMatch?.id;
+    },
+    [corteNameMap, cortes]
+  );
 
   const selectedItem = useMemo(() => {
     if (!selectedItemId) {
@@ -260,7 +282,7 @@ const TallerWorkflow = ({
   };
 
   const handleSubcortePesoChange = (label: string, value: string) => {
-    const corteId = corteNameMap.get(normalizeCorteName(label));
+    const corteId = resolveCorteIdByLabel(label);
     if (!corteId) {
       return;
     }

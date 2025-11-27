@@ -289,6 +289,7 @@ export const adminGetUsers = async (): Promise<UserProfile[]> => {
 
 export interface AdminUpdateUserPayload {
   username?: string;
+  email?: string;
   full_name?: string;
   password?: string;
   is_active?: boolean;
