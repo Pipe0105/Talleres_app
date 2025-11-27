@@ -43,8 +43,22 @@ const App = () => {
     <AppLayout navItems={navItems}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/talleres" element={<Talleres />} />
-        <Route path="/talleres/desposte" element={<TalleresDesposte />} />
+        <Route
+          path="/talleres"
+          element={
+            <ProtectedRoute>
+              <Talleres />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/talleres/desposte"
+          element={
+            <ProtectedRoute>
+              <TalleresDesposte />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/informes-historicos" element={<InformesHistoricos />} />
         <Route path="/lista-precios" element={<ListaPrecios />} />
         <Route

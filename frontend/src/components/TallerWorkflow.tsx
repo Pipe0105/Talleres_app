@@ -234,6 +234,9 @@ const TallerWorkflow = ({
       } catch (err) {
         console.error(err);
         if (isMounted) {
+          setError(
+            "No fue posible cargar los cortes del material. Verifica tu sesión e inténtalo nuevamente."
+          );
         }
       } finally {
         if (isMounted) {
