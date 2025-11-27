@@ -63,7 +63,7 @@ def crear_taller(
             )
         )
     
-    db.flush()
+    db.commit()
     db.refresh(taller)
     
     return TallerOut(id=taller.id, nombre_taller=taller.nombre_taller, descripcion=taller.descripcion)
