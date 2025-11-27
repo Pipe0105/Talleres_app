@@ -23,7 +23,11 @@ import MaterialSelector from "./taller/MaterialSelector";
 import TallerForm from "./taller/TallerForm";
 import TallerList from "./taller/TallerList";
 import PageHeader from "./PageHeader";
-import { EspecieKey, resolveMaterialOptions } from "../data/materialesTaller";
+import {
+  EspecieKey,
+  resolveMaterialOptions,
+  ResolvedMaterialOption,
+} from "../data/materialesTaller";
 
 interface TallerWorkflowProps {
   title: string;
@@ -104,7 +108,23 @@ const TallerWorkflow = ({
       return null;
     }
     return items.find((item) => item.id === Number(selectedItemId)) ?? null;
-  }, [items, selectedItemId]);
+  }, [items, resolveItemLabel, selectedItemId]);
+
+  const selectedItemNombre = useMemo(
+    () => selectedItem?.descripcion ?? "",
+    [selectedItem]
+  );
+
+  const resolveItemLabel = useCallback(
+    (option: ResolvedMaterialOption) =>
+      (option.config.label ?? option.item?.descripcion ?? "").trim(),
+    []
+  );
+
+  const selectedItemLabel = useMemo(
+    () => resolveItemLabel(selectedItem),
+    [resolveItemLabel, selectedItem]
+  );
 
   const secondaryCuts = useMemo(() => {
     if (!selectedSpecies) {
@@ -123,7 +143,7 @@ const TallerWorkflow = ({
     const seen = new Set<string>();
 
     return selectedOption.children
-      .map((child) => child.config.label?.trim())
+      .map((child) => resolveItemLabel(child))
       .filter((label): label is string => {
         if (!label) {
           return false;
@@ -138,10 +158,16 @@ const TallerWorkflow = ({
         seen.add(key);
         return true;
       });
-  }, [items, selectedItemId, selectedSpecies]);
+  }, [items, selectedItemId, selectedSpecies, resolveItemLabel]);
 
   const normalizeSpecies = (value: string): EspecieKey =>
     value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
+
+  const resolveItemLabel = useCallback(
+    (item: Item | null | undefined) =>
+      sanitizeInput(item ? getItemNombre(item) : "", { maxLength: 120 }),
+    []
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -232,9 +258,7 @@ const TallerWorkflow = ({
     );
     if (selectedItem) {
       setNombreTaller((current) =>
-        current?.trim()
-          ? current
-          : sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
+        current?.trim() ? current : resolveItemLabel(selectedItem)
       );
     }
   }, [items, selectedItemId]);
@@ -294,9 +318,8 @@ const TallerWorkflow = ({
     const item = items.find((candidate) => candidate.id === Number(itemId));
     if (item) {
       setSelectedSpecies(normalizeSpecies(item.especie));
-      setNombreTaller(
-        sanitizeInput(item.descripcion, { maxLength: 120 }) || nombreTaller
-      );
+      const normalizedName = resolveItemLabel(item);
+      setNombreTaller(normalizedName || nombreTaller);
     }
   };
 
@@ -318,9 +341,7 @@ const TallerWorkflow = ({
   const resetForm = () => {
     setPesos({});
     setNombreTaller(() => {
-      return selectedItem
-        ? sanitizeInput(selectedItem.descripcion, { maxLength: 120 })
-        : "";
+      return resolveItemLabel(selectedItem);
     });
   };
 
@@ -431,6 +452,7 @@ const TallerWorkflow = ({
             pesos={pesos}
             selectedItemId={selectedItemId}
             selectedItem={selectedItem}
+            selectedItemNombre={selectedItemNombre}
             nombreTaller={nombreTaller}
             loadingCortes={loadingCortes}
             submitting={submitting}

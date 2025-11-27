@@ -31,6 +31,18 @@ from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
 
+BRANCH_LOCATIONS = [
+    "Ciudad Jardín",
+    "Calle 5ta",
+    "Centro Sur",
+    "Floresta",
+    "Plaza Norte",
+    "Floralia",
+    "Guadalupes",
+    "Palmira",
+    "Bogotá",
+    "Chia",
+]
 
 app = FastAPI(title="MercaMorfosis Backend")
 
@@ -108,6 +120,47 @@ def _ensure_default_operator() -> None:
             db.rollback()
             logger.exception("Fallo creando usuario")
             raise
+        
+def _branch_username(branch_name: str) -> str:
+    return f"Talleres_{branch_name.replace(' ', '_')}"
+
+def _ensure_branch_operators() -> None:
+    if not DEFAULT_USER_PASSWORD:
+        return
+    
+    hashed_password = get_password_hash(DEFAULT_USER_PASSWORD)
+    created_users: list[str] = []
+    
+    with SessionLocal() as db:
+        try:
+            for branch in BRANCH_LOCATIONS:
+                username = _branch_username(branch)
+                existing_user = crud.get_user_by_username(db, username)
+                if existing_user:
+                    continue
+            
+            crud.create_user(
+                db,
+                username=username,
+                email=None,
+                hashed_password=hashed_password,
+                full_name=f"Operario {branch}",
+                is_admin=False,
+            )
+            created_users.append(username)
+            
+            if created_users:
+                db.commit()
+                logger.info(
+                    "Usuarios de operador creados para sedes: %s", ", ".join(created_users)
+                )
+        except SQLAlchemyError:
+            db.rollback()
+            logger.exception(
+                "Fallo creando usuarios de operador para las sedes configuradas."
+            )
+            raise
+    
             
 
 
@@ -173,7 +226,8 @@ def _startup():
     with engine.begin() as conn:
         conn.execute(text(create_view_sql))
         
-    _ensure_default_operator()
+    _ensure_branch_operators()
+
 
 
 # Routers

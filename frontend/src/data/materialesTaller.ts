@@ -1,5 +1,8 @@
 import { Item } from "../types";
 
+export const getItemNombre = (item: Item): string =>
+  (item.nombre ?? item.descripcion ?? "").trim();
+
 export type EspecieKey = "res" | "cerdo";
 
 export interface MaterialConfig {
@@ -311,7 +314,8 @@ const speciesFromValue = (value: string): EspecieKey | null => {
 };
 
 const matchesMaterial = (item: Item, material: MaterialConfig): boolean => {
-  const normalizedDescription = normalize(item.descripcion);
+  const description = getItemNombre(item);
+  const normalizedDescription = normalize(description);
   const simplifiedDescription = simplify(normalizedDescription);
   const normalizedLabel = normalize(material.label);
 

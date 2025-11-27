@@ -17,6 +17,7 @@ interface TallerFormProps {
   pesos: Record<string, string>;
   selectedItemId: string;
   selectedItem: Item | null;
+  selectedItemNombre?: string;
   nombreTaller: string;
   loadingCortes: boolean;
   submitting: boolean;
@@ -34,6 +35,7 @@ const TallerForm = ({
   pesos,
   selectedItemId,
   selectedItem,
+  selectedItemNombre,
   nombreTaller,
   loadingCortes,
   submitting,
@@ -70,9 +72,12 @@ const TallerForm = ({
             Cambiar material
           </Button>
         </Stack>
-        {selectedItem ? (
+        {selectedItem || selectedItemNombre ? (
           <Typography>
-            {selectedItem.descripcion} · {selectedItem.codigo_producto}
+            {selectedItem?.descripcion ?? selectedItemNombre ?? ""}
+            {selectedItem?.codigo_producto
+              ? ` · ${selectedItem.codigo_producto}`
+              : ""}
           </Typography>
         ) : (
           <Alert severity="warning">

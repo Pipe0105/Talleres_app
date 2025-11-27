@@ -11,6 +11,7 @@ import {
   UserProfile,
 } from "../types";
 import { safeStorage } from "../utils/storage";
+import { Description } from "@mui/icons-material";
 
 const TOKEN_STORAGE_KEY = "talleres.authToken";
 
@@ -137,16 +138,28 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-const mapItem = (raw: any): Item => ({
-  id: toNumber(raw?.id, 0),
-  codigo_producto: toStringOr(raw?.codigo_producto, ""),
-  descripcion: toStringOr(raw?.descripcion, ""),
-  precio: toNumber(raw?.precio, 0),
-  especie: toStringOr(raw?.especie, ""),
-  fecha_vigencia: toStringOr(raw?.fecha_vigencia, ""),
-  fuente: toStringOr(raw?.fuente, ""),
-  activo: toBoolean(raw?.activo, true),
-});
+const resolveItemNombre = (raw: any): string =>
+  toStringOr(
+    raw?.nombre ?? raw?.detalle ?? raw?.descripcion ?? raw?.descripcion_item,
+    ""
+  );
+
+const mapItem = (raw: any): Item => {
+  const nombre = resolveItemNombre(raw);
+
+  return {
+    id: toNumber(raw?.id, 0),
+    codigo_producto: toStringOr(raw?.codigo_producto, ""),
+    descripcion: nombre,
+    nombre,
+    detalle: raw?.detalle ?? null,
+    precio: toNumber(raw?.precio, 0),
+    especie: toStringOr(raw?.especie, ""),
+    fecha_vigencia: toStringOr(raw?.fecha_vigencia, ""),
+    fuente: toStringOr(raw?.fuente, ""),
+    activo: toBoolean(raw?.activo, true),
+  };
+};
 
 const mapCorte = (raw: any): corte => ({
   id: toStringOr(raw?.id, ""),
