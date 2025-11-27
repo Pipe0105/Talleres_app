@@ -19,20 +19,35 @@ def upsert_items(db: Session, rows: Iterable[dict]) -> list[models.Item]:
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.get(models.User, user_id)
 
+def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+    return (
+        db.query(models.User)
+        .filter(models.User.username == username)
+        .one_or_none()
+    )
+
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.email == email).one_or_none()
+
+def get_user_by_identifier(db: Session, identifier: str) -> Optional[models.User]:
+    user = get_user_by_username(db, identifier)
+    if user:
+        return user
+    return get_user_by_email(db, identifier)
 
 def create_user(
     db: Session,
     *,
-    email: str,
+    username: str,
+    email: Optional[str] = None,
     hashed_password: str,
     full_name: Optional[str] = None,
     is_active: bool = True,
     is_admin: bool = False,
 ) -> models.User:
     user = models.User(
-        email = email,
+        username=username,
+        email=email,
         hashed_password = hashed_password,
         full_name = full_name,
         is_active = is_active,
@@ -50,12 +65,15 @@ def update_user(
     db: Session,
     user: models.User,
     *,
+    username: Optional[str] = None,
     email: Optional[str] = None,
     full_name: Optional[str] = None,
     hashed_password: Optional[str] = None,
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
 ) -> models.User:
+    if username is not None:
+        user.username = username
     if email is not None:
         user.email = email
     if full_name is not None:

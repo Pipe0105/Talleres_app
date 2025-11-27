@@ -57,6 +57,14 @@ const UserProfile = () => {
           <Stack spacing={2}>
             <Stack spacing={0.5}>
               <Typography variant="subtitle2" color="text.secondary">
+                Usuario
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {user.username}
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle2" color="text.secondary">
                 Nombre Completo
               </Typography>
               <Typography variant="body1" fontWeight={600}>
@@ -66,10 +74,10 @@ const UserProfile = () => {
 
             <Stack spacing={0.5}>
               <Typography variant="subtitle2" color="text.secondary">
-                Correo Electronico
+                Correo electrónico
               </Typography>
               <Typography variant="body1" fontWeight={600}>
-                {user.email}
+                {user.email?.trim() || "Sin registrar"}
               </Typography>
             </Stack>
 

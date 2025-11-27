@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, condecimal
+from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
+
 
 
 
@@ -67,8 +68,17 @@ class TallerCalculoRow(BaseModel):
 
 
 class UserBase(BaseModel):
-    email: EmailStr
+    username: str
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    
+    @field_validator("username")
+    @classmethod
+    def _validate_username(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("el nombre de usuario es obligatorio")
+        return normalized
 
 
 class UserCreate(UserBase):
@@ -85,7 +95,7 @@ class UserOut(UserBase):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 
@@ -95,6 +105,7 @@ class UserAdminCreate(UserCreate):
 
 
 class UserUpdate(BaseModel):
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = None

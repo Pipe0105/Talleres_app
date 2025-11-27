@@ -17,7 +17,12 @@ from .config import (
     ADMIN_EMAIL,
     ADMIN_FULL_NAME,
     ADMIN_PASSWORD,
+    ADMIN_USERNAME,
     API_PREFIX,
+    DEFAULT_USER_EMAIL,
+    DEFAULT_USER_FULL_NAME,
+    DEFAULT_USER_PASSWORD,
+    DEFAULT_USER_USERNAME,
     FRONTEND_ORIGINS,
 )
 from .database import Base, SessionLocal, engine
@@ -53,11 +58,11 @@ def read_root():
 def _ensure_default_admin() -> None:
     """Create the default admin user if configuration variables are provided."""
 
-    if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+    if not ADMIN_USERNAME or not ADMIN_PASSWORD:
         return
 
     with SessionLocal() as db:
-        existing_admin = crud.get_user_by_email(db, ADMIN_EMAIL)
+        existing_admin = crud.get_user_by_username(db, ADMIN_USERNAME)
         if existing_admin:
             return
 
@@ -65,19 +70,45 @@ def _ensure_default_admin() -> None:
             hashed_password = get_password_hash(ADMIN_PASSWORD)
             crud.create_user(
                 db,
+                username=ADMIN_USERNAME,
                 email=ADMIN_EMAIL,
                 hashed_password=hashed_password,
                 full_name=ADMIN_FULL_NAME,
                 is_admin=True,
             )
             db.commit()
-            logger.info("Default admin user created: %s", ADMIN_EMAIL)
+            logger.info("Default admin user created: %s", ADMIN_USERNAME)
         except SQLAlchemyError:
             db.rollback()
             logger.exception("Failed to create default admin user.")
             raise
 
+def _ensure_default_operator() -> None:
+    if not DEFAULT_USER_USERNAME or not DEFAULT_USER_PASSWORD:
+        return
     
+    with SessionLocal() as db:
+        existing_user = crud.get_user_by_username(db, DEFAULT_USER_USERNAME)
+        if existing_user:
+            return
+        
+        try:
+            hashed_password = get_password_hash(DEFAULT_USER_PASSWORD)
+            crud.create_user(
+                db,
+                username=DEFAULT_USER_USERNAME,
+                email=DEFAULT_USER_EMAIL,
+                hashed_password=hashed_password,
+                full_name=DEFAULT_USER_FULL_NAME,
+                is_admin=False,
+            )
+            db.commit()
+            logger.info("Default operator user created: %s", DEFAULT_USER_USERNAME)
+        except SQLAlchemyError:
+            db.rollback()
+            logger.exception("Fallo creando usuario")
+            raise
+            
 
 
 @app.on_event("startup")
@@ -89,6 +120,24 @@ def _startup():
             text(
                 "ALTER TABLE IF EXISTS users "
                 "ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS users "
+                "ADD COLUMN IF NOT EXISTS username TEXT"
+            )
+        )
+        conn.execute(
+            text("ALTER TABLE IF EXISTS users ALTER COLUMN email DROP NOT NULL")
+        )
+        conn.execute(text("UPDATE users SET username = email WHERE username IS NULL"))
+        conn.execute(
+            text("ALTER TABLE IF EXISTS users ALTER COLUMN username SET NOT NULL")
+        )
+        conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username)"
             )
         )
     # Crear/asegurar vista v_taller_calculo (idem potente)
@@ -124,7 +173,7 @@ def _startup():
     with engine.begin() as conn:
         conn.execute(text(create_view_sql))
         
-    _ensure_default_admin()
+    _ensure_default_operator()
 
 
 # Routers

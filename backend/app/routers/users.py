@@ -24,16 +24,25 @@ def create_user(
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_admin_user),
 ) -> UserOut:
-    existing = crud.get_user_by_email(db, payload.email)
+    existing = crud.get_user_by_username(db, payload.username)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo ya está registrado",
+            detail="El nombre de usuario ya está registrado",
         )
+    
+    if payload.email:
+        existing_email = crud.get_user_by_email(db,payload.email)
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El correo ya está registrado",
+            )
         
     hashed_password = get_password_hash(payload.password)
     user = crud.create_user(
         db,
+        username=payload.username,
         email=payload.email,
         hashed_password=hashed_password,
         full_name=payload.full_name,
@@ -63,8 +72,8 @@ def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No puedes desactivar",
             )
-    if payload.email and payload.email != user.email:
-        existing_user = crud.get_user_by_email(db, payload.email)
+    if payload.username and payload.username != user.username:
+        existing_user = crud.get_user_by_username(db, payload.username)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -81,7 +90,8 @@ def update_user(
         is_active=payload.is_active,
         is_admin=payload.is_admin,
     )
-    return update_user
+    return updated_user
+
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(

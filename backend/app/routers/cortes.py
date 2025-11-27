@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import get_current_active_user
+from ..dependencies import get_current_active_user, get_current_admin_user
+
 from ..models import Corte, Item
 from ..schemas import CorteIn, CorteOut
 
@@ -12,7 +13,11 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_user)],
 )
 @router.post("/", response_model=CorteOut)
-def crear_corte(payload: CorteIn, db: Session = Depends(get_db)):
+def crear_corte(
+    payload: CorteIn,
+    db: Session = Depends(get_db),
+    _: None = Depends(get_current_admin_user),
+):
     item = db.get(Item, payload.item_id)
     if not item:
         raise HTTPException(status_code=404, detail="item no existe")

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models
 from ..database import get_db
-from ..dependencies import get_current_active_user
+from ..dependencies import get_current_admin_user
 from ..services.etl_precios import leer_y_limpiar_precios
 from .. import models
 from .. import crud
@@ -15,7 +15,7 @@ from .. import crud
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
-    dependencies=[Depends(get_current_active_user)],
+    dependencies=[Depends(get_current_admin_user)],
 )
 @router.post("/precios")
 def cargar_precios(file: UploadFile = File(...), db: Session = Depends(get_db)):

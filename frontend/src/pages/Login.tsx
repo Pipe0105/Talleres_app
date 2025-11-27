@@ -16,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 const Login = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -32,13 +32,17 @@ const Login = () => {
     try {
       setSubmitting(true);
       if (mode === "register") {
-        await register({ email, password, full_name: fullName || undefined });
+        await register({
+          username,
+          password,
+          full_name: fullName || undefined,
+        });
         setSuccess("Cuenta creada correctamente. Ahora puedes iniciar sesión.");
         setMode("login");
         return;
       }
 
-      await login(email, password);
+      await login(username, password);
       await refresh();
       setSuccess("Inicio de sesión exitoso. Redirigiendo…");
       setTimeout(() => navigate("/"), 600);
@@ -97,12 +101,12 @@ const Login = () => {
 
           <Stack component="form" spacing={3} onSubmit={handleSubmit}>
             <TextField
-              label="Correo electrónico"
-              type="email"
-              name="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              label="Usuario"
+              type="text"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
               required
               fullWidth
             />

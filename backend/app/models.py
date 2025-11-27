@@ -75,7 +75,8 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(Text, unique=True, nullable=False)
+    username = Column(Text, unique=True, nullable=False)
+    email = Column(Text, unique=True)
     full_name = Column(Text)
     hashed_password = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default="true")

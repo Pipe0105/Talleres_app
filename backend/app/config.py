@@ -34,9 +34,14 @@ def _load_frontend_origins() -> List[str]:
 DATABASE_URL = _build_database_url()
 FRONTEND_ORIGINS = _load_frontend_origins()
 
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME") or os.getenv("ADMIN_EMAIL")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME")
+DEFAULT_USER_USERNAME = os.getenv("DEFAULT_USER_USERNAME")
+DEFAULT_USER_EMAIL = os.getenv("DEFAULT_USER_MAIL")
+DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
+DEFAULT_USER_FULL_NAME = os.getenv("DEFAULT_USER_FULL_NAME")
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")

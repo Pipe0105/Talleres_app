@@ -63,7 +63,8 @@ export interface AuthToken {
 
 export interface UserProfile {
   id: string;
-  email: string;
+  username: string;
+  email: string | null;
   full_name: string | null;
   is_active: boolean;
   is_admin: boolean;

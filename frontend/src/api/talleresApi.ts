@@ -179,7 +179,8 @@ const mapCalculo = (raw: any): TallerCalculoRow => ({
 
 const mapUser = (raw: any): UserProfile => ({
   id: toStringOr(raw?.id, ""),
-  email: toStringOr(raw?.email, ""),
+  username: toStringOr(raw?.username, ""),
+  email: raw?.email ?? null,
   full_name: raw?.full_name ?? null,
   is_active: toBoolean(raw?.is_active, true),
   is_admin: toBoolean(raw?.is_admin, false),
@@ -188,12 +189,12 @@ const mapUser = (raw: any): UserProfile => ({
 });
 
 export const login = async (
-  email: string,
+  username: string,
   password: string
 ): Promise<AuthToken> => {
   const payload = new URLSearchParams();
   payload.set("grant_type", "password");
-  payload.set("username", email);
+  payload.set("username", username);
   payload.set("password", password);
   payload.set("scope", "");
   payload.set("client_id", "");
@@ -208,7 +209,8 @@ export const login = async (
 };
 
 export interface RegisterUserPayload {
-  email: string;
+  username: string;
+  email?: string;
   password: string;
   full_name?: string;
 }
@@ -286,7 +288,7 @@ export const adminGetUsers = async (): Promise<UserProfile[]> => {
 };
 
 export interface AdminUpdateUserPayload {
-  email?: string;
+  username?: string;
   full_name?: string;
   password?: string;
   is_active?: boolean;
@@ -302,5 +304,5 @@ export const adminUpdateUser = async (
 };
 
 export const adminDeleteUser = async (userId: string): Promise<void> => {
-  await api.delete(`´/users/${userId}`);
+  await api.delete(`/users/${userId}`);
 };

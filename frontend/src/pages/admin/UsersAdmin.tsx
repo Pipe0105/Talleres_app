@@ -39,6 +39,7 @@ import type { UserProfile } from "../../types";
 import { Person } from "@mui/icons-material";
 
 interface NewUserForm {
+  username: string;
   email: string;
   password: string;
   fullName: string;
@@ -47,6 +48,7 @@ interface NewUserForm {
 }
 
 interface EditUserForm {
+  username: string;
   email: string;
   password: string;
   fullname: string;
@@ -55,6 +57,7 @@ interface EditUserForm {
 }
 
 const INITIAL_FORM_STATE: NewUserForm = {
+  username: "",
   email: "",
   password: "",
   fullName: "",
@@ -105,7 +108,8 @@ const UsersAdmin = () => {
 
     try {
       await adminCreateUser({
-        email: formState.email,
+        username: formState.username,
+        email: formState.email || undefined,
         password: formState.password,
         full_name: formState.fullName || undefined,
         is_admin: formState.isAdmin,
@@ -154,7 +158,8 @@ const UsersAdmin = () => {
   const openEditDialog = (target: UserProfile) => {
     setEditTarget(target);
     setEditForm({
-      email: target.email,
+      username: target.username,
+      email: target.email ?? "",
       fullname: target.full_name ?? "",
       password: "",
       isAdmin: target.is_admin,
@@ -178,7 +183,8 @@ const UsersAdmin = () => {
 
     try {
       await adminUpdateUser(editTarget.id, {
-        email: editForm.email.trim() || editTarget.email,
+        username: editForm.username.trim() || editTarget.username,
+        email: editForm.email.trim() || undefined,
         full_name: editForm.fullname.trim() || undefined,
         password: editForm.password ? editForm.password : undefined,
         is_admin: editForm.isAdmin,
@@ -276,6 +282,7 @@ const UsersAdmin = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
+                  <TableCell>Usuario</TableCell>
                   <TableCell>Correo</TableCell>
                   <TableCell>Nombre</TableCell>
                   <TableCell>Rol</TableCell>
@@ -287,7 +294,8 @@ const UsersAdmin = () => {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id} hover>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
                     <TableCell>
                       <Chip
@@ -398,7 +406,7 @@ const UsersAdmin = () => {
                 ))}
                 {!loading && users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
                       </Typography>
@@ -407,7 +415,7 @@ const UsersAdmin = () => {
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Cargando usuarios…
                       </Typography>
@@ -430,6 +438,17 @@ const UsersAdmin = () => {
           <DialogTitle>Crear un nuevo usuario</DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
             <Stack spacing={3} mt={1}>
+              <TextField
+                label="Usuario"
+                value={formState.username}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    username: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
               <TextField
                 label="Correo electrónico"
                 type="email"
@@ -519,6 +538,22 @@ const UsersAdmin = () => {
           <DialogTitle>Editar usuario</DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
             <Stack spacing={2} mt={1}>
+              <TextField
+                label="Usuario"
+                value={editForm?.username ?? ""}
+                onChange={(event) =>
+                  setEditForm((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          username: event.target.value,
+                        }
+                      : prev
+                  )
+                }
+                required
+                fullWidth
+              />
               <TextField
                 label="Correo electrónico"
                 type="email"
@@ -616,7 +651,7 @@ const UsersAdmin = () => {
         <DialogTitle>Eliminar usuario</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            ¿Confirmas que deseas eliminar la cuenta "{deleteTarget?.email}"?
+            ¿Confirmas que deseas eliminar la cuenta "{deleteTarget?.username}"?
             Esta accion no se puede deshacer
           </Typography>
         </DialogContent>
