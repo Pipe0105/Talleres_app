@@ -16,6 +16,7 @@ interface SubcorteCalculatorProps {
   primaryLabel: string;
   secondaryCuts?: string[];
   disabled?: boolean;
+  onPesoChange?: (label: string, value: string) => void;
 }
 
 const DEFAULT_SECONDARY_CUTS = ["Recorte", "Gordana"];
@@ -57,17 +58,20 @@ const SubcorteCalculator = ({
   const handlePesoInicialChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoInicial(sanitized);
+    onPesoChange?.(primaryLabel, sanitized);
     setPesoBloqueado(false);
   };
 
   const handleSubPesoChange = (label: string, value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setSubPesos((prev) => ({ ...prev, [label]: sanitized }));
+    onPesoChange?.(label, sanitized);
   };
 
   const handlePesoFinalChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoFinal(sanitized);
+    onPesoChange?.(`${primaryLabel} final`, sanitized);
   };
 
   const cutsToUse = secondaryCuts.length

@@ -53,12 +53,29 @@ const TallerWorkflow = ({
   const [submitting, setSubmitting] = useState(false);
   const [selectorLocked, setSelectorLocked] = useState(false);
 
+  const normalizeCorteName = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^0-9A-Za-z]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+
   const tallerSeleccionado = useMemo(() => {
     if (!selectedTallerId) {
       return null;
     }
     return talleres.find((taller) => taller.id === selectedTallerId) ?? null;
   }, [talleres, selectedTallerId]);
+
+  const corteNameMap = useMemo(() => {
+    const entries = cortes.map(
+      (corte) => [normalizeCorteName(corte.nombre_corte), corte.id] as const
+    );
+
+    return new Map(entries);
+  }, [cortes]);
 
   const selectedItem = useMemo(() => {
     if (!selectedItemId) {
@@ -242,6 +259,14 @@ const TallerWorkflow = ({
     setNombreTaller(sanitizeInput(value, { maxLength: 120 }));
   };
 
+  const handleSubcortePesoChange = (label: string, value: string) => {
+    const corteId = corteNameMap.get(normalizeCorteName(label));
+    if (!corteId) {
+      return;
+    }
+    handlePesoChange(corteId, value);
+  };
+
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
     const item = items.find((candidate) => candidate.id === Number(itemId));
@@ -388,6 +413,7 @@ const TallerWorkflow = ({
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}
+            onSubcortePesoChange={handleSubcortePesoChange}
           />
         </Stack>
       )}

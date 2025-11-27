@@ -26,6 +26,7 @@ interface TallerFormProps {
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
+  onSubcortePesoChange?: (label: string, value: string) => void;
 }
 
 const TallerForm = ({
@@ -42,6 +43,7 @@ const TallerForm = ({
   onNombreChange,
   onPesoChange,
   onOpenSelector,
+  onSubcortePesoChange,
 }: TallerFormProps) => (
   <Paper
     component="form"
@@ -96,6 +98,7 @@ const TallerForm = ({
         <SubcorteCalculator
           primaryLabel={selectedItem.descripcion}
           secondaryCuts={secondaryCuts}
+          onPesoChange={onSubcortePesoChange}
         ></SubcorteCalculator>
       )}
 
