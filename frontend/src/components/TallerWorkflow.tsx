@@ -359,7 +359,7 @@ const TallerWorkflow = ({
     }
 
     const parsed = Number.parseFloat(cleaned);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
+    if (!Number.isFinite(parsed) || parsed < 0) {
       return null;
     }
 
