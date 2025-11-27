@@ -334,15 +334,20 @@ const TallerWorkflow = ({
     const detalles: CrearTallerPayload["detalles"] = cortes
       .map((corte) => {
         const raw = pesos[corte.id];
-        if (!raw) {
+        if (raw === undefined || raw === null) {
           return null;
         }
 
         const trimmed = raw.replace(/\s+/g, "");
-        const usesComma = trimmed.includes(",");
-        const normalized = usesComma
-          ? trimmed.replace(/\./g, "").replace(/,/g, ".")
-          : trimmed.replace(/,/g, ".");
+        if (!trimmed) {
+          return null;
+        }
+
+        const normalized = trimmed
+          // Remove thousand separators like 1.234.567 or 1,234,567
+          .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
+          // Use dot as decimal separator
+          .replace(/,/g, ".");
 
         const parsed = Number.parseFloat(normalized);
         if (!Number.isFinite(parsed) || parsed <= 0) {
