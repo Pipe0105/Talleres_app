@@ -300,6 +300,7 @@ const TallerWorkflow = ({
   const handlePesoChange = (corteId: string, value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesos((prev) => ({ ...prev, [corteId]: sanitized }));
+    setError(null);
   };
 
   const handleNombreChange = (value: string) => {
@@ -339,6 +340,29 @@ const TallerWorkflow = ({
     setSelectorLocked(true);
   };
 
+  const parsePesoInput = (raw: string | undefined | null): number | null => {
+    if (raw === undefined || raw === null) {
+      return null;
+    }
+
+    const cleaned = raw
+      .replace(/[^0-9.,-]+/g, "")
+      .replace(/\s+/g, "")
+      .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
+      .replace(/,/g, ".");
+
+    if (!cleaned) {
+      return null;
+    }
+
+    const parsed = Number.parseFloat(cleaned);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return parsed;
+  };
+
   const resetForm = () => {
     setPesos({});
     setNombreTaller(() => {
@@ -353,36 +377,22 @@ const TallerWorkflow = ({
       return;
     }
 
-    const detalles: CrearTallerPayload["detalles"] = cortes
-      .map((corte) => {
-        const raw = pesos[corte.id];
-        if (raw === undefined || raw === null) {
-          return null;
+    const detalles: CrearTallerPayload["detalles"] = cortes.reduce(
+      (result, corte) => {
+        const parsed = parsePesoInput(pesos[corte.id]);
+        if (parsed === null) {
+          return result;
         }
 
-        const trimmed = raw.replace(/\s+/g, "");
-        if (!trimmed) {
-          return null;
-        }
-
-        const normalized = trimmed
-          // Remove thousand separators like 1.234.567 or 1,234,567
-          .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
-          // Use dot as decimal separator
-          .replace(/,/g, ".");
-
-        const parsed = Number.parseFloat(normalized);
-        if (!Number.isFinite(parsed) || parsed <= 0) {
-          return null;
-        }
-        return { item_id: corte.item_id, corte_id: corte.id, peso: parsed };
-      })
-      .filter(
-        (
-          detalle
-        ): detalle is { item_id: string; corte_id: string; peso: number } =>
-          detalle !== null
-      );
+        result.push({
+          item_id: corte.item_id,
+          corte_id: corte.id,
+          peso: parsed,
+        });
+        return result;
+      },
+      [] as CrearTallerPayload["detalles"]
+    );
 
     if (!detalles.length) {
       setError(
