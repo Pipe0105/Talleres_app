@@ -377,22 +377,29 @@ const TallerWorkflow = ({
       return;
     }
 
-    const detalles: CrearTallerPayload["detalles"] = cortes.reduce(
-      (result, corte) => {
-        const parsed = parsePesoInput(pesos[corte.id]);
-        if (parsed === null) {
-          return result;
+    const corteById = cortes.reduce((map, corte) => {
+      map.set(corte.id, corte);
+      return map;
+    }, new Map<string, corte>());
+
+    const detalles: CrearTallerPayload["detalles"] = Object.entries(pesos)
+      .map(([corteId, rawPeso]) => {
+        const corte = corteById.get(corteId);
+        const parsed = parsePesoInput(rawPeso);
+
+        if (!corte || parsed === null) {
+          return null;
         }
 
-        result.push({
+        return {
           item_id: corte.item_id,
           corte_id: corte.id,
           peso: parsed,
-        });
-        return result;
-      },
-      [] as CrearTallerPayload["detalles"]
-    );
+        } satisfies CrearTallerPayload["detalles"][number];
+      })
+      .filter((detalle): detalle is CrearTallerPayload["detalles"][number] =>
+        Boolean(detalle)
+      );
 
     if (!detalles.length) {
       setError(
