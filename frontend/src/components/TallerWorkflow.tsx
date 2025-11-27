@@ -25,6 +25,7 @@ import TallerList from "./taller/TallerList";
 import PageHeader from "./PageHeader";
 import {
   EspecieKey,
+  getItemNombre,
   resolveMaterialOptions,
   ResolvedMaterialOption,
 } from "../data/materialesTaller";
@@ -67,6 +68,18 @@ const TallerWorkflow = ({
       .trim()
       .toUpperCase();
 
+  const resolveMaterialOptionLabel = useCallback(
+    (option: ResolvedMaterialOption | null | undefined) =>
+      (option?.config.label ?? option?.item?.descripcion ?? "").trim(),
+    []
+  );
+
+  const resolveItemLabel = useCallback(
+    (item: Item | null | undefined) =>
+      sanitizeInput(item ? getItemNombre(item) : "", { maxLength: 120 }),
+    []
+  );
+
   const tallerSeleccionado = useMemo(() => {
     if (!selectedTallerId) {
       return null;
@@ -108,17 +121,11 @@ const TallerWorkflow = ({
       return null;
     }
     return items.find((item) => item.id === Number(selectedItemId)) ?? null;
-  }, [items, resolveItemLabel, selectedItemId]);
+  }, [items, selectedItemId]);
 
   const selectedItemNombre = useMemo(
     () => selectedItem?.descripcion ?? "",
     [selectedItem]
-  );
-
-  const resolveItemLabel = useCallback(
-    (option: ResolvedMaterialOption) =>
-      (option.config.label ?? option.item?.descripcion ?? "").trim(),
-    []
   );
 
   const selectedItemLabel = useMemo(
@@ -143,7 +150,7 @@ const TallerWorkflow = ({
     const seen = new Set<string>();
 
     return selectedOption.children
-      .map((child) => resolveItemLabel(child))
+      .map((child) => resolveMaterialOptionLabel(child))
       .filter((label): label is string => {
         if (!label) {
           return false;
@@ -158,16 +165,10 @@ const TallerWorkflow = ({
         seen.add(key);
         return true;
       });
-  }, [items, selectedItemId, selectedSpecies, resolveItemLabel]);
+  }, [items, selectedItemId, selectedSpecies, resolveMaterialOptionLabel]);
 
   const normalizeSpecies = (value: string): EspecieKey =>
     value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
-
-  const resolveItemLabel = useCallback(
-    (item: Item | null | undefined) =>
-      sanitizeInput(item ? getItemNombre(item) : "", { maxLength: 120 }),
-    []
-  );
 
   useEffect(() => {
     let isMounted = true;
