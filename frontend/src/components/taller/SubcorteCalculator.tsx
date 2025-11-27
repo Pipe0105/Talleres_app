@@ -44,6 +44,7 @@ const SubcorteCalculator = ({
   primaryLabel,
   secondaryCuts = DEFAULT_SECONDARY_CUTS,
   disabled = false,
+  onPesoChange,
 }: SubcorteCalculatorProps) => {
   const [pesoInicial, setPesoInicial] = useState("");
   const [pesoFinal, setPesoFinal] = useState("");
@@ -73,10 +74,6 @@ const SubcorteCalculator = ({
     setPesoFinal(sanitized);
     onPesoChange?.(`${primaryLabel} final`, sanitized);
   };
-
-  const cutsToUse = secondaryCuts.length
-    ? secondaryCuts
-    : DEFAULT_SECONDARY_CUTS;
 
   const uniqueSecondaryCuts = useMemo(() => {
     const seen = new Set<string>();
@@ -111,25 +108,13 @@ const SubcorteCalculator = ({
     [pesoInicialNumber]
   );
 
-  const calculateValor = useCallback(
-    (pesoRaw: string | undefined): number | null => {
-      const peso = parseInputNumber(pesoRaw);
-      if (peso === null) {
-        return null;
-      }
-
-      return peso;
-    },
-    []
-  );
-
   const subcorteDatos = useMemo(
     () =>
       uniqueSecondaryCuts.map((label) => ({
         label,
         porcentaje: calculatePercentage(subPesos[label]),
       })),
-    [uniqueSecondaryCuts, subPesos, calculatePercentage, calculateValor]
+    [uniqueSecondaryCuts, subPesos, calculatePercentage]
   );
 
   const porcentajeFinal = useMemo(
