@@ -403,7 +403,7 @@ const TallerWorkflow = ({
       return;
     }
 
-    const detalles = cortes
+    const cortesParaGuardar = cortes
       .map((corte) => {
         const peso = parsePesoValue(pesos[corte.id]);
         return peso !== null
@@ -414,7 +414,7 @@ const TallerWorkflow = ({
         (detalle): detalle is NonNullable<typeof detalle> => detalle !== null
       );
 
-    if (!detalles.length || !nombreTaller.trim()) {
+    if (!cortesParaGuardar.length || !nombreTaller.trim()) {
       setError(
         "Completa el nombre del taller e ingresa los pesos de los cortes antes de guardar."
       );
@@ -427,7 +427,7 @@ const TallerWorkflow = ({
     const payload: CrearTallerPayload = {
       nombre_taller: nombreTaller.trim(),
       descripcion: selectedItemLabel || null,
-      detalles,
+      cortes: cortesParaGuardar,
     };
 
     try {

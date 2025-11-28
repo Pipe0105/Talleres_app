@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, condecimal, field_validator
 
 
 
@@ -38,7 +38,7 @@ class TallerDetalleIn(BaseModel):
     peso: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
 
 class TallerCreatePayload(TallerIn):
-    detalles: List[TallerDetalleIn]
+    cortes: List[TallerDetalleIn] = Field(alias="detalles")
 
 class TallerOut(TallerIn):
     id: int

@@ -24,7 +24,7 @@ def crear_taller(
     db: Session = Depends(get_db),
     _: None = Depends(get_current_active_user),
 ):
-    if not payload.detalles:
+    if not payload.cortes:
         raise HTTPException(status_code=400, detail="debes incluir al menos un detaller")
     
     taller = Taller(
@@ -37,29 +37,30 @@ def crear_taller(
     db.add(taller)
     db.flush()
     
-    for detalle in payload.detalles:
-        item = db.get(Item, detalle.item_id)
+
+    for corte in payload.cortes:
+        item = db.get(Item, corte.item_id)
         if not item:
-            raise HTTPException(status_code=404, detail=f"item {detalle.item_id} no existe")
-        
-        corte = db.get(Corte, detalle.corte_id)
-        if not corte:
+            raise HTTPException(status_code=404, detail=f"item {corte.item_id} no existe")
+
+        corte_encontrado = db.get(Corte, corte.corte_id)
+        if not corte_encontrado:
             raise HTTPException(
-                status_code=400, detail=f"corte {detalle.corte_id} no existe"
+                status_code=400, detail=f"corte {corte.corte_id} no existe"
             )
             
-        if corte.item_id != detalle.item_id:
+        if corte_encontrado.item_id != corte.item_id:
             raise HTTPException(
                 status_code=400,
-                detail="el corte seleccionado no pertenece al item indicado"
+                detail="el corte seleccionado no pertenece al item indicado",
             )
             
         db.add(
             TallerDetalle(
                 taller_id=taller.id,
-                item_id=detalle.item_id,
-                corte_id=detalle.corte_id,
-                peso=detalle.peso,
+                item_id=corte.item_id,
+                corte_id=corte.corte_id,
+                peso=corte.peso,
             )
         )
     
