@@ -140,15 +140,6 @@ const TallerForm = ({
             {error}
           </Alert>
         )}
-
-        <Button
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={submitting || loadingCortes}
-        >
-          {submitting ? "Registrando taller…" : "Registrar taller"}
-        </Button>
       </Stack>
     </Paper>
   </form>
