@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Alert,
   AlertTitle,
@@ -59,6 +60,64 @@ const TallerForm = ({
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   };
 
+  const normalizeCorteName = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+
+  const corteLabels = useMemo(
+    () => cortes.map((corte) => corte.nombre_corte).filter(Boolean),
+    [cortes]
+  );
+
+  const derivedPrimaryLabel = useMemo(
+    () =>
+      corteLabels[0] ||
+      primaryCorteLabel ||
+      selectedItem?.descripcion ||
+      selectedItemNombre ||
+      "",
+    [
+      corteLabels,
+      primaryCorteLabel,
+      selectedItem?.descripcion,
+      selectedItemNombre,
+    ]
+  );
+
+  const derivedFinalLabel = useMemo(() => {
+    const regex = /FINAL|SALIDA|DESP/;
+    const finalFromCortes = corteLabels.find((label) =>
+      regex.test(normalizeCorteName(label))
+    );
+
+    if (finalFromCortes) {
+      return finalFromCortes;
+    }
+
+    return finalCorteLabel || `${derivedPrimaryLabel} FINAL`.trim();
+  }, [corteLabels, derivedPrimaryLabel, finalCorteLabel]);
+
+  const derivedSecondaryCuts = useMemo(() => {
+    const excluded = new Set([
+      normalizeCorteName(derivedPrimaryLabel),
+      normalizeCorteName(derivedFinalLabel),
+    ]);
+
+    const cortesSecundarios = corteLabels.filter(
+      (label) => !excluded.has(normalizeCorteName(label))
+    );
+
+    const extras = secondaryCuts.filter(
+      (label) => !excluded.has(normalizeCorteName(label))
+    );
+
+    return [...cortesSecundarios, ...extras];
+  }, [corteLabels, derivedFinalLabel, derivedPrimaryLabel, secondaryCuts]);
+
   return (
     <div style={{ flex: 1 }}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -109,9 +168,9 @@ const TallerForm = ({
 
           {selectedItem && (
             <SubcorteCalculator
-              primaryLabel={primaryCorteLabel || selectedItem.descripcion}
-              secondaryCuts={secondaryCuts}
-              finalLabel={finalCorteLabel}
+              primaryLabel={derivedPrimaryLabel}
+              secondaryCuts={derivedSecondaryCuts}
+              finalLabel={derivedFinalLabel}
               onPesoChange={onSubcortePesoChange}
             ></SubcorteCalculator>
           )}

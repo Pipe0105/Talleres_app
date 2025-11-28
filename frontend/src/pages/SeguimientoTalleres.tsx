@@ -201,12 +201,14 @@ const SeguimientoTalleres = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ minWidth: 200 }}>Usuario / sede</TableCell>
+                  <TableCell sx={{ minWidth: 200, fontSize: "1.4rem" }}>
+                    Sede
+                  </TableCell>
                   {displayedDates.map((fecha) => {
                     const { label, helper } = formatTableDay(fecha);
                     return (
                       <TableCell key={fecha} align="center">
-                        <Typography variant="subtitle2">{label}</Typography>
+                        <Typography variant="subtitle1">{label}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {helper}
                         </Typography>
@@ -220,10 +222,7 @@ const SeguimientoTalleres = () => {
                   <TableRow key={usuario.user_id} hover>
                     <TableCell>
                       <Stack spacing={0.5}>
-                        <Typography fontWeight={600}>
-                          {resolveDisplayName(usuario)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="subtitle1" color="text.primary">
                           {resolveSede(usuario)}
                         </Typography>
                       </Stack>

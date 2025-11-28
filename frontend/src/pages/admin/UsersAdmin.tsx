@@ -578,7 +578,7 @@ const UsersAdmin = () => {
                 SelectProps={{ displayEmpty: true }}
                 helperText="Selecciona la sede asignada"
               >
-                <MenuItem value="">Sin sede asignada</MenuItem>
+                <MenuItem value=""></MenuItem>
                 {BRANCH_LOCATIONS.map((branch) => (
                   <MenuItem key={branch} value={branch}>
                     {branch}
