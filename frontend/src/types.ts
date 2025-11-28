@@ -35,7 +35,7 @@ export interface TallerDetalleInput {
 export interface CrearTallerPayload {
   nombre_taller: string;
   descripcion?: string | null;
-  cortes: TallerDetalleInput[];
+  detalles: TallerDetalleInput[];
 }
 
 export interface TallerCreado {

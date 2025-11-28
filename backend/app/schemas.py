@@ -39,6 +39,7 @@ class TallerDetalleIn(BaseModel):
 
 class TallerCreatePayload(TallerIn):
     cortes: List[TallerDetalleIn] = Field(alias="detalles")
+    model_config = ConfigDict(populate_by_name=True)
 
 class TallerOut(TallerIn):
     id: int

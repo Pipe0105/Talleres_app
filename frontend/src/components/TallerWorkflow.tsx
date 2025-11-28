@@ -216,8 +216,7 @@ const TallerWorkflow = ({
   const finalCorteLabel = useMemo(() => {
     const finalMatch = cortes.find((corte) => {
       const normalized = normalizeCorteName(corte.nombre_corte);
-      return;
-      /FINAL|SALIDA|DESP/.test(normalized);
+      return /FINAL|SALIDA|DESP/.test(normalized);
     });
 
     return finalMatch?.nombre_corte || `${primaryCorteLabel} FINAL`.trim();
@@ -427,7 +426,7 @@ const TallerWorkflow = ({
     const payload: CrearTallerPayload = {
       nombre_taller: nombreTaller.trim(),
       descripcion: selectedItemLabel || null,
-      cortes: cortesParaGuardar,
+      detalles: cortesParaGuardar,
     };
 
     try {
