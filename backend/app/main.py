@@ -10,7 +10,7 @@ from textwrap import dedent
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import crud
 from .config import (
@@ -75,10 +75,30 @@ def _ensure_default_admin() -> None:
 
     with SessionLocal() as db:
         existing_admin = crud.get_user_by_username(db, ADMIN_USERNAME)
-        if existing_admin:
-            return
+        
+        if not existing_admin and ADMIN_EMAIL:
+            existing_admin = crud.get_user_by_email(db, ADMIN_EMAIL)
 
         try:
+            if existing_admin:
+                updated = False
+                if not existing_admin.is_admin:
+                    existing_admin.is_admin = True
+                    updated = True
+
+                if ADMIN_EMAIL and existing_admin.email != ADMIN_EMAIL:
+                    existing_admin.email = ADMIN_EMAIL
+                    updated = True
+
+                if ADMIN_FULL_NAME and existing_admin.full_name != ADMIN_FULL_NAME:
+                    existing_admin.full_name = ADMIN_FULL_NAME
+                    updated = True
+
+                if updated:
+                    db.add(existing_admin)
+                    db.commit()
+                    logger.info("Default admin user updated: %s", existing_admin.username)
+                return
             hashed_password = get_password_hash(ADMIN_PASSWORD)
             crud.create_user(
                 db,
@@ -90,10 +110,14 @@ def _ensure_default_admin() -> None:
             )
             db.commit()
             logger.info("Default admin user created: %s", ADMIN_USERNAME)
+        except IntegrityError:
+            db.rollback()
+            logger.info(
+                "Default admin user already exists with provided username or email; skipping creation."
+            )
         except SQLAlchemyError:
             db.rollback()
             logger.exception("Failed to create default admin user.")
-            raise
 
 def _ensure_default_operator() -> None:
     if not DEFAULT_USER_USERNAME or not DEFAULT_USER_PASSWORD:
