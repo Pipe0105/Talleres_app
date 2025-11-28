@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  MenuItem,
   Stack,
   Switch,
   Table,
@@ -37,6 +38,7 @@ import {
 } from "../../api/talleresApi";
 import type { UserProfile } from "../../types";
 import { Person } from "@mui/icons-material";
+import { BRANCH_LOCATIONS } from "../../data/branchLocations";
 
 interface NewUserForm {
   username: string;
@@ -246,6 +248,18 @@ const UsersAdmin = () => {
     () => new Set([currentUser?.id].filter(Boolean) as string[]),
     [currentUser?.id]
   );
+
+  const editSedeOptions = useMemo(() => {
+    if (
+      editForm?.sede &&
+      editForm.sede.trim() &&
+      !BRANCH_LOCATIONS.includes(editForm.sede)
+    ) {
+      return [editForm.sede, ...BRANCH_LOCATIONS];
+    }
+
+    return BRANCH_LOCATIONS;
+  }, [editForm?.sede]);
 
   const openCreateDialog = () => {
     setFormError(null);
@@ -551,6 +565,7 @@ const UsersAdmin = () => {
                 fullWidth
               />
               <TextField
+                select
                 label="Sede"
                 value={formState.sede}
                 onChange={(event) =>
@@ -560,7 +575,16 @@ const UsersAdmin = () => {
                   }))
                 }
                 fullWidth
-              />
+                SelectProps={{ displayEmpty: true }}
+                helperText="Selecciona la sede asignada"
+              >
+                <MenuItem value="">Sin sede asignada</MenuItem>
+                {BRANCH_LOCATIONS.map((branch) => (
+                  <MenuItem key={branch} value={branch}>
+                    {branch}
+                  </MenuItem>
+                ))}
+              </TextField>
               <FormControlLabel
                 control={
                   <Switch
@@ -670,6 +694,7 @@ const UsersAdmin = () => {
                 fullWidth
               />
               <TextField
+                select
                 label="Sede"
                 value={editForm?.sede ?? ""}
                 onChange={(event) =>
@@ -678,7 +703,16 @@ const UsersAdmin = () => {
                   )
                 }
                 fullWidth
-              />
+                SelectProps={{ displayEmpty: true }}
+                helperText="Selecciona la sede asignada"
+              >
+                <MenuItem value=""></MenuItem>
+                {editSedeOptions.map((branch) => (
+                  <MenuItem key={branch} value={branch}>
+                    {branch}
+                  </MenuItem>
+                ))}
+              </TextField>
               <TextField
                 label="Nueva contraseña"
                 type="password"

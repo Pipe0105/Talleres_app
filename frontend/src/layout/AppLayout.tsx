@@ -148,22 +148,15 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     sx={(theme) => ({
                       fontWeight: 700,
                       gap: 1,
-                      px: 1.75,
+                      px: 1, // <--- CAMBIADO
                       borderRadius: 999,
                       backgroundColor: item.isActive
                         ? "rgba(255, 255, 255, 0.70)"
                         : "transparent",
                       backdropFilter: item.isActive ? "blur(2px)" : "none",
-
                       color: item.isActive
                         ? theme.palette.primary.main
                         : theme.palette.common.white,
-                      cursor: item.disabled ? "default" : undefined,
-                      pointerEvents: item.disabled ? "none" : undefined,
-                      "&.Mui-disabled": {
-                        color: theme.palette.common.white,
-                        opacity: 1,
-                      },
                       boxShadow: item.isActive
                         ? theme.customShadows.surface
                         : "none",

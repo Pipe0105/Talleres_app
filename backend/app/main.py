@@ -25,24 +25,12 @@ from .config import (
     DEFAULT_USER_USERNAME,
     FRONTEND_ORIGINS,
 )
+from .constants import BRANCH_LOCATIONS
 from .database import Base, SessionLocal, engine
 from .routers import auth, upload, items, cortes, talleres, users
 from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
-
-BRANCH_LOCATIONS = [
-    "Ciudad Jardín",
-    "Calle 5ta",
-    "Centro Sur",
-    "Floresta",
-    "Plaza Norte",
-    "Floralia",
-    "Guadalupes",
-    "Palmira",
-    "Bogotá",
-    "Chia",
-]
 
 app = FastAPI(title="MercaMorfosis Backend")
 

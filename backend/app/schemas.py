@@ -98,6 +98,23 @@ class UserBase(BaseModel):
             raise ValueError("el nombre de usuario es obligatorio")
         return normalized
 
+    @field_validator("sede")
+    @classmethod
+    def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
+        from .constants import BRANCH_LOCATIONS
+
+        if value is None:
+            return value
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        if normalized not in BRANCH_LOCATIONS:
+            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+
+        return normalized
+
 
 class UserCreate(UserBase):
     password: str
