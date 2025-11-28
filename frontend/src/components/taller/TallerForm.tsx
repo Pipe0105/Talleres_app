@@ -24,6 +24,7 @@ interface TallerFormProps {
   secondaryCuts: string[];
   finalCorteLabel?: string;
   submitting?: boolean;
+  canSubmit: boolean;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
@@ -44,139 +45,151 @@ const TallerForm = ({
   secondaryCuts,
   finalCorteLabel,
   submitting = false,
+  canSubmit,
   onNombreChange,
   onPesoChange,
   onOpenSelector,
   onSubcortePesoChange,
   onSubmit,
-}: TallerFormProps) => (
-  <div style={{ flex: 1 }}>
-    <Paper sx={{ p: { xs: 3, md: 4 } }}>
-      <Stack spacing={3}>
-        <div>
-          <Typography variant="h6" component="h2">
-            Registrar nuevo taller
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Completa los campos para crear un nuevo taller con los cortes
-            configurados para el material seleccionado.
-          </Typography>
-        </div>
+}: TallerFormProps) => {
+  const parsePesoValue = (value?: string) => {
+    if (!value?.trim()) {
+      return null;
+    }
+    const normalized = value.replace(/,/g, ".");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  };
 
-        <Stack spacing={1}>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
-              Material seleccionado
+  return (
+    <div style={{ flex: 1 }}>
+      <Paper sx={{ p: { xs: 3, md: 4 } }}>
+        <Stack spacing={3}>
+          <div>
+            <Typography variant="h6" component="h2">
+              Registrar nuevo taller
             </Typography>
-            <Button variant="outlined" onClick={onOpenSelector}>
-              Cambiar material
-            </Button>
+            <Typography variant="body2" color="text.secondary">
+              Completa los campos para crear un nuevo taller con los cortes
+              configurados para el material seleccionado.
+            </Typography>
+          </div>
+
+          <Stack spacing={1}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+                Material seleccionado
+              </Typography>
+              <Button variant="outlined" onClick={onOpenSelector}>
+                Cambiar material
+              </Button>
+            </Stack>
+            {selectedItem || selectedItemNombre ? (
+              <Typography>
+                {selectedItem?.descripcion ?? selectedItemNombre ?? ""}
+                {selectedItem?.codigo_producto
+                  ? ` · ${selectedItem.codigo_producto}`
+                  : ""}
+              </Typography>
+            ) : (
+              <Alert severity="warning">
+                Usa el botón "Registrar nuevo taller" para elegir un material
+                antes de completar los datos.
+              </Alert>
+            )}
           </Stack>
-          {selectedItem || selectedItemNombre ? (
-            <Typography>
-              {selectedItem?.descripcion ?? selectedItemNombre ?? ""}
-              {selectedItem?.codigo_producto
-                ? ` · ${selectedItem.codigo_producto}`
-                : ""}
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              label="Nombre del taller"
+              value={nombreTaller}
+              onChange={(event) => onNombreChange(event.target.value)}
+              required
+              fullWidth
+              disabled={!selectedItem}
+              helperText="Ej. Taller desposte res 2024"
+            />
+          </Stack>
+
+          {selectedItem && (
+            <SubcorteCalculator
+              primaryLabel={primaryCorteLabel || selectedItem.descripcion}
+              secondaryCuts={secondaryCuts}
+              finalLabel={finalCorteLabel}
+              onPesoChange={onSubcortePesoChange}
+            ></SubcorteCalculator>
+          )}
+
+          <Stack spacing={2}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              Pesos por corte
             </Typography>
-          ) : (
-            <Alert severity="warning">
-              Usa el botón "Registrar nuevo taller" para elegir un material
-              antes de completar los datos.
+            {loadingCortes ? (
+              <Typography variant="body2" color="text.secondary">
+                Cargando cortes asociados…
+              </Typography>
+            ) : cortes.length ? (
+              cortes.map((corte) => {
+                const pesoValue = pesos[corte.id] ?? "";
+                const pesoParsed = parsePesoValue(pesoValue);
+                const pesoInvalid = pesoValue !== "" && pesoParsed === null;
+
+                return (
+                  <TextField
+                    key={corte.id}
+                    label={`${
+                      corte.nombre_corte
+                    } · % objetivo ${corte.porcentaje_default.toFixed(2)}%`}
+                    type="number"
+                    inputProps={{ step: 0.001, min: 0 }}
+                    required
+                    value={pesoValue}
+                    onChange={(event) =>
+                      onPesoChange(corte.id, event.target.value)
+                    }
+                    error={pesoInvalid}
+                    helperText={
+                      pesoInvalid
+                        ? "Ingresa un peso válido en kilogramos"
+                        : "Ingresa el peso en kilogramos"
+                    }
+                  />
+                );
+              })
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No hay cortes registrados para este material. Registra cortes en
+                la API antes de crear talleres.
+              </Typography>
+            )}
+          </Stack>
+
+          {error && (
+            <Alert severity="error">
+              <AlertTitle>Error</AlertTitle>
+              {error}
             </Alert>
           )}
-        </Stack>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <TextField
-            label="Nombre del taller"
-            value={nombreTaller}
-            onChange={(event) => onNombreChange(event.target.value)}
-            required
-            fullWidth
-            disabled={!selectedItem}
-            helperText="Ej. Taller desposte res 2024"
-          />
-        </Stack>
-
-        {selectedItem && (
-          <SubcorteCalculator
-            primaryLabel={primaryCorteLabel || selectedItem.descripcion}
-            secondaryCuts={secondaryCuts}
-            finalLabel={finalCorteLabel}
-            onPesoChange={onSubcortePesoChange}
-          ></SubcorteCalculator>
-        )}
-
-        <Stack spacing={2}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Pesos por corte
-          </Typography>
-          {loadingCortes ? (
-            <Typography variant="body2" color="text.secondary">
-              Cargando cortes asociados…
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={onSubmit}
+              type="submit"
+              disabled={!canSubmit || submitting}
+            >
+              {submitting ? "Guardando…" : "Guardar taller"}
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+              Guarda el taller para registrar el peso inicial, los subcortes y
+              el peso final en el historial.
             </Typography>
-          ) : cortes.length ? (
-            cortes.map((corte) => (
-              <TextField
-                key={corte.id}
-                label={`${
-                  corte.nombre_corte
-                } · % objetivo ${corte.porcentaje_default.toFixed(2)}%`}
-                type="number"
-                inputProps={{ step: 0.001, min: 0 }}
-                value={pesos[corte.id] ?? ""}
-                onChange={(event) => onPesoChange(corte.id, event.target.value)}
-                helperText="Ingresa el peso en kilogramos"
-              />
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No hay cortes registrados para este material. Registra cortes en
-              la API antes de crear talleres.
-            </Typography>
-          )}
+          </Stack>
         </Stack>
-
-        {error && (
-          <Alert severity="error">
-            <AlertTitle>Error</AlertTitle>
-            {error}
-          </Alert>
-        )}
-
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onSubmit}
-            type="submit"
-            disabled={!selectedItem || submitting}
-          >
-            {submitting ? "Guardando…" : "Guardar taller"}
-          </Button>
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Guarda el taller para registrar el peso inicial, los subcortes y el
-            peso final en el historial.
-          </Typography>
-        </Stack>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onSubmit}
-            type="submit"
-            disabled={!selectedItem || submitting}
-          >
-            {submitting ? "Guardando.." : "Guardando taller"}
-          </Button>
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Guardar el taller para registrar todo
-          </Typography>
-        </Stack>
-      </Stack>
-    </Paper>
-  </div>
-);
+      </Paper>
+    </div>
+  );
+};
 
 export default TallerForm;

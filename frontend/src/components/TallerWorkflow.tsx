@@ -142,6 +142,29 @@ const TallerWorkflow = ({
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   }, []);
 
+  const canSubmit = useMemo(() => {
+    if (!selectedItem || !selectedItemId || !nombreTaller.trim()) {
+      return false;
+    }
+
+    if (!cortes.length) {
+      return false;
+    }
+
+    if (!cortes.length) {
+      return false;
+    }
+
+    return cortes.every((corte) => parsePesoValue(pesos[corte.id]) !== null);
+  }, [
+    cortes,
+    nombreTaller,
+    parsePesoValue,
+    pesos,
+    selectedItem,
+    selectedItemId,
+  ]);
+
   const secondaryCuts = useMemo(() => {
     if (!selectedSpecies) {
       return [];
@@ -413,7 +436,7 @@ const TallerWorkflow = ({
         (detalle): detalle is NonNullable<typeof detalle> => detalle !== null
       );
 
-    if (!cortesParaGuardar.length || !nombreTaller.trim()) {
+    if (!canSubmit || !cortesParaGuardar.length) {
       setError(
         "Completa el nombre del taller e ingresa los pesos de los cortes antes de guardar."
       );
@@ -491,6 +514,7 @@ const TallerWorkflow = ({
             secondaryCuts={resolvedSecondaryCuts}
             finalCorteLabel={finalCorteLabel}
             submitting={submitting}
+            canSubmit={canSubmit}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}
