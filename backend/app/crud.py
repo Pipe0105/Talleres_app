@@ -20,14 +20,20 @@ def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.get(models.User, user_id)
 
 def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+    normalized = username.strip().lower()
     return (
         db.query(models.User)
-        .filter(models.User.username == username)
+        .filter(func.lower(models.User.username) == normalized)
         .one_or_none()
     )
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.email == email).one_or_none()
+    normalized = email.strip().lower()
+    return (
+        db.query(models.User)
+        .filter(func.lower(models.User.email) == normalized)
+        .one_or_none()
+    )
 
 def get_user_by_identifier(db: Session, identifier: str) -> Optional[models.User]:
     user = get_user_by_username(db, identifier)
@@ -45,9 +51,11 @@ def create_user(
     is_active: bool = True,
     is_admin: bool = False,
 ) -> models.User:
+    normalized_username = username.strip().lower()
+    normalized_email = email.strip().lower() if email else None
     user = models.User(
-        username=username,
-        email=email,
+        username=normalized_username,
+        email=normalized_email,
         hashed_password = hashed_password,
         full_name = full_name,
         is_active = is_active,
@@ -73,9 +81,9 @@ def update_user(
     is_admin: Optional[bool] = None,
 ) -> models.User:
     if username is not None:
-        user.username = username
+        user.username = username.strip().lower()
     if email is not None:
-        user.email = email
+        user.email = email.strip().lower()
     if full_name is not None:
         user.full_name = full_name
     if hashed_password is not None:
