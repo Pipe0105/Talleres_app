@@ -143,13 +143,6 @@ const MaterialSelector = ({
 
   return (
     <Stack spacing={2}>
-      <Stack spacing={1}>
-        <Typography variant="h6">Alta de talleres</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Abre el selector para elegir el material antes de llenar el
-          formulario.
-        </Typography>
-      </Stack>
       {locked ? (
         <Alert severity="info" sx={{ m: 0 }}>
           Guarda el taller actual para registrar uno nuevo.
