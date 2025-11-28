@@ -163,7 +163,11 @@ def actividad_talleres(
 
     usuarios = (
         db.query(User)
-        .filter(User.is_active.is_(True))
+        .filter(
+            User.is_active.is_(True),
+            User.sede.isnot(None),
+            func.length(func.trim(User.sede)) > 0,
+        )
         .order_by(User.username)
         .all()
     )
