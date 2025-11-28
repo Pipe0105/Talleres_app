@@ -33,7 +33,7 @@ def _load_frontend_origins() -> List[str]:
 DATABASE_URL = _build_database_url()
 FRONTEND_ORIGINS = _load_frontend_origins()
 
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME") or os.getenv("ADMIN_EMAIL") or "admin@example.com"
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "Admin") or os.getenv("ADMIN_EMAIL") or "admin@example.com"
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "administrador")
 ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Administrador")
