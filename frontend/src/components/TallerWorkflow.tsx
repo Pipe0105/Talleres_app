@@ -343,104 +343,6 @@ const TallerWorkflow = ({
     setSelectorLocked(true);
   };
 
-  const parsePesoInput = (raw: string | undefined | null): number | null => {
-    if (raw === undefined || raw === null) {
-      return null;
-    }
-
-    const cleaned = raw
-      .replace(/[^0-9.,-]+/g, "")
-      .replace(/\s+/g, "")
-      .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
-      .replace(/,/g, ".");
-
-    if (!cleaned) {
-      return null;
-    }
-
-    const parsed = Number.parseFloat(cleaned);
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      return null;
-    }
-
-    return parsed;
-  };
-
-  const resetForm = () => {
-    setPesos({});
-    setNombreTaller(() => {
-      return resolveItemLabel(selectedItem);
-    });
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!selectedItemId) {
-      setError("Selecciona un material antes de registrar el taller.");
-      return;
-    }
-
-    const corteById = cortes.reduce((map, corte) => {
-      map.set(corte.id, corte);
-      return map;
-    }, new Map<string, corte>());
-
-    const detalles: CrearTallerPayload["detalles"] = Object.entries(pesos)
-      .map(([corteId, rawPeso]) => {
-        const corte = corteById.get(corteId);
-        const parsed = parsePesoInput(rawPeso);
-
-        if (!corte || parsed === null) {
-          return null;
-        }
-
-        return {
-          item_id: corte.item_id,
-          corte_id: corte.id,
-          peso: parsed,
-        } satisfies CrearTallerPayload["detalles"][number];
-      })
-      .filter((detalle): detalle is CrearTallerPayload["detalles"][number] =>
-        Boolean(detalle)
-      );
-
-    if (!detalles.length) {
-      setError(
-        "Debes ingresar al menos un peso válido para registrar el taller."
-      );
-      return;
-    }
-
-    const nombreNormalizado = sanitizeInput(nombreTaller, { maxLength: 120 });
-    if (!nombreNormalizado) {
-      setError("Ingresa un nombre valido para el taller");
-      return;
-    }
-
-    const payload: CrearTallerPayload = {
-      nombre_taller: nombreNormalizado,
-      detalles,
-    };
-
-    try {
-      setSubmitting(true);
-      setError(null);
-      const nuevoTaller = await createTaller(payload);
-      setSelectedTallerId(nuevoTaller.id);
-      resetForm();
-      const refreshedTalleres = await getTalleres();
-      setTalleres(refreshedTalleres);
-      setSelectorLocked(false);
-    } catch (err) {
-      console.error(err);
-      setError(
-        "No fue posible registrar el taller. Verifica los datos e inténtalo nuevamente."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <Stack spacing={4}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -476,10 +378,8 @@ const TallerWorkflow = ({
             selectedItemNombre={selectedItemNombre}
             nombreTaller={nombreTaller}
             loadingCortes={loadingCortes}
-            submitting={submitting}
             error={error}
             secondaryCuts={secondaryCuts}
-            onSubmit={handleSubmit}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}

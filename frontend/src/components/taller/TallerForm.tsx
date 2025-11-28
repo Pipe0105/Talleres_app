@@ -1,4 +1,3 @@
-import { FormEvent } from "react";
 import {
   Alert,
   AlertTitle,
@@ -20,10 +19,8 @@ interface TallerFormProps {
   selectedItemNombre?: string;
   nombreTaller: string;
   loadingCortes: boolean;
-  submitting: boolean;
   error: string | null;
   secondaryCuts: string[];
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
@@ -38,16 +35,14 @@ const TallerForm = ({
   selectedItemNombre,
   nombreTaller,
   loadingCortes,
-  submitting,
   error,
   secondaryCuts,
-  onSubmit,
   onNombreChange,
   onPesoChange,
   onOpenSelector,
   onSubcortePesoChange,
 }: TallerFormProps) => (
-  <form onSubmit={onSubmit} style={{ flex: 1 }}>
+  <div style={{ flex: 1 }}>
     <Paper sx={{ p: { xs: 3, md: 4 } }}>
       <Stack spacing={3}>
         <div>
@@ -142,7 +137,7 @@ const TallerForm = ({
         )}
       </Stack>
     </Paper>
-  </form>
+  </div>
 );
 
 export default TallerForm;
