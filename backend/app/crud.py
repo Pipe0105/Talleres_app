@@ -23,7 +23,7 @@ def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
     normalized = username.strip().lower()
     return (
         db.query(models.User)
-        .filter(func.lower(models.User.username) == normalized)
+        .filter(models.User.username.ilike(normalized))
         .one_or_none()
     )
 
@@ -31,7 +31,7 @@ def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     normalized = email.strip().lower()
     return (
         db.query(models.User)
-        .filter(func.lower(models.User.email) == normalized)
+        .filter(models.User.email.ilike(normalized))
         .one_or_none()
     )
 
