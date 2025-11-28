@@ -21,10 +21,12 @@ interface TallerFormProps {
   loadingCortes: boolean;
   error: string | null;
   secondaryCuts: string[];
+  submitting?: boolean;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
   onSubcortePesoChange?: (label: string, value: string) => void;
+  onSubmit?: () => void;
 }
 
 const TallerForm = ({
@@ -37,10 +39,12 @@ const TallerForm = ({
   loadingCortes,
   error,
   secondaryCuts,
+  submitting = false,
   onNombreChange,
   onPesoChange,
   onOpenSelector,
   onSubcortePesoChange,
+  onSubmit,
 }: TallerFormProps) => (
   <div style={{ flex: 1 }}>
     <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -135,6 +139,20 @@ const TallerForm = ({
             {error}
           </Alert>
         )}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onSubmit}
+            type="submit"
+            disabled={!selectedItem || submitting}
+          >
+            {submitting ? "Guardando.." : "Guardando taller"}
+          </Button>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Guardar el taller para registrar todo
+          </Typography>
+        </Stack>
       </Stack>
     </Paper>
   </div>

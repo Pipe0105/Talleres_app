@@ -133,6 +133,15 @@ const TallerWorkflow = ({
     [resolveItemLabel, selectedItem]
   );
 
+  const parsePesoValue = useCallback((value?: string) => {
+    if (!value?.trim()) {
+      return null;
+    }
+    const normalized = value.replace(/,/g, ".");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }, []);
+
   const secondaryCuts = useMemo(() => {
     if (!selectedSpecies) {
       return [];
@@ -343,8 +352,64 @@ const TallerWorkflow = ({
     setSelectorLocked(true);
   };
 
+  const handleSubmit = async (event?: FormEvent) => {
+    event?.preventDefault();
+
+    if (submitting || !selectedItem || !selectedItemId) {
+      return;
+    }
+
+    const detalles = cortes
+      .map((corte) => {
+        const peso = parsePesoValue(pesos[corte.id]);
+        return peso !== null
+          ? { item_id: selectedItemId, corte_id: corte.id, peso }
+          : null;
+      })
+      .filter(
+        (detalle): detalle is NonNullable<typeof detalle> => detalle !== null
+      );
+
+    if (!detalles.length || !nombreTaller.trim()) {
+      setError(
+        "Completa el nombre del taller e ingresa los pesos de los cortes antes de guardar."
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    const payload: CrearTallerPayload = {
+      nombre_taller: nombreTaller.trim(),
+      descripcion: selectedItemLabel || null,
+      detalles,
+    };
+
+    try {
+      const tallerCreado = await createTaller(payload);
+      const [talleresData, calculoData] = await Promise.all([
+        getTalleres(),
+        getTallerCalculo(tallerCreado.id),
+      ]);
+
+      setTalleres(talleresData);
+      setSelectedTallerId(tallerCreado.id);
+      setCalculo(calculoData);
+      setPesos({});
+      setSelectorLocked(false);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "No fue posible guardar el taller. Verifica los datos e inténtalo nuevamente."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <Stack spacing={4}>
+    <Stack spacing={4} component="form" onSubmit={handleSubmit}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <PageHeader title={title} description={description} />
       </Paper>
@@ -384,6 +449,7 @@ const TallerWorkflow = ({
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}
             onSubcortePesoChange={handleSubcortePesoChange}
+            onSubmit={handleSubmit}
           />
         </Stack>
       )}
