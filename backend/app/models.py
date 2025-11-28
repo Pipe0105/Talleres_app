@@ -42,6 +42,9 @@ class Taller(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nombre_taller = Column(Text, nullable=False)
     descripcion = Column(Text)
+    creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    creado_por = relationship("User")
 
     detalles = relationship(
         "TallerDetalle", back_populates="taller", cascade="all, delete-orphan"
@@ -81,6 +84,8 @@ class User(Base):
     hashed_password = Column(Text, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default="true")
     is_admin = Column(Boolean, nullable=False, server_default="false")
+    is_gerente = Column(Boolean, nullable=False, server_default="false")
+    sede = Column(Text)
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     actualizado_en = Column(
         TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False

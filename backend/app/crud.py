@@ -50,6 +50,8 @@ def create_user(
     full_name: Optional[str] = None,
     is_active: bool = True,
     is_admin: bool = False,
+    is_gerente: bool = False,
+    sede: Optional[str] = None,
 ) -> models.User:
     normalized_username = username.strip().lower()
     normalized_email = email.strip().lower() if email else None
@@ -60,6 +62,8 @@ def create_user(
         full_name = full_name,
         is_active = is_active,
         is_admin = is_admin,
+        is_gerente=is_gerente,
+        sede=sede,
     )
     db.add(user)
     db.flush()
@@ -79,6 +83,8 @@ def update_user(
     hashed_password: Optional[str] = None,
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
+    is_gerente: Optional[bool] = None,
+    sede: Optional[str] = None,
 ) -> models.User:
     if username is not None:
         user.username = username.strip().lower()
@@ -92,6 +98,11 @@ def update_user(
         user.is_active = is_active
     if is_admin is not None:
         user.is_admin = is_admin
+        
+    if is_gerente is not None:
+        user.is_gerente = is_gerente
+    if sede is not None:
+        user.sede = sede
     
     db.add(user)
     db.flush()

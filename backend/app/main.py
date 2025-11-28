@@ -94,10 +94,14 @@ def _ensure_default_admin() -> None:
                     existing_admin.full_name = ADMIN_FULL_NAME
                     updated = True
 
-                if updated:
-                    db.add(existing_admin)
-                    db.commit()
-                    logger.info("Default admin user updated: %s", existing_admin.username)
+                if not existing_admin.is_gerente:
+                    existing_admin.is_gerente = True
+                    updated = True
+
+            if updated:
+                db.add(existing_admin)
+                db.commit()
+                logger.info("Default admin user updated: %s", existing_admin.username)
                 return
             hashed_password = get_password_hash(ADMIN_PASSWORD)
             crud.create_user(
@@ -107,6 +111,7 @@ def _ensure_default_admin() -> None:
                 hashed_password=hashed_password,
                 full_name=ADMIN_FULL_NAME,
                 is_admin=True,
+                is_gerente=True,
             )
             db.commit()
             logger.info("Default admin user created: %s", ADMIN_USERNAME)
@@ -118,6 +123,31 @@ def _ensure_default_admin() -> None:
         except SQLAlchemyError:
             db.rollback()
             logger.exception("Failed to create default admin user.")
+            
+def _promote_user_to_admin(email: str) -> None:
+    if not email:
+        return
+    
+    with SessionLocal() as db:
+        user = crud.get_user_by_email(db, email)
+        if not user:
+            logger.info(
+                "No se encontro", email
+            )
+            return
+        if user.is_admin:
+            return
+        
+        try:
+            user.is_admin = True
+            db.add(user)
+            db.commit()
+            logger.info("Usuario promovido", email)
+        except SQLAlchemyError:
+            db.rollback()
+            logger.exception(
+                "Fallo al intentar promover", email
+            )
 
 def _ensure_default_operator() -> None:
     if not DEFAULT_USER_USERNAME or not DEFAULT_USER_PASSWORD:
@@ -137,6 +167,7 @@ def _ensure_default_operator() -> None:
                 hashed_password=hashed_password,
                 full_name=DEFAULT_USER_FULL_NAME,
                 is_admin=False,
+                sede=DEFAULT_USER_FULL_NAME,
             )
             db.commit()
             logger.info("Default operator user created: %s", DEFAULT_USER_USERNAME)
@@ -170,6 +201,7 @@ def _ensure_branch_operators() -> None:
                     hashed_password=hashed_password,
                     full_name=f"Operario {branch}",
                     is_admin=False,
+                    sede=branch,
                 )
                 created_users.append(username)
             
@@ -206,6 +238,15 @@ def _startup():
             )
         )
         conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS users "
+                "ADD COLUMN IF NOT EXISTS is_gerente BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
+        conn.execute(
+            text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS sede TEXT")
+        )
+        conn.execute(
             text("ALTER TABLE IF EXISTS users ALTER COLUMN email DROP NOT NULL")
         )
         conn.execute(text("UPDATE users SET username = email WHERE username IS NULL"))
@@ -215,6 +256,18 @@ def _startup():
         conn.execute(
             text(
                 "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username)"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP NOT NULL DEFAULT NOW()"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS creado_por_id INTEGER REFERENCES users(id)"
             )
         )
     # Crear/asegurar vista v_taller_calculo (idem potente)
@@ -252,6 +305,7 @@ def _startup():
         
     _ensure_default_admin()
     _ensure_default_operator()
+    _promote_user_to_admin("pipe@gmail.com")
     _ensure_branch_operators()
 
 

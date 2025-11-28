@@ -33,6 +33,9 @@ export const useNavigationItems = ({
         ? [
             { label: "Desposte", to: "/talleres/desposte" },
             { label: "Informes", to: "/informes-historicos" },
+            ...(user.is_admin || user.is_gerente
+              ? [{ label: "Seguimiento", to: "/seguimiento-talleres" }]
+              : []),
           ]
         : []),
       { label: "Lista de precios", to: "/lista-precios" },
@@ -41,7 +44,6 @@ export const useNavigationItems = ({
             {
               label: "Usuarios",
               to: "/usuarios",
-              icon: <GroupOutlinedIcon fontSize="small" />,
             },
           ]
         : []),

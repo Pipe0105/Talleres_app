@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, condecimal, field_validator
@@ -9,7 +9,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, condecimal, field_v
 class ItemIn(BaseModel):
     item_code: str
     descripcion: str
-    precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
+    precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4)  # type: ignore
+
 
 class ItemOut(BaseModel):
     id: int
@@ -22,7 +23,7 @@ class ItemOut(BaseModel):
 class CorteIn(BaseModel):
     item_id: int
     nombre_corte: str
-    porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4) # type: ignore
+    porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4)  # type: ignore
 
 class CorteOut(CorteIn):
     id: int
@@ -35,7 +36,7 @@ class TallerIn(BaseModel):
 class TallerDetalleIn(BaseModel):
     item_id: int
     corte_id: int
-    peso: condecimal(ge=0, max_digits=14, decimal_places=4) # type: ignore
+    peso: condecimal(ge=0, max_digits=14, decimal_places=4)  # type: ignore
 
 class TallerCreatePayload(TallerIn):
     cortes: List[TallerDetalleIn] = Field(alias="detalles")
@@ -43,6 +44,7 @@ class TallerCreatePayload(TallerIn):
 
 class TallerOut(TallerIn):
     id: int
+    creado_en: datetime
     model_config = ConfigDict(from_attributes=True)
     
 class TallerListItem(BaseModel):
@@ -66,12 +68,27 @@ class TallerCalculoRow(BaseModel):
     porcentaje_real: float
     delta_pct: float
     valor_estimado: float
+    
+class TallerActividadDia(BaseModel):
+    fecha: date
+    cantidad: int
+
+
+class TallerActividadUsuario(BaseModel):
+    user_id: int
+    username: str
+    full_name: Optional[str] = None
+    sede: Optional[str] = None
+    is_active: bool
+    dias: List[TallerActividadDia]
 
 
 class UserBase(BaseModel):
     username: str
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
+    
+    sede: Optional[str] = None
     
     @field_validator("username")
     @classmethod
@@ -90,6 +107,7 @@ class UserOut(UserBase):
     id: int
     is_active: bool
     is_admin: bool
+    is_gerente: bool
     creado_en: datetime
     actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)
@@ -103,6 +121,7 @@ class UserLogin(BaseModel):
 class UserAdminCreate(UserCreate):
     is_active: bool = True
     is_admin: bool = False
+    is_gerente: bool = False
 
 
 class UserUpdate(BaseModel):
@@ -112,6 +131,8 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
+    is_gerente: Optional[bool] = None
+    sede: Optional[str] = None
 
 
 class Token(BaseModel):

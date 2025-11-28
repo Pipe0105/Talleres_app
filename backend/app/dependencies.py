@@ -52,4 +52,16 @@ def get_current_admin_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Se requiere permisos de administrador",
         )
+        
+    return current_user
+
+
+def get_current_manager_user(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if not (current_user.is_admin or current_user.is_gerente):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren permisos de gerente o administrador",
+        )
     return current_user

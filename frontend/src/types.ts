@@ -70,6 +70,22 @@ export interface UserProfile {
   full_name: string | null;
   is_active: boolean;
   is_admin: boolean;
+  is_gerente: boolean;
+  sede: string | null;
   creado_en: string;
   actualizado_en: string;
+}
+
+export interface TallerActividadDia {
+  fecha: string;
+  cantidad: number;
+}
+
+export interface TallerActividadUsuario {
+  user_id: string;
+  username: string;
+  full_name: string | null;
+  sede: string | null;
+  is_active: boolean;
+  dias: TallerActividadDia[];
 }

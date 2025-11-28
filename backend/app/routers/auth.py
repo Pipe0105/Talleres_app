@@ -35,6 +35,7 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> UserOut
         email=payload.email,
         hashed_password=hashed_password,
         full_name=payload.full_name,
+        sede=payload.sede,
     )
     return user
 

@@ -8,6 +8,7 @@ import {
   TallerCalculoRow,
   TallerCreado,
   TallerListItem,
+  TallerActividadUsuario,
   UserProfile,
 } from "../types";
 import { safeStorage } from "../utils/storage";
@@ -190,6 +191,20 @@ const mapCalculo = (raw: any): TallerCalculoRow => ({
   valor_estimado: toNumber(raw?.valor_estimado),
 });
 
+const mapActividadDia = (raw: any) => ({
+  fecha: toStringOr(raw?.fecha, ""),
+  cantidad: toNumber(raw?.cantidad, 0),
+});
+
+const mapActividadUsuario = (raw: any): TallerActividadUsuario => ({
+  user_id: toStringOr(raw?.user_id, ""),
+  username: toStringOr(raw?.username, ""),
+  full_name: raw?.full_name ?? null,
+  sede: raw?.sede ?? null,
+  is_active: toBoolean(raw?.is_active, true),
+  dias: Array.isArray(raw?.dias) ? raw.dias.map(mapActividadDia) : [],
+});
+
 const mapUser = (raw: any): UserProfile => ({
   id: toStringOr(raw?.id, ""),
   username: toStringOr(raw?.username, ""),
@@ -197,6 +212,8 @@ const mapUser = (raw: any): UserProfile => ({
   full_name: raw?.full_name ?? null,
   is_active: toBoolean(raw?.is_active, true),
   is_admin: toBoolean(raw?.is_admin, false),
+  is_gerente: toBoolean(raw?.is_gerente, false),
+  sede: raw?.sede ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
   actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
 });
@@ -283,9 +300,29 @@ export const getTallerCalculo = async (
   return (Array.isArray(data) ? data : []).map(mapCalculo);
 };
 
+export const getTallerActividad = async (params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<TallerActividadUsuario[]> => {
+  const searchParams = new URLSearchParams();
+  if (params?.startDate) {
+    searchParams.set("start_date", params.startDate);
+  }
+  if (params?.endDate) {
+    searchParams.set("end_date", params.endDate);
+  }
+
+  const query = searchParams.toString();
+  const url = query ? `/talleres/actividad?${query}` : `/talleres/actividad`;
+  const { data } = await api.get<unknown[]>(url);
+  return (Array.isArray(data) ? data : []).map(mapActividadUsuario);
+};
+
 export interface AdminCreateUserPayload extends RegisterUserPayload {
   is_admin?: boolean;
   is_active?: boolean;
+  is_gerente?: boolean;
+  sede?: string;
 }
 
 export const adminCreateUser = async (
@@ -307,6 +344,8 @@ export interface AdminUpdateUserPayload {
   password?: string;
   is_active?: boolean;
   is_admin?: boolean;
+  is_gerente?: boolean;
+  sede?: string;
 }
 
 export const adminUpdateUser = async (

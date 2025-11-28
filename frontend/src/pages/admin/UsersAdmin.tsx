@@ -44,7 +44,9 @@ interface NewUserForm {
   password: string;
   fullName: string;
   isAdmin: boolean;
+  isGerente: boolean;
   isActive: boolean;
+  sede: string;
 }
 
 interface EditUserForm {
@@ -53,7 +55,9 @@ interface EditUserForm {
   password: string;
   fullname: string;
   isAdmin: boolean;
+  isGerente: boolean;
   isActive: boolean;
+  sede: string;
 }
 
 const INITIAL_FORM_STATE: NewUserForm = {
@@ -62,7 +66,9 @@ const INITIAL_FORM_STATE: NewUserForm = {
   password: "",
   fullName: "",
   isAdmin: false,
+  isGerente: false,
   isActive: true,
+  sede: "",
 };
 
 const UsersAdmin = () => {
@@ -114,6 +120,8 @@ const UsersAdmin = () => {
         full_name: formState.fullName || undefined,
         is_admin: formState.isAdmin,
         is_active: formState.isActive,
+        is_gerente: formState.isGerente,
+        sede: formState.sede || undefined,
       });
       setFormSuccess("Usuario creado correctamente.");
       setFormState(INITIAL_FORM_STATE);
@@ -155,6 +163,20 @@ const UsersAdmin = () => {
     }
   };
 
+  const handleToggleGerente = async (target: UserProfile) => {
+    setUpdatingUserId(target.id);
+    setListError(null);
+    try {
+      await adminUpdateUser(target.id, { is_gerente: !target.is_gerente });
+      await loadUsers();
+    } catch (error) {
+      console.error(error);
+      setListError("No se pudo actualizar el rol de gerente.");
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   const openEditDialog = (target: UserProfile) => {
     setEditTarget(target);
     setEditForm({
@@ -163,7 +185,9 @@ const UsersAdmin = () => {
       fullname: target.full_name ?? "",
       password: "",
       isAdmin: target.is_admin,
+      isGerente: target.is_gerente,
       isActive: target.is_active,
+      sede: target.sede ?? "",
     });
     setEditError(null);
   };
@@ -189,6 +213,8 @@ const UsersAdmin = () => {
         password: editForm.password ? editForm.password : undefined,
         is_admin: editForm.isAdmin,
         is_active: editForm.isActive,
+        is_gerente: editForm.isGerente,
+        sede: editForm.sede.trim() || undefined,
       });
       closeEditDialog();
       await loadUsers();
@@ -285,6 +311,7 @@ const UsersAdmin = () => {
                   <TableCell>Usuario</TableCell>
                   <TableCell>Correo</TableCell>
                   <TableCell>Nombre</TableCell>
+                  <TableCell>Sede</TableCell>
                   <TableCell>Rol</TableCell>
                   <TableCell>Estado</TableCell>
                   <TableCell>Creado</TableCell>
@@ -297,10 +324,23 @@ const UsersAdmin = () => {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
+                    <TableCell>{user.sede || "—"}</TableCell>
                     <TableCell>
                       <Chip
-                        label={user.is_admin ? "Administrador" : "Operador"}
-                        color={user.is_admin ? "primary" : "default"}
+                        label={
+                          user.is_admin
+                            ? "Administrador"
+                            : user.is_gerente
+                            ? "Gerente"
+                            : "Operador"
+                        }
+                        color={
+                          user.is_admin
+                            ? "primary"
+                            : user.is_gerente
+                            ? "secondary"
+                            : "default"
+                        }
                         size="small"
                       />
                     </TableCell>
@@ -363,6 +403,31 @@ const UsersAdmin = () => {
                             </Button>
                           </span>
                         </Tooltip>
+                        <Tooltip
+                          title={
+                            disableSelfManagement.has(user.id)
+                              ? "No puedes modificar tu propio rol"
+                              : user.is_gerente
+                              ? "Quitar permisos de gerente"
+                              : "Conceder rol de gerente"
+                          }
+                        >
+                          <span hidden>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleToggleGerente(user)}
+                              disabled={
+                                updatingUserId === user.id ||
+                                disableSelfManagement.has(user.id)
+                              }
+                            >
+                              {user.is_gerente
+                                ? "Quitar gerente"
+                                : "Hacer gerente"}
+                            </Button>
+                          </span>
+                        </Tooltip>
                         <Tooltip title="Editar usuario">
                           <span>
                             <Button
@@ -406,7 +471,7 @@ const UsersAdmin = () => {
                 ))}
                 {!loading && users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
                       </Typography>
@@ -415,7 +480,7 @@ const UsersAdmin = () => {
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Cargando usuarios…
                       </Typography>
@@ -459,7 +524,6 @@ const UsersAdmin = () => {
                     email: event.target.value,
                   }))
                 }
-                required
                 fullWidth
               />
               <TextField
@@ -485,6 +549,31 @@ const UsersAdmin = () => {
                   }))
                 }
                 fullWidth
+              />
+              <TextField
+                label="Sede"
+                value={formState.sede}
+                onChange={(event) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    sede: event.target.value,
+                  }))
+                }
+                fullWidth
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formState.isGerente}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        isGerente: event.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Asignar rol de gerente"
               />
               <FormControlLabel
                 control={
@@ -568,7 +657,6 @@ const UsersAdmin = () => {
                       : prev
                   )
                 }
-                required
                 fullWidth
               />
               <TextField
@@ -577,6 +665,16 @@ const UsersAdmin = () => {
                 onChange={(event) =>
                   setEditForm((prev) =>
                     prev ? { ...prev, fullname: event.target.value } : prev
+                  )
+                }
+                fullWidth
+              />
+              <TextField
+                label="Sede"
+                value={editForm?.sede ?? ""}
+                onChange={(event) =>
+                  setEditForm((prev) =>
+                    prev ? { ...prev, sede: event.target.value } : prev
                   )
                 }
                 fullWidth
@@ -611,6 +709,23 @@ const UsersAdmin = () => {
                   />
                 }
                 label="Permisos de administrador"
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editForm?.isGerente ?? false}
+                    onChange={(event) =>
+                      setEditForm((prev) =>
+                        prev
+                          ? { ...prev, isGerente: event.target.checked }
+                          : prev
+                      )
+                    }
+                    disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                  />
+                }
+                label="Rol de gerente"
               />
               <FormControlLabel
                 control={

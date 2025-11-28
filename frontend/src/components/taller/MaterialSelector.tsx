@@ -89,23 +89,20 @@ const MaterialButton = ({
           alignItems="center"
           justifyContent="center"
           sx={{
-            minWidth: { sm: 180 },
+            minWidth: { sm: 220 },
             maxWidth: { sm: 200 },
             textAlign: "center",
           }}
         >
-          <Typography fontWeight={700} variant="body1">
+          <Typography fontWeight={700} variant="subtitle1">
             {option.config.label}
           </Typography>
         </Stack>
 
         {option.item ? (
           <Stack spacing={0.5} justifyContent="center" sx={{ width: "100%" }}>
-            <Typography variant="body2" fontWeight={600}>
-              {limpiarDescripcion(option.item.descripcion)}
-            </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center">
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="subtitle1" color="text.secondary">
                 Codigo:
               </Typography>
               <Typography variant="body2" fontWeight={700}>
@@ -220,11 +217,6 @@ const MaterialSelector = ({
                 especie. Verifica que el catálogo esté actualizado.
               </Alert>
             )}
-
-            <Alert severity="info">
-              Solo se muestran los materiales encontrados en la API para
-              mantener el selector ordenado y evitar opciones inválidas.
-            </Alert>
           </Stack>
         </DialogContent>
       </Dialog>

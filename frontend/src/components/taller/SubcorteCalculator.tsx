@@ -48,7 +48,9 @@ const SubcorteCalculator = ({
   finalLabel,
   onPesoChange,
 }: SubcorteCalculatorProps) => {
+  const [botonOculto, setBotonOculto] = useState(false);
   const [pesoInicial, setPesoInicial] = useState("");
+  const [botonPresionado, setBotonPresionado] = useState(false);
   const [pesoFinal, setPesoFinal] = useState("");
   const [pesoBloqueado, setPesoBloqueado] = useState(false);
   const [subPesos, setSubPesos] = useState<Record<string, string>>({});
@@ -143,13 +145,8 @@ const SubcorteCalculator = ({
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle1" fontWeight={600}>
-        Desglose del corte principal
+        Peso del corte seleccionado
       </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Ingresa el peso total del corte {primaryLabel.toLowerCase()} y guarda el
-        valor para habilitar los recortes asociados y el peso final.
-      </Typography>
-
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
@@ -165,18 +162,26 @@ const SubcorteCalculator = ({
           disabled={disabled || pesoBloqueado}
           fullWidth
         />
-        <Button
-          variant={pesoBloqueado ? "outlined" : "contained"}
-          color={pesoBloqueado ? "secondary" : "primary"}
-          onClick={() =>
-            setPesoBloqueado((prev) =>
-              prev ? false : pesoInicialNumber !== null && pesoInicialNumber > 0
-            )
-          }
-          disabled={disabled || (!pesoBloqueado && !puedeGuardarPeso)}
-        >
-          {pesoBloqueado ? "Editar peso" : "Guardar peso"}
-        </Button>
+        {!botonOculto && (
+          <Button
+            variant={pesoBloqueado ? "outlined" : "contained"}
+            color={pesoBloqueado ? "secondary" : "primary"}
+            onClick={() => {
+              // Lógica actual
+              setPesoBloqueado((prev) =>
+                prev
+                  ? false
+                  : pesoInicialNumber !== null && pesoInicialNumber > 0
+              );
+
+              // Ocultar el botón
+              setBotonOculto(true);
+            }}
+            disabled={disabled || (!pesoBloqueado && !puedeGuardarPeso)}
+          >
+            {pesoBloqueado ? "Editar peso" : "Guardar peso"}
+          </Button>
+        )}
       </Stack>
 
       {!pesoBloqueado && (
@@ -187,7 +192,7 @@ const SubcorteCalculator = ({
 
       {pesoBloqueado && (
         <Stack spacing={2}>
-          <Divider textAlign="left">Subcortes vinculados</Divider>
+          <Divider textAlign="left">Subcortes </Divider>
           {uniqueSecondaryCuts.map((label) => {
             const datos = subcorteDatos.find((entry) => entry.label === label);
             const porcentaje = datos?.porcentaje ?? null;
@@ -242,7 +247,7 @@ const SubcorteCalculator = ({
             );
           })}
 
-          <Divider textAlign="left">Peso final del corte</Divider>
+          <Divider textAlign="left">Peso luego del taller</Divider>
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}
@@ -254,7 +259,7 @@ const SubcorteCalculator = ({
               onChange={(event) => handlePesoFinalChange(event.target.value)}
               type="number"
               inputProps={{ step: 0.001, min: 0 }}
-              helperText="Peso del corte principal tras retirar recortes"
+              helperText="Peso del corte principal tras hacer el taller"
               disabled={disabled}
               fullWidth
             />
@@ -283,12 +288,6 @@ const SubcorteCalculator = ({
                   <strong style={{ color: "#FF0000" }}>
                     {formatPercentage(perdidaPorcentaje)}
                   </strong>
-                </Typography>
-              )}
-              {pesoInicialNumber && totalPorcentaje === 0 && (
-                <Typography color="text.secondary">
-                  Agrega los pesos de recorte, gordana y peso final para ver el
-                  porcentaje consolidado.
                 </Typography>
               )}
             </Stack>

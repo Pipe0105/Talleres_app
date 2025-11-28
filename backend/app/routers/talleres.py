@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,9 +6,11 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..dependencies import get_current_active_user
-from ..models import Corte, Item, Taller, TallerDetalle
+from ..dependencies import get_current_active_user, get_current_manager_user
+from ..models import Corte, Item, Taller, TallerDetalle, User
+
 from ..schemas import (
+    TallerActividadUsuario,
     TallerCalculoRow,
     TallerCreatePayload,
     TallerListItem,
@@ -22,7 +25,7 @@ router = APIRouter(
 def crear_taller(
     payload: TallerCreatePayload,
     db: Session = Depends(get_db),
-    _: None = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
 ):
     if not payload.cortes:
         raise HTTPException(status_code=400, detail="debes incluir al menos un detaller")
@@ -30,6 +33,7 @@ def crear_taller(
     taller = Taller(
         nombre_taller=payload.nombre_taller.strip(),
         descripcion=payload.descripcion.strip() if payload.descripcion else None,
+        creado_por_id=current_user.id,
     )
     if not taller.nombre_taller:
         raise HTTPException(status_code=400, detail="el nombre del taller es obligatorio")
@@ -67,7 +71,7 @@ def crear_taller(
     db.commit()
     db.refresh(taller)
     
-    return TallerOut(id=taller.id, nombre_taller=taller.nombre_taller, descripcion=taller.descripcion)
+    return TallerOut.model_validate(taller)
 
 @router.get("", response_model=list[TallerListItem])
 @router.get("/", response_model=list[TallerListItem])
@@ -107,6 +111,81 @@ def _to_float(value: Decimal | float | int | None) -> float:
     if isinstance(value, Decimal):
         return float(value)
     return float(value)
+
+def _normalize_range(
+    start_date: date | None, end_date: date | None
+) -> tuple[date, date]:
+    today = date.today()
+    normalized_start = start_date or (today - timedelta(days=today.weekday()))
+    normalized_end = end_date or (normalized_start + timedelta(days=6))
+
+    if normalized_end < normalized_start:
+        normalized_start, normalized_end = normalized_end, normalized_start
+
+    return normalized_start, normalized_end
+
+
+@router.get("/actividad", response_model=list[TallerActividadUsuario])
+def actividad_talleres(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_manager_user),
+):
+    fecha_inicio, fecha_fin = _normalize_range(start_date, end_date)
+    rango_fechas: list[date] = []
+    iterador = fecha_inicio
+    while iterador <= fecha_fin:
+        rango_fechas.append(iterador)
+        iterador += timedelta(days=1)
+
+    inicio_dt = datetime.combine(fecha_inicio, datetime.min.time())
+    fin_dt = datetime.combine(fecha_fin + timedelta(days=1), datetime.min.time())
+
+    actividad_rows = (
+        db.query(
+            Taller.creado_por_id.label("user_id"),
+            func.date(Taller.creado_en).label("fecha"),
+            func.count(Taller.id).label("cantidad"),
+        )
+        .filter(Taller.creado_en >= inicio_dt, Taller.creado_en < fin_dt)
+        .group_by(Taller.creado_por_id, func.date(Taller.creado_en))
+        .all()
+    )
+
+    actividad_por_usuario: dict[int, dict[date, int]] = {}
+    for row in actividad_rows:
+        if row.user_id is None:
+            continue
+        actividad_por_usuario.setdefault(row.user_id, {})[row.fecha] = int(
+            row.cantidad or 0
+        )
+
+    usuarios = (
+        db.query(User)
+        .filter(User.is_active.is_(True))
+        .order_by(User.username)
+        .all()
+    )
+
+    resultados: list[TallerActividadUsuario] = []
+    for usuario in usuarios:
+        dias = [
+            {"fecha": fecha, "cantidad": actividad_por_usuario.get(usuario.id, {}).get(fecha, 0)}
+            for fecha in rango_fechas
+        ]
+        resultados.append(
+            TallerActividadUsuario(
+                user_id=usuario.id,
+                username=usuario.username,
+                full_name=usuario.full_name,
+                sede=usuario.sede,
+                is_active=usuario.is_active,
+                dias=dias,
+            )
+        )
+
+    return resultados
 
 @router.get("/{taller_id}/calculo", response_model=list[TallerCalculoRow])
 def ver_calculo(taller_id: int, db: Session = Depends(get_db)):

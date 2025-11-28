@@ -101,11 +101,9 @@ const TallerForm = ({
             <TextField
               label="Nombre del taller"
               value={nombreTaller}
-              onChange={(event) => onNombreChange(event.target.value)}
               required
+              InputProps={{ readOnly: true }}
               fullWidth
-              disabled={!selectedItem}
-              helperText="Ej. Taller desposte res 2024"
             />
           </Stack>
 
@@ -117,50 +115,6 @@ const TallerForm = ({
               onPesoChange={onSubcortePesoChange}
             ></SubcorteCalculator>
           )}
-
-          <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              Pesos por corte
-            </Typography>
-            {loadingCortes ? (
-              <Typography variant="body2" color="text.secondary">
-                Cargando cortes asociados…
-              </Typography>
-            ) : cortes.length ? (
-              cortes.map((corte) => {
-                const pesoValue = pesos[corte.id] ?? "";
-                const pesoParsed = parsePesoValue(pesoValue);
-                const pesoInvalid = pesoValue !== "" && pesoParsed === null;
-
-                return (
-                  <TextField
-                    key={corte.id}
-                    label={`${
-                      corte.nombre_corte
-                    } · % objetivo ${corte.porcentaje_default.toFixed(2)}%`}
-                    type="number"
-                    inputProps={{ step: 0.001, min: 0 }}
-                    required
-                    value={pesoValue}
-                    onChange={(event) =>
-                      onPesoChange(corte.id, event.target.value)
-                    }
-                    error={pesoInvalid}
-                    helperText={
-                      pesoInvalid
-                        ? "Ingresa un peso válido en kilogramos"
-                        : "Ingresa el peso en kilogramos"
-                    }
-                  />
-                );
-              })
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No hay cortes registrados para este material. Registra cortes en
-                la API antes de crear talleres.
-              </Typography>
-            )}
-          </Stack>
 
           {error && (
             <Alert severity="error">

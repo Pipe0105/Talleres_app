@@ -48,6 +48,8 @@ def create_user(
         full_name=payload.full_name,
         is_active=payload.is_active,
         is_admin=payload.is_admin,
+        is_gerente=payload.is_gerente,
+        sede=payload.sede,
     )
     return user
 
@@ -89,6 +91,8 @@ def update_user(
         hashed_password=hashed_password,
         is_active=payload.is_active,
         is_admin=payload.is_admin,
+        is_gerente=payload.is_gerente,
+        sede=payload.sede,
     )
     return updated_user
 
