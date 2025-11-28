@@ -17,10 +17,12 @@ interface TallerFormProps {
   selectedItemId: string;
   selectedItem: Item | null;
   selectedItemNombre?: string;
+  primaryCorteLabel?: string;
   nombreTaller: string;
   loadingCortes: boolean;
   error: string | null;
   secondaryCuts: string[];
+  finalCorteLabel?: string;
   submitting?: boolean;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
@@ -35,10 +37,12 @@ const TallerForm = ({
   selectedItemId,
   selectedItem,
   selectedItemNombre,
+  primaryCorteLabel,
   nombreTaller,
   loadingCortes,
   error,
   secondaryCuts,
+  finalCorteLabel,
   submitting = false,
   onNombreChange,
   onPesoChange,
@@ -97,8 +101,9 @@ const TallerForm = ({
 
         {selectedItem && (
           <SubcorteCalculator
-            primaryLabel={selectedItem.descripcion}
+            primaryLabel={primaryCorteLabel || selectedItem.descripcion}
             secondaryCuts={secondaryCuts}
+            finalLabel={finalCorteLabel}
             onPesoChange={onSubcortePesoChange}
           ></SubcorteCalculator>
         )}
@@ -139,6 +144,22 @@ const TallerForm = ({
             {error}
           </Alert>
         )}
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onSubmit}
+            type="submit"
+            disabled={!selectedItem || submitting}
+          >
+            {submitting ? "Guardando…" : "Guardar taller"}
+          </Button>
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Guarda el taller para registrar el peso inicial, los subcortes y el
+            peso final en el historial.
+          </Typography>
+        </Stack>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <Button
             variant="contained"

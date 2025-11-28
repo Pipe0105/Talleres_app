@@ -179,6 +179,50 @@ const TallerWorkflow = ({
   const normalizeSpecies = (value: string): EspecieKey =>
     value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
 
+  const primaryCorteLabel = useMemo(() => {
+    const normalizedSelected = normalizeCorteName(
+      selectedItemNombre || selectedItemLabel || ""
+    );
+
+    const primaryMatch = cortes.find((corte) => {
+      const normalizedCorte = normalizeCorteName(corte.nombre_corte);
+      return (
+        normalizedCorte === normalizedSelected ||
+        normalizedCorte.includes(normalizedSelected) ||
+        normalizedCorte.includes(normalizedCorte)
+      );
+    });
+
+    return (
+      primaryMatch?.nombre_corte ||
+      selectedItemNombre ||
+      selectedItemLabel ||
+      ""
+    );
+  }, [cortes, selectedItemLabel, selectedItemNombre]);
+
+  const resolvedSecondaryCuts = useMemo(
+    () =>
+      secondaryCuts.map((label) => {
+        const corteId = resolveCorteIdByLabel(label);
+        const matched = corteId
+          ? cortes.find((corte) => corte.id === corteId)
+          : null;
+        return matched?.nombre_corte || label;
+      }),
+    [secondaryCuts, resolveCorteIdByLabel, cortes]
+  );
+
+  const finalCorteLabel = useMemo(() => {
+    const finalMatch = cortes.find((corte) => {
+      const normalized = normalizeCorteName(corte.nombre_corte);
+      return;
+      /FINAL|SALIDA|DESP/.test(normalized);
+    });
+
+    return finalMatch?.nombre_corte || `${primaryCorteLabel} FINAL`.trim();
+  }, [cortes, primaryCorteLabel]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -441,10 +485,13 @@ const TallerWorkflow = ({
             selectedItemId={selectedItemId}
             selectedItem={selectedItem}
             selectedItemNombre={selectedItemNombre}
+            primaryCorteLabel={primaryCorteLabel}
             nombreTaller={nombreTaller}
             loadingCortes={loadingCortes}
             error={error}
-            secondaryCuts={secondaryCuts}
+            secondaryCuts={resolvedSecondaryCuts}
+            finalCorteLabel={finalCorteLabel}
+            submitting={submitting}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}

@@ -16,6 +16,7 @@ interface SubcorteCalculatorProps {
   primaryLabel: string;
   secondaryCuts?: string[];
   disabled?: boolean;
+  finalLabel?: string;
   onPesoChange?: (label: string, value: string) => void;
 }
 
@@ -44,6 +45,7 @@ const SubcorteCalculator = ({
   primaryLabel,
   secondaryCuts = DEFAULT_SECONDARY_CUTS,
   disabled = false,
+  finalLabel,
   onPesoChange,
 }: SubcorteCalculatorProps) => {
   const [pesoInicial, setPesoInicial] = useState("");
@@ -72,7 +74,7 @@ const SubcorteCalculator = ({
   const handlePesoFinalChange = (value: string) => {
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoFinal(sanitized);
-    onPesoChange?.(`${primaryLabel} final`, sanitized);
+    onPesoChange?.(finalLabel?.trim() || `${primaryLabel} final`, sanitized);
   };
 
   const uniqueSecondaryCuts = useMemo(() => {
