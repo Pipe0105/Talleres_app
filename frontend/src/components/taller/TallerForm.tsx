@@ -24,7 +24,6 @@ interface TallerFormProps {
   secondaryCuts: string[];
   finalCorteLabel?: string;
   submitting?: boolean;
-  canSubmit: boolean;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
   onOpenSelector: () => void;
@@ -45,7 +44,6 @@ const TallerForm = ({
   secondaryCuts,
   finalCorteLabel,
   submitting = false,
-  canSubmit,
   onNombreChange,
   onPesoChange,
   onOpenSelector,
@@ -177,7 +175,7 @@ const TallerForm = ({
               color="primary"
               onClick={onSubmit}
               type="submit"
-              disabled={!canSubmit || submitting}
+              disabled={!selectedItem || submitting}
             >
               {submitting ? "Guardando…" : "Guardar taller"}
             </Button>

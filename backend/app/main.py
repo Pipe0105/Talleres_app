@@ -139,15 +139,15 @@ def _ensure_branch_operators() -> None:
                 if existing_user:
                     continue
             
-            crud.create_user(
-                db,
-                username=username,
-                email=None,
-                hashed_password=hashed_password,
-                full_name=f"Operario {branch}",
-                is_admin=False,
-            )
-            created_users.append(username)
+                crud.create_user(
+                    db,
+                    username=username,
+                    email=None,
+                    hashed_password=hashed_password,
+                    full_name=f"Operario {branch}",
+                    is_admin=False,
+                )
+                created_users.append(username)
             
             if created_users:
                 db.commit()
@@ -226,6 +226,8 @@ def _startup():
     with engine.begin() as conn:
         conn.execute(text(create_view_sql))
         
+    _ensure_default_admin()
+    _ensure_default_operator()
     _ensure_branch_operators()
 
 

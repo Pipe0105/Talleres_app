@@ -514,7 +514,6 @@ const TallerWorkflow = ({
             secondaryCuts={resolvedSecondaryCuts}
             finalCorteLabel={finalCorteLabel}
             submitting={submitting}
-            canSubmit={canSubmit}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}
