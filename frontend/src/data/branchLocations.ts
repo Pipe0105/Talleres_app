@@ -5,7 +5,7 @@ export const BRANCH_LOCATIONS = [
   "Floresta",
   "Plaza Norte",
   "Floralia",
-  "Guadalupes",
+  "Guaduales",
   "Palmira",
   "Bogotá",
   "Chia",

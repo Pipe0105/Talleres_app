@@ -68,7 +68,7 @@ export const appTheme = createTheme({
     subtitle1: { fontWeight: 600 },
   },
   shape: {
-    borderRadius: 14,
+    borderRadius: 6,
   },
   layout: {
     sectionSpacing: 6,
@@ -113,7 +113,7 @@ export const appTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: ({ theme }) => ({
-          borderRadius: 20,
+          borderRadius: 14,
           boxShadow: theme.customShadows.surface,
         }),
       },
