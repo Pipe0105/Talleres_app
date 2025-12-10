@@ -128,7 +128,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 boxShadow: "0px 10px 30px rgba(0,0,0,0.2)",
               })}
             >
-              <Stack direction="row" spacing={0.5} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ flexWrap: "wrap" }}
+              >
                 {navItems.map((item) => (
                   <Button
                     key={item.to ?? item.label}
@@ -139,8 +144,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     startIcon={item.icon}
                     sx={(theme) => ({
                       fontWeight: 700,
-                      gap: 1,
-                      px: 1.5,
+                      textTransform: "none",
+                      gap: 0.75,
+                      px: 2,
+                      py: 1.1,
+                      minWidth: 136,
+                      justifyContent: "center",
                       borderRadius: 999,
                       backgroundColor: item.isActive
                         ? alpha(theme.palette.common.white, 0.9)
