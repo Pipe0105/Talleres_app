@@ -89,7 +89,18 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   TD
                 </Typography>
               </Box>
-              <Box>
+              <Box
+                component={RouterLink}
+                to="/"
+                sx={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  display: "flex",
+                  flexDirection: "column",
+                  cursor: "pointer",
+                  "&:hover": { opacity: 0.85 },
+                }}
+              >
                 <Stack
                   direction="row"
                   spacing={1}
@@ -105,6 +116,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     Talleres Desposte
                   </Typography>
                 </Stack>
+
                 <Typography
                   variant="body2"
                   sx={(theme) => ({
@@ -120,19 +132,28 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             <Paper
               elevation={0}
               sx={(theme) => ({
-                backgroundColor: alpha(theme.palette.common.white, 0.08),
+                backgroundColor: alpha(theme.palette.common.white, 0.06),
                 border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
-                px: 0.75,
-                py: 0.5,
-                borderRadius: 999,
-                boxShadow: "0px 10px 30px rgba(0,0,0,0.2)",
+                px: 1.5,
+                py: 1,
+                borderRadius: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                maxWidth: "100%",
+                overflowX: "auto",
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
               })}
             >
               <Stack
                 direction="row"
-                spacing={1}
+                spacing={0.5}
                 alignItems="center"
-                sx={{ flexWrap: "wrap" }}
+                sx={{
+                  flexWrap: "nowrap",
+                  whiteSpace: "nowrap",
+                }}
               >
                 {navItems.map((item) => (
                   <Button
@@ -143,12 +164,13 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     aria-current={item.isActive ? "page" : undefined}
                     startIcon={item.icon}
                     sx={(theme) => ({
-                      fontWeight: 700,
+                      fontWeight: 600,
                       textTransform: "none",
                       gap: 0.75,
-                      px: 2,
-                      py: 1.1,
-                      minWidth: 136,
+                      px: 1.8,
+                      py: 0.75,
+                      minWidth: "auto",
+                      fontSize: "0.86rem",
                       justifyContent: "center",
                       borderRadius: 999,
                       backgroundColor: item.isActive

@@ -28,7 +28,6 @@ export const useNavigationItems = ({
 
   return useMemo<NavigationItem[]>(() => {
     const navigationConfig: NavigationItem[] = [
-      { label: "Inicio", to: "/" },
       ...(user
         ? [
             { label: "Desposte", to: "/talleres/desposte" },

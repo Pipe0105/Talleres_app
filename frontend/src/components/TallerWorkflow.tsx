@@ -425,15 +425,23 @@ const TallerWorkflow = ({
       return;
     }
 
+    // Construye los cortes que se enviarán al backend
     const cortesParaGuardar = cortes
       .map((corte) => {
         const peso = parsePesoValue(pesos[corte.id]);
         return peso !== null
-          ? { item_id: selectedItemId, corte_id: corte.id, peso }
+          ? {
+              item_id: selectedItemId,
+              corte_id: corte.id,
+              peso,
+            }
           : null;
       })
       .filter(
-        (detalle): detalle is NonNullable<typeof detalle> => detalle !== null
+        (
+          detalle
+        ): detalle is { item_id: string; corte_id: string; peso: number } =>
+          detalle !== null
       );
 
     if (!canSubmit || !cortesParaGuardar.length) {
@@ -448,8 +456,8 @@ const TallerWorkflow = ({
 
     const payload: CrearTallerPayload = {
       nombre_taller: nombreTaller.trim(),
-      descripcion: selectedItemLabel || null,
-      detalles: cortesParaGuardar,
+      descripcion: resolveItemLabel(selectedItem) || null,
+      cortes: cortesParaGuardar, // 👈 AHORA CORRECTO
     };
 
     try {

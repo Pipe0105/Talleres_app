@@ -165,13 +165,15 @@ const TallerForm = ({
             />
           </Stack>
 
-          {selectedItem && (
+          {selectedItem && primaryCorteLabel && (
             <SubcorteCalculator
-              primaryLabel={derivedPrimaryLabel}
-              secondaryCuts={derivedSecondaryCuts}
-              finalLabel={derivedFinalLabel}
-              onPesoChange={onSubcortePesoChange}
-            ></SubcorteCalculator>
+              primaryLabel={primaryCorteLabel}
+              secondaryCuts={secondaryCuts ?? []}
+              finalLabel={finalCorteLabel ?? `${primaryCorteLabel} FINAL`}
+              cortes={cortes}
+              pesos={pesos}
+              onPesoChange={onPesoChange}
+            />
           )}
 
           {error && (

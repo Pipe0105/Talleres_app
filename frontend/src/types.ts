@@ -35,7 +35,11 @@ export interface TallerDetalleInput {
 export interface CrearTallerPayload {
   nombre_taller: string;
   descripcion?: string | null;
-  detalles: TallerDetalleInput[];
+  cortes: {
+    item_id: string | number;
+    corte_id: string | number;
+    peso: number;
+  }[];
 }
 
 export interface TallerCreado {
