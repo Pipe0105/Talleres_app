@@ -7,19 +7,38 @@ import {
   Grid,
   Stack,
   Typography,
+  Paper,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import ScaleOutlinedIcon from "@mui/icons-material/ScaleOutlined";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 
-const heroMetrics = [
+const summaryStats = [
   {
-    label: "Talleres realizados",
+    label: "Entradas",
     value: "0",
-    helper: "En todas las sedes",
+    helper: "Semana actual",
+    icon: <Inventory2OutlinedIcon />,
   },
   {
-    label: "Porcentaje de Aprovechamiento",
+    label: "Kilos",
+    value: "0",
+    helper: "A la fecha",
+    icon: <ScaleOutlinedIcon />,
+  },
+  {
+    label: "Stock Disponible",
+    value: "0",
+    helper: "Inventario",
+    icon: <LocalShippingOutlinedIcon />,
+  },
+  {
+    label: "Tasa Promedio",
     value: "0%",
-    helper: "En todas las sedes",
+    helper: "Sedes",
+    icon: <QueryStatsOutlinedIcon />,
   },
 ];
 
@@ -27,75 +46,53 @@ const HeroSection = () => {
   return (
     <Card
       sx={(theme) => ({
-        p: { xs: 4, md: 6 },
-        position: "relative",
+        p: { xs: 3, md: 4 },
         overflow: "hidden",
+        border: `1px solid ${alpha(theme.palette.primary.main, 0.06)}`,
         backgroundImage: theme.gradients.hero,
-        color: theme.palette.common.white,
-        boxShadow: theme.customShadows.floating,
+        boxShadow: theme.customShadows.surface,
       })}
     >
-      <Box
-        sx={(theme) => ({
-          position: "absolute",
-          inset: 0,
-          background: theme.gradients.heroOverlay,
-          pointerEvents: "none",
-        })}
-      />
-      <Grid container spacing={4} alignItems="center">
-        <Grid item xs={12} md={7}>
-          <Stack spacing={3} position="relative" zIndex={1}>
-            <Stack direction="row" spacing={1.5} flexWrap="wrap">
-              <Chip
-                label="Plataforma para Talleres"
-                color="primary"
-                variant="filled"
-                sx={(theme) => ({
-                  bgcolor: alpha(theme.palette.common.white, 0.16),
-                  color: theme.palette.common.white,
-                  borderColor: "transparent",
-                })}
-              />
-              <Chip
-                label="Dashboard operativo"
-                variant="outlined"
-                sx={(theme) => ({
-                  borderColor: alpha(theme.palette.common.white, 0.4),
-                  color: theme.palette.common.white,
-                  bgcolor: alpha(theme.palette.common.white, 0.08),
-                })}
-              />
-            </Stack>
+      <Stack spacing={3}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", md: "center" }}
+          spacing={2}
+        >
+          <Stack spacing={1}>
+            <Chip
+              label="Dashboard operativo"
+              sx={(theme) => ({
+                alignSelf: "flex-start",
+                bgcolor: alpha(theme.palette.secondary.main, 0.12),
+                color: theme.palette.secondary.main,
+                fontWeight: 700,
+              })}
+            />
             <Typography
               variant="h3"
               component="h1"
-              sx={{
-                fontSize: { xs: 48, md: 76 },
+              sx={(theme) => ({
                 fontWeight: 800,
-                lineHeight: 1,
-              }}
+                color: theme.palette.primary.main,
+              })}
             >
               Talleres Desposte
             </Typography>
-            <Typography
-              variant="body1"
-              sx={(theme) => ({
-                fontSize: { xs: 18, md: 24 },
-                maxWidth: 900,
-                color: alpha(theme.palette.common.white, 0.82),
-              })}
-            >
-              Ingreso, gestion y Reporte historico de Talleres de Desposte.
+            <Typography variant="body1" color="text.secondary" maxWidth={760}>
+              Ingreso, gestión y reporte histórico de talleres de desposte.
+              Mantén el panel al día con un vistazo rápido de las métricas
+              principales.
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
                 component={RouterLink}
                 to="/talleres"
                 variant="contained"
-                color="secondary"
+                color="primary"
                 size="large"
-                sx={{ fontWeight: 700 }}
+                sx={{ fontWeight: 700, px: 3 }}
               >
                 Ir al tablero de talleres
               </Button>
@@ -103,91 +100,81 @@ const HeroSection = () => {
                 component={RouterLink}
                 to="/talleres/desposte"
                 variant="outlined"
-                color="inherit"
+                color="primary"
                 size="large"
-                sx={{ fontWeight: 700 }}
+                sx={{ fontWeight: 700, px: 3 }}
               >
                 Registrar desposte
               </Button>
             </Stack>
           </Stack>
-        </Grid>
-        <Grid item xs={12} md={5}>
           <Card
             sx={(theme) => ({
-              p: 3,
-              bgcolor: alpha(theme.palette.common.black, 0.35),
-              border: `1px solid ${alpha(theme.palette.common.white, 0.18)}`,
-              backdropFilter: "blur(12px)",
-              boxShadow: theme.customShadows.frosted,
+              minWidth: 280,
+              p: 2.5,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+              backgroundColor: alpha(theme.palette.common.white, 0.9),
+              boxShadow: theme.customShadows.surface,
             })}
           >
-            <Stack spacing={2}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Box>
-                  <Typography variant="h6" color={alpha("#FFFFFF", 0.9)}>
-                    {" "}
-                    Estado actual
-                  </Typography>
-                </Box>
-                <Chip
-                  label="Operativo"
-                  color="success"
-                  variant="outlined"
-                  sx={(theme) => ({
-                    bgcolor: alpha(theme.palette.success.main, 0.15),
-                    borderColor: alpha(theme.palette.success.main, 0.4),
-                    color: alpha(theme.palette.success.light, 0.92),
-                  })}
-                />
-              </Stack>
-              <Typography variant="body1" color={alpha("#FFFFFF", 0.7)}>
-                {" "}
-                Resumen de métricas clave
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Estado general
               </Typography>
-              <Box>
-                <Typography
-                  fontSize={20}
-                  variant="caption"
-                  color={alpha("#FFFFFF", 0.7)}
-                >
-                  Talleres Mensuales
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={2}>
-                {heroMetrics.map((metric) => (
-                  <Box key={metric.label} sx={{ flex: 1 }}>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        color: alpha("#CDE4FF", 0.98),
-                        fontWeight: 700,
-                      }}
-                    >
-                      {metric.value}
-                    </Typography>
-                    <Typography variant="body2" color={alpha("#FFFFFF", 0.9)}>
-                      {" "}
-                      {metric.label}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color={alpha("#FFFFFF", 0.55)}
-                    >
-                      {" "}
-                      {metric.helper}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
+              <Typography variant="h5" color="primary" fontWeight={800}>
+                Operativo
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Mantén la trazabilidad al día para todas las sedes.
+              </Typography>
             </Stack>
           </Card>
+        </Stack>
+        <Grid container spacing={2}>
+          {summaryStats.map((item) => (
+            <Grid item xs={12} sm={6} md={3} key={item.label}>
+              <Paper
+                sx={(theme) => ({
+                  p: 2.5,
+                  height: "100%",
+                  border: `1px solid ${alpha(
+                    theme.palette.primary.main,
+                    0.08
+                  )}`,
+                  boxShadow: "0px 16px 40px rgba(15,41,69,0.08)",
+                  borderRadius: 12,
+                  backgroundColor: theme.palette.common.white,
+                })}
+              >
+                <Stack spacing={1.5}>
+                  <Box
+                    sx={(theme) => ({
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      display: "grid",
+                      placeItems: "center",
+                      bgcolor: alpha(theme.palette.secondary.main, 0.12),
+                      color: theme.palette.secondary.main,
+                    })}
+                  >
+                    {item.icon}
+                  </Box>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {item.label}
+                  </Typography>
+                  <Typography variant="h5" fontWeight={800}>
+                    {item.value}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {item.helper}
+                  </Typography>
+                </Stack>
+              </Paper>
+            </Grid>
+          ))}
         </Grid>
-      </Grid>
+      </Stack>
     </Card>
   );
 };

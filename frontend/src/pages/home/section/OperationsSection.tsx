@@ -21,7 +21,7 @@ const maturityIndicators = [
 const OperationsSection = () => {
   return (
     <Stack spacing={3}>
-      <Typography variant="h4" component="h2">
+      <Typography variant="h4" component="h2" color="primary">
         Indicadores de madurez operativa
       </Typography>
       <Grid container spacing={3}>
@@ -31,8 +31,9 @@ const OperationsSection = () => {
               sx={(theme) => ({
                 p: 3,
                 height: "100%",
-                boxShadow: theme.customShadows.surface,
-                backgroundImage: theme.gradients.subtle,
+                boxShadow: "0px 14px 36px rgba(15,41,69,0.08)",
+                border: `1px solid ${theme.palette.divider}`,
+                backgroundColor: theme.palette.common.white,
               })}
             >
               {" "}
@@ -43,7 +44,7 @@ const OperationsSection = () => {
                   alignItems="baseline"
                 >
                   <Typography variant="subtitle1">{indicator.label}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="secondary">
                     {indicator.progress}%
                   </Typography>
                 </Stack>

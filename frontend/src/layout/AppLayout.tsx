@@ -39,16 +39,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         position="sticky"
         elevation={0}
         sx={(theme) => ({
-          background: `linear-gradient(
-      120deg,
-      ${theme.palette.primary.main} 0%,
-      #0a1f44 55%,
-      #041125 100%
-    )`,
-          backdropFilter: "blur(14px)",
+          backgroundColor: theme.palette.primary.main,
           borderRadius: 0,
-          borderBottom: "1px solid rgba(255,255,255,0.18)",
-          boxShadow: "0px 6px 22px rgba(0,0,0,0.35)",
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: "0px 12px 32px rgba(4, 17, 37, 0.35)",
         })}
       >
         <Container
@@ -76,18 +70,15 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             >
               <Box
                 sx={(theme) => ({
-                  width: 52,
-                  height: 52,
+                  width: 48,
+                  height: 48,
                   borderRadius: 14,
-                  background: theme.gradients.callout,
+                  backgroundColor: theme.palette.secondary.main,
                   display: "grid",
                   placeItems: "center",
                   color: theme.palette.common.white,
-                  boxShadow: theme.customShadows.frosted,
-                  border: `1px solid ${alpha(
-                    theme.palette.common.white,
-                    0.25
-                  )}`,
+                  boxShadow: "0px 12px 25px rgba(16,178,211,0.3)",
+                  border: `2px solid ${alpha(theme.palette.common.white, 0.5)}`,
                 })}
               >
                 <Typography
@@ -107,8 +98,8 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 >
                   <Typography
                     variant="h6"
-                    fontSize={30}
-                    fontWeight={700}
+                    fontSize={26}
+                    fontWeight={800}
                     color="inherit"
                   >
                     Talleres Desposte
@@ -116,7 +107,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 </Stack>
                 <Typography
                   variant="body2"
-                  sx={{ color: alpha("#f2f7ffff", 0.9) }}
+                  sx={(theme) => ({
+                    color: alpha(theme.palette.common.white, 0.86),
+                  })}
                 >
                   Un panel especializado para visualizar y registrar talleres de
                   desposte.
@@ -127,13 +120,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             <Paper
               elevation={0}
               sx={(theme) => ({
-                backgroundColor: alpha(theme.palette.common.white, 0.12),
-                border: `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
-                backdropFilter: "blur(10px)",
+                backgroundColor: alpha(theme.palette.common.white, 0.08),
+                border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
                 px: 0.75,
                 py: 0.5,
                 borderRadius: 999,
-                boxShadow: theme.customShadows.surface,
+                boxShadow: "0px 10px 30px rgba(0,0,0,0.2)",
               })}
             >
               <Stack direction="row" spacing={0.5} alignItems="center">
@@ -148,12 +140,11 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     sx={(theme) => ({
                       fontWeight: 700,
                       gap: 1,
-                      px: 1, // <--- CAMBIADO
+                      px: 1.5,
                       borderRadius: 999,
                       backgroundColor: item.isActive
-                        ? "rgba(255, 255, 255, 0.70)"
+                        ? alpha(theme.palette.common.white, 0.9)
                         : "transparent",
-                      backdropFilter: item.isActive ? "blur(2px)" : "none",
                       color: item.isActive
                         ? theme.palette.primary.main
                         : theme.palette.common.white,
@@ -162,8 +153,8 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                         : "none",
                       "&:hover": {
                         backgroundColor: item.isActive
-                          ? alpha(theme.palette.common.white, 0.92)
-                          : alpha(theme.palette.common.white, 0.12),
+                          ? alpha(theme.palette.common.white, 0.9)
+                          : alpha(theme.palette.common.white, 0.14),
                       },
                     })}
                     disabled={item.disabled}
@@ -181,6 +172,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
         component="main"
         sx={(theme) => ({
           py: theme.layout.pagePaddingY,
+          backgroundImage: theme.gradients.page,
         })}
       >
         <Container

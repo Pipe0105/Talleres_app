@@ -15,6 +15,16 @@ const PageHeader = ({ title, description, action }: PageHeaderProps) => (
     justifyContent="space-between"
   >
     <Stack spacing={0.75}>
+      <Typography
+        variant="overline"
+        sx={(theme) => ({
+          color: theme.palette.secondary.main,
+          letterSpacing: 1,
+          fontWeight: 800,
+        })}
+      >
+        Panel en línea
+      </Typography>
       <Typography variant="h4" component="h1" gutterBottom>
         {title}
       </Typography>

@@ -41,19 +41,19 @@ export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0a1f44", // Deep Navy
+      main: "#0f2945", // Navy Blue
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#334155", // Slate
+      main: "#10b2d3", // Teal accent
     },
     background: {
-      default: "#f1f5f9", // Light Slate Gray
+      default: "#f3f6fb", // Soft gray canvas
       paper: "#ffffff",
     },
     text: {
       primary: "#0f172a",
-      secondary: "#475569",
+      secondary: "#4b5563",
     },
   },
   typography: {
@@ -68,7 +68,7 @@ export const appTheme = createTheme({
     subtitle1: { fontWeight: 600 },
   },
   shape: {
-    borderRadius: 16,
+    borderRadius: 14,
   },
   layout: {
     sectionSpacing: 6,
@@ -79,19 +79,19 @@ export const appTheme = createTheme({
     contentMaxWidth: 1280,
   },
   gradients: {
-    page: "linear-gradient(180deg, #f1f5f9 0%, #f8fafc 40%)",
-    hero: "linear-gradient(140deg, #0a1f44 0%, #041125 100%)",
+    page: "linear-gradient(180deg, #f6f8fc 0%, #f3f6fb 45%, #eef2f7 100% )",
+    hero: "linear-gradient(120deg, rgba(16, 178, 211, 0.15) 0%, rgba(15,41,69,0.06)100%)",
     heroOverlay:
-      "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1), transparent 55%)",
+      "radial-gradient(circle at 20% 20%, rgba(16,178,211,0.18), transparent 55%)",
     callout:
-      "linear-gradient(135deg, rgba(10,31,68,0.08), rgba(10,31,68,0.02))",
+      "linear-gradient(135deg, rgba(16,178,211,0.08), rgba(15,41,69,0.04))",
     subtle:
-      "radial-gradient(circle at top left, rgba(10,31,68,0.05) 0%, transparent 55%), radial-gradient(circle at bottom right, rgba(10,31,68,0.03) 0%, transparent 50%)",
+      "radial-gradient(circle at top left, rgba(16,178,211,0.04) 0%, transparent 55%), radial-gradient(circle at bottom right, rgba(15,41,69,0.04) 0%, transparent 50%)",
   },
   customShadows: {
-    surface: "0px 14px 40px rgba(15, 23, 42, 0.06)",
-    floating: "0px 28px 60px rgba(15, 23, 42, 0.12)",
-    frosted: "0px 18px 46px rgba(10, 31, 68, 0.15)",
+    surface: "0px 8px 26px rgba(15, 23, 42, 0.06)",
+    floating: "0px 20px 52px rgba(15, 23, 42, 0.14)",
+    frosted: "0px 18px 46px rgba(15, 41, 69, 0.16)",
   },
   components: {
     MuiPaper: {

@@ -2,7 +2,8 @@ import { Grid, Paper, Stack, Typography, Chip, useTheme } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import { Link as RouterLink } from "react-router-dom";
-import { TextSnippet } from "@mui/icons-material";
+import { TextSnippet, ThreeMp } from "@mui/icons-material";
+import { alpha } from "@mui/material/styles";
 
 const capabilityPillars = [
   {
@@ -34,7 +35,7 @@ const HighlightsSection = () => {
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h4" component="h2">
+      <Typography variant="h4" component="h2" color="primary">
         Funcionalidades Principales
       </Typography>
       <Grid container spacing={3}>
@@ -47,30 +48,30 @@ const HighlightsSection = () => {
               sx={{
                 p: 3,
                 height: "100%",
-                border: `1px solid ${theme.palette.divider}`,
-                boxShadow: theme.customShadows.surface,
-                backgroundImage: theme.gradients.subtle,
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                boxShadow: "0px 14px 36px rgba(15,41,69,0.08)",
+                backgroundColor: theme.palette.common.white,
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
                 textDecoration: "none",
-                transition: theme.transitions.create(
-                  ["box-shadow", "transform"],
-                  {
-                    duration: theme.transitions.duration.short,
-                  }
-                ),
+                transition: theme.transitions.create([
+                  "box-shadow",
+                  "transform",
+                  "border-color",
+                ]),
                 "&:hover": {
                   boxShadow: theme.customShadows.floating,
-                  transform: "translateY(-4px)",
+                  transform: "translateY(-6px)",
+                  borderColor: alpha(theme.palette.secondary.main, 0.4),
                 },
               }}
             >
               <Chip
                 label={pillar.tag}
-                color="primary"
+                color="secondary"
                 variant="outlined"
-                sx={{ width: "fit-content" }}
+                sx={{ width: "fit-content", fontWeight: 700 }}
               />
               {pillar.icon}
               <Typography variant="h6">{pillar.title}</Typography>
