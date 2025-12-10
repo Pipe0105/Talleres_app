@@ -49,8 +49,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(currentUser);
     } catch (error) {
       console.error("No se pudo obtener el usuario actual", error);
-      clearAuthToken();
-      setUser(null);
     } finally {
       setLoading(false);
     }
