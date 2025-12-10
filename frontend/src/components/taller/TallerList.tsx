@@ -8,7 +8,6 @@ import {
   TableHead,
   TableRow,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 
 import { TallerListItem } from "../../types";
@@ -23,7 +22,6 @@ interface TallerListProps {
   selectedTallerId: string | null;
   emptyMessage: string;
   onSelect: (tallerId: string) => void;
-  loading?: boolean;
 }
 
 const TallerList = ({
@@ -31,21 +29,13 @@ const TallerList = ({
   selectedTallerId,
   emptyMessage,
   onSelect,
-  loading = false,
 }: TallerListProps) => (
   <Paper sx={{ flex: 1, p: { sx: 3, md: 4 } }}>
     <Stack spacing={2}>
       <Typography variant="h6" component="h2">
         Talleres registrados
       </Typography>
-      {loading ? (
-        <Stack spacing={1} alignItems="center" py={2}>
-          <CircularProgress size={24} />
-          <Typography variant="body2" color="text.secondary">
-            Cargando talleres...
-          </Typography>
-        </Stack>
-      ) : talleres.length === 0 ? (
+      {talleres.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
           {emptyMessage}
         </Typography>

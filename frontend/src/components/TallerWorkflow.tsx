@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
-import { Paper, Stack } from "@mui/material";
+import { Paper, Stack, Typography } from "@mui/material";
 
 import {
   createTaller,
@@ -17,51 +17,31 @@ import {
   TallerListItem,
 } from "../types";
 import { sanitizeInput } from "../utils/security";
-import { EspecieKey, getItemNombre } from "../data/materialesTaller";
-import PageHeader from "./PageHeader";
 import TallerCalculoTable from "./TallerCalculoTable";
 
 import MaterialSelector from "./taller/MaterialSelector";
 import TallerForm from "./taller/TallerForm";
 import TallerList from "./taller/TallerList";
 
-const FINAL_CORTE_ID = "final";
-const FINAL_CORTE_NAME = "Corte Final";
+import PageHeader from "./PageHeader";
+import {
+  EspecieKey,
+  getItemNombre,
+  resolveMaterialOptions,
+  ResolvedMaterialOption,
+} from "../data/materialesTaller";
 
-const parsePesoValue = (value?: string): number | null => {
-  if (!value?.trim()) {
-    return null;
-  }
-  const normalized = value.replace(/,/g, ".");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
-};
-
-const createFinalCorte = (itemId: string): corte => ({
-  id: FINAL_CORTE_ID,
-  item_id: itemId,
-  nombre_corte: FINAL_CORTE_NAME,
-  porcentaje_default: 0,
-});
-
-const appendFinalCorte = (cortes: corte[], itemId: string): corte[] => {
-  const hasFinal = cortes.some((corte) => corte.id === FINAL_CORTE_ID);
-  return hasFinal ? cortes : [...cortes, createFinalCorte(itemId)];
-};
-
-const resolveItemLabel = (item: Item | null | undefined): string =>
-  sanitizeInput(item ? getItemNombre(item) : "", { maxLength: 120 });
+interface TallerWorkflowProps {
+  title: string;
+  description: string;
+  emptyMessage?: string;
+}
 
 const TallerWorkflow = ({
   title,
   description,
   emptyMessage = "Aún no hay talleres registrados en la base de datos.",
-}: {
-  title: string;
-  description: string;
-  emptyMessage?: string;
-}) => {
-  // Datos base
+}: TallerWorkflowProps) => {
   const [items, setItems] = useState<Item[]>([]);
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [cortes, setCortes] = useState<corte[]>([]);
@@ -69,39 +49,201 @@ const TallerWorkflow = ({
   const [selectedSpecies, setSelectedSpecies] = useState<EspecieKey | null>(
     null
   );
-  const [selectedTallerId, setSelectedTallerId] = useState<string | null>(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const [nombreTaller, setNombreTaller] = useState("");
   const [pesos, setPesos] = useState<Record<string, string>>({});
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [selectorLocked, setSelectorLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingCortes, setLoadingCortes] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTallerId, setSelectedTallerId] = useState<string | null>(null);
   const [calculo, setCalculo] = useState<TallerCalculoRow[] | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectorLocked, setSelectorLocked] = useState(false);
 
-  const selectedItem = useMemo(
-    () => items.find((item) => item.id === Number(selectedItemId)) ?? null,
-    [items, selectedItemId]
+  const normalizeCorteName = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^0-9A-Za-z]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+
+  const resolveMaterialOptionLabel = useCallback(
+    (option: ResolvedMaterialOption | null | undefined) =>
+      (option?.config.label ?? option?.item?.descripcion ?? "").trim(),
+    []
   );
+
+  const resolveItemLabel = useCallback(
+    (item: Item | null | undefined) =>
+      sanitizeInput(item ? getItemNombre(item) : "", { maxLength: 120 }),
+    []
+  );
+
+  const tallerSeleccionado = useMemo(() => {
+    if (!selectedTallerId) {
+      return null;
+    }
+    return talleres.find((taller) => taller.id === selectedTallerId) ?? null;
+  }, [talleres, selectedTallerId]);
+
+  const corteNameMap = useMemo(() => {
+    const entries = cortes.map(
+      (corte) => [normalizeCorteName(corte.nombre_corte), corte.id] as const
+    );
+
+    return new Map(entries);
+  }, [cortes]);
+
+  const resolveCorteIdByLabel = useCallback(
+    (label: string) => {
+      const normalizedLabel = normalizeCorteName(label);
+      const directMatch = corteNameMap.get(normalizedLabel);
+      if (directMatch) {
+        return directMatch;
+      }
+
+      const fallbackMatch = cortes.find((corte) => {
+        const normalizedCorte = normalizeCorteName(corte.nombre_corte);
+        return (
+          normalizedCorte.includes(normalizedLabel) ||
+          normalizedLabel.includes(normalizedCorte)
+        );
+      });
+
+      return fallbackMatch?.id;
+    },
+    [corteNameMap, cortes]
+  );
+
+  const selectedItem = useMemo(() => {
+    if (!selectedItemId) {
+      return null;
+    }
+    return items.find((item) => item.id === Number(selectedItemId)) ?? null;
+  }, [items, selectedItemId]);
 
   const selectedItemNombre = useMemo(
     () => selectedItem?.descripcion ?? "",
     [selectedItem]
   );
 
-  const tallerSeleccionado = useMemo(() => {
-    if (!selectedTallerId) return null;
-    return talleres.find((taller) => taller.id === selectedTallerId) ?? null;
-  }, [talleres, selectedTallerId]);
-
-  const canSubmit = useMemo(
-    () =>
-      nombreTaller.trim() !== "" &&
-      Boolean(selectedItemId) &&
-      parsePesoValue(pesos[FINAL_CORTE_ID]) !== null,
-    [nombreTaller, pesos, selectedItemId]
+  const selectedItemLabel = useMemo(
+    () => resolveItemLabel(selectedItem),
+    [resolveItemLabel, selectedItem]
   );
+
+  const parsePesoValue = useCallback((value?: string) => {
+    if (!value?.trim()) {
+      return null;
+    }
+    const normalized = value.replace(/,/g, ".");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }, []);
+
+  const canSubmit = useMemo(() => {
+    if (!selectedItem || !selectedItemId || !nombreTaller.trim()) {
+      return false;
+    }
+
+    if (!cortes.length) {
+      return false;
+    }
+
+    if (!cortes.length) {
+      return false;
+    }
+
+    return cortes.every((corte) => parsePesoValue(pesos[corte.id]) !== null);
+  }, [
+    cortes,
+    nombreTaller,
+    parsePesoValue,
+    pesos,
+    selectedItem,
+    selectedItemId,
+  ]);
+
+  const secondaryCuts = useMemo(() => {
+    if (!selectedSpecies) {
+      return [];
+    }
+
+    const resolvedOptions = resolveMaterialOptions(items, selectedSpecies);
+    const selectedOption = resolvedOptions.find(
+      (option) => option.item && String(option.item.id) === selectedItemId
+    );
+
+    if (!selectedOption?.children?.length) {
+      return [];
+    }
+
+    const seen = new Set<string>();
+
+    return selectedOption.children
+      .map((child) => resolveMaterialOptionLabel(child))
+      .filter((label): label is string => {
+        if (!label) {
+          return false;
+        }
+
+        const key = label.toUpperCase();
+
+        if (seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
+  }, [items, selectedItemId, selectedSpecies, resolveMaterialOptionLabel]);
+
+  const normalizeSpecies = (value: string): EspecieKey =>
+    value.trim().toLowerCase() === "cerdo" ? "cerdo" : "res";
+
+  const primaryCorteLabel = useMemo(() => {
+    const normalizedSelected = normalizeCorteName(
+      selectedItemNombre || selectedItemLabel || ""
+    );
+
+    const primaryMatch = cortes.find((corte) => {
+      const normalizedCorte = normalizeCorteName(corte.nombre_corte);
+      return (
+        normalizedCorte === normalizedSelected ||
+        normalizedCorte.includes(normalizedSelected) ||
+        normalizedCorte.includes(normalizedCorte)
+      );
+    });
+
+    return (
+      primaryMatch?.nombre_corte ||
+      selectedItemNombre ||
+      selectedItemLabel ||
+      ""
+    );
+  }, [cortes, selectedItemLabel, selectedItemNombre]);
+
+  const resolvedSecondaryCuts = useMemo(
+    () =>
+      secondaryCuts.map((label) => {
+        const corteId = resolveCorteIdByLabel(label);
+        const matched = corteId
+          ? cortes.find((corte) => corte.id === corteId)
+          : null;
+        return matched?.nombre_corte || label;
+      }),
+    [secondaryCuts, resolveCorteIdByLabel, cortes]
+  );
+  const finalCorteLabel = useMemo(() => {
+    const finalMatch = cortes.find((corte) => {
+      const normalized = normalizeCorteName(corte.nombre_corte);
+      return /FINAL|SALIDA|DESP/.test(normalized);
+    });
+
+    return finalMatch?.nombre_corte || `${primaryCorteLabel} FINAL`.trim();
+  }, [cortes, primaryCorteLabel]);
 
   useEffect(() => {
     let isMounted = true;
@@ -113,7 +255,9 @@ const TallerWorkflow = ({
           getItems(),
           getTalleres(),
         ]);
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
         setItems(itemsData);
         setTalleres(talleresData);
         setError(null);
@@ -123,7 +267,9 @@ const TallerWorkflow = ({
           setError("No fue posible cargar los datos iniciales del servidor.");
         }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -148,17 +294,18 @@ const TallerWorkflow = ({
       try {
         setLoadingCortes(true);
         const response = await getCortesPorItem(selectedItemId);
-        if (!isMounted) return;
-        const cortesConFinal = appendFinalCorte(response, selectedItemId);
-        setCortes(cortesConFinal);
+        if (!isMounted) {
+          return;
+        }
+        setCortes(response);
+        setError(null);
         setPesos((prev) => {
           const next: Record<string, string> = {};
-          cortesConFinal.forEach((corte) => {
+          response.forEach((corte) => {
             next[corte.id] = prev[corte.id] ?? "";
           });
           return next;
         });
-        setError(null);
       } catch (err) {
         console.error(err);
         if (isMounted) {
@@ -167,7 +314,9 @@ const TallerWorkflow = ({
           );
         }
       } finally {
-        if (isMounted) setLoadingCortes(false);
+        if (isMounted) {
+          setLoadingCortes(false);
+        }
       }
     };
 
@@ -179,13 +328,16 @@ const TallerWorkflow = ({
   }, [selectedItemId]);
 
   useEffect(() => {
-    if (!selectedItemId) return;
-    const item = items.find(
-      (candidate) => candidate.id === Number(selectedItemId)
+    if (!selectedItemId) {
+      return;
+    }
+
+    const selectedItem = items.find(
+      (item) => item.id === Number(selectedItemId)
     );
-    if (item) {
+    if (selectedItem) {
       setNombreTaller((current) =>
-        current?.trim() ? current : resolveItemLabel(item)
+        current?.trim() ? current : resolveItemLabel(selectedItem)
       );
     }
   }, [items, selectedItemId]);
@@ -201,7 +353,9 @@ const TallerWorkflow = ({
     const fetchCalculo = async () => {
       try {
         const response = await getTallerCalculo(selectedTallerId);
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
         setCalculo(response);
         setError(null);
       } catch (err) {
@@ -221,24 +375,30 @@ const TallerWorkflow = ({
     };
   }, [selectedTallerId]);
 
-  // Handlers
-  const handlePesoChange = useCallback((corteId: string, value: string) => {
-    setPesos((prev) => ({ ...prev, [corteId]: value }));
+  const handlePesoChange = (corteId: string, value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setPesos((prev) => ({ ...prev, [corteId]: sanitized }));
     setError(null);
-  }, []);
+  };
 
   const handleNombreChange = (value: string) => {
     setNombreTaller(sanitizeInput(value, { maxLength: 120 }));
+  };
+
+  const handleSubcortePesoChange = (label: string, value: string) => {
+    const corteId = resolveCorteIdByLabel(label);
+    if (!corteId) {
+      return;
+    }
+    handlePesoChange(corteId, value);
   };
 
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
     const item = items.find((candidate) => candidate.id === Number(itemId));
     if (item) {
+      setSelectedSpecies(normalizeSpecies(item.especie));
       const normalizedName = resolveItemLabel(item);
-      setSelectedSpecies(
-        item.especie.trim().toLowerCase() === "cerdo" ? "cerdo" : "res"
-      );
       setNombreTaller(normalizedName || nombreTaller);
     }
   };
@@ -265,7 +425,7 @@ const TallerWorkflow = ({
       return;
     }
 
-    const detalles = cortes
+    const cortesParaGuardar = cortes
       .map((corte) => {
         const peso = parsePesoValue(pesos[corte.id]);
         return peso !== null
@@ -276,7 +436,7 @@ const TallerWorkflow = ({
         (detalle): detalle is NonNullable<typeof detalle> => detalle !== null
       );
 
-    if (!canSubmit || !detalles.length) {
+    if (!canSubmit || !cortesParaGuardar.length) {
       setError(
         "Completa el nombre del taller e ingresa los pesos de los cortes antes de guardar."
       );
@@ -288,8 +448,8 @@ const TallerWorkflow = ({
 
     const payload: CrearTallerPayload = {
       nombre_taller: nombreTaller.trim(),
-      descripcion: resolveItemLabel(selectedItem) || null,
-      detalles,
+      descripcion: selectedItemLabel || null,
+      detalles: cortesParaGuardar,
     };
 
     try {
@@ -344,24 +504,21 @@ const TallerWorkflow = ({
           <TallerForm
             cortes={cortes}
             pesos={pesos}
+            selectedItemId={selectedItemId}
             selectedItem={selectedItem}
             selectedItemNombre={selectedItemNombre}
+            primaryCorteLabel={primaryCorteLabel}
             nombreTaller={nombreTaller}
             loadingCortes={loadingCortes}
             error={error}
+            secondaryCuts={resolvedSecondaryCuts}
+            finalCorteLabel={finalCorteLabel}
             submitting={submitting}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
             onOpenSelector={() => setSelectorOpen(true)}
+            onSubcortePesoChange={handleSubcortePesoChange}
             onSubmit={handleSubmit}
-          />
-
-          <TallerList
-            talleres={talleres}
-            selectedTallerId={selectedTallerId}
-            onSelect={(tallerId) => setSelectedTallerId(tallerId)}
-            loading={loading}
-            emptyMessage={emptyMessage}
           />
         </Stack>
       )}

@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   AlertTitle,
+  Button,
   Chip,
   Divider,
   Stack,
@@ -9,187 +10,289 @@ import {
   Typography,
 } from "@mui/material";
 
-import { corte } from "../../types";
 import { sanitizeInput } from "../../utils/security";
 
 interface SubcorteCalculatorProps {
-  cortes: corte[];
-  pesos: Record<string, string>;
+  primaryLabel: string;
+  secondaryCuts?: string[];
   disabled?: boolean;
   finalLabel?: string;
-  onPesoChange?: (corteId: string, value: string) => void;
+  onPesoChange?: (label: string, value: string) => void;
 }
 
-const parsePesoValue = (value?: string): number | null => {
-  if (!value?.trim()) {
-    return null;
-  }
-  const normalized = value.replace(/,/g, ".");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
-};
+const DEFAULT_SECONDARY_CUTS = ["Recorte", "Gordana"];
+const currencyFormatter = new Intl.NumberFormat("es-CO", {
+  style: "currency",
+  currency: "COP",
+  maximumFractionDigits: 0,
+});
+
 const formatPercentage = (value: number | null): string =>
   value !== null ? `${value.toFixed(2)}%` : "—";
 
+const formatCurrency = (value: number | null): string =>
+  value !== null ? currencyFormatter.format(value) : "—";
+
+const parseInputNumber = (value?: string): number | null => {
+  const parsed = Number(value?.replace(/,/g, "."));
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+};
+
 const SubcorteCalculator = ({
-  cortes,
-  pesos,
+  primaryLabel,
+  secondaryCuts = DEFAULT_SECONDARY_CUTS,
   disabled = false,
-  finalLabel = "Peso luego del taller",
+  finalLabel,
   onPesoChange,
 }: SubcorteCalculatorProps) => {
-  const primaryCorte = cortes[0];
-  const finalCorte = cortes[cortes.length - 1];
-  const subcortes = cortes.slice(1, -1);
+  const [botonOculto, setBotonOculto] = useState(false);
+  const [pesoInicial, setPesoInicial] = useState("");
+  const [botonPresionado, setBotonPresionado] = useState(false);
+  const [pesoFinal, setPesoFinal] = useState("");
+  const [pesoBloqueado, setPesoBloqueado] = useState(false);
+  const [subPesos, setSubPesos] = useState<Record<string, string>>({});
 
-  const primaryPeso = parsePesoValue(
-    primaryCorte ? pesos[primaryCorte.id] : ""
+  const pesoInicialNumber = useMemo(
+    () => parseInputNumber(pesoInicial),
+    [pesoInicial]
+  );
+
+  const handlePesoInicialChange = (value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setPesoInicial(sanitized);
+    onPesoChange?.(primaryLabel, sanitized);
+    setPesoBloqueado(false);
+  };
+
+  const handleSubPesoChange = (label: string, value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setSubPesos((prev) => ({ ...prev, [label]: sanitized }));
+    onPesoChange?.(label, sanitized);
+  };
+
+  const handlePesoFinalChange = (value: string) => {
+    const sanitized = sanitizeInput(value, { maxLength: 18 });
+    setPesoFinal(sanitized);
+    onPesoChange?.(finalLabel?.trim() || `${primaryLabel} final`, sanitized);
+  };
+
+  const uniqueSecondaryCuts = useMemo(() => {
+    const seen = new Set<string>();
+
+    return secondaryCuts.filter((cut) => {
+      const key = cut.trim().toUpperCase();
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }, [secondaryCuts]);
+
+  useEffect(() => {
+    setPesoInicial("");
+    setPesoFinal("");
+    setPesoBloqueado(false);
+    setSubPesos({});
+  }, [primaryLabel, JSON.stringify(uniqueSecondaryCuts)]);
+
+  const calculatePercentage = useCallback(
+    (rawValue: string | undefined): number | null => {
+      if (!pesoInicialNumber || pesoInicialNumber <= 0) {
+        return null;
+      }
+      const parsed = parseInputNumber(rawValue);
+      return parsed !== null ? (parsed / pesoInicialNumber) * 100 : null;
+    },
+    [pesoInicialNumber]
   );
   const subcorteDatos = useMemo(
     () =>
-      subcortes.map((corte) => {
-        const peso = parsePesoValue(pesos[corte.id]);
-        const porcentaje =
-          primaryPeso && primaryPeso > 0
-            ? ((peso ?? 0) / primaryPeso) * 100
-            : null;
-
-        return {
-          corte,
-          peso,
-          porcentaje,
-        };
-      }),
-    [primaryPeso, subcortes, pesos]
+      uniqueSecondaryCuts.map((label) => ({
+        label,
+        porcentaje: calculatePercentage(subPesos[label]),
+      })),
+    [uniqueSecondaryCuts, subPesos, calculatePercentage]
   );
 
-  const porcentajeFinal = useMemo(() => {
-    if (!finalCorte) {
-      return null;
-    }
-    const peso = parsePesoValue(pesos[finalCorte.id]);
-    return primaryPeso && primaryPeso > 0 && peso !== null
-      ? (peso / primaryPeso) * 100
-      : null;
-  }, [finalCorte, pesos, primaryPeso]);
+  const porcentajeFinal = useMemo(
+    () => calculatePercentage(pesoFinal),
+    [pesoFinal, calculatePercentage]
+  );
 
   const totalPorcentaje = useMemo(() => {
-    const subTotal = subcorteDatos.reduce((acc, current) => {
-      return acc + (current.porcentaje ?? 0);
-    }, 0);
+    const subcorteTotal = subcorteDatos
+      .map((entry) => entry.porcentaje)
+      .filter((value): value is number => value !== null)
+      .reduce((acc, value) => acc + value, 0);
 
-    return porcentajeFinal !== null ? subTotal + porcentajeFinal : subTotal;
+    return porcentajeFinal !== null
+      ? subcorteTotal + porcentajeFinal
+      : subcorteTotal;
   }, [porcentajeFinal, subcorteDatos]);
 
   const perdidaPorcentaje =
-    primaryPeso && totalPorcentaje > 0 ? 100 - totalPorcentaje : null;
-
-  const handleChange = (corteId: string, value: string) => {
-    const sanitized = sanitizeInput(value, { maxLength: 18 });
-    onPesoChange?.(corteId, sanitized);
-  };
-
-  if (!primaryCorte || !finalCorte) {
-    return null;
-  }
+    pesoInicialNumber && totalPorcentaje > 0 ? 100 - totalPorcentaje : null;
+  const puedeGuardarPeso =
+    pesoInicialNumber !== null && pesoInicialNumber > 0 && !pesoBloqueado;
 
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle1" fontWeight={600}>
         Peso del corte seleccionado
       </Typography>
-
-      <TextField
-        label={`Peso de ${primaryCorte.nombre_corte}`}
-        value={pesos[primaryCorte.id] ?? ""}
-        onChange={(event) => handleChange(primaryCorte.id, event.target.value)}
-        type="number"
-        inputProps={{ step: 0.001, min: 0 }}
-        helperText="Peso inicial del corte principal en kilogramos"
-        disabled={disabled}
-        fullWidth
-      />
-
-      {subcortes.length > 0 && (
-        <>
-          <Divider textAlign="left">Subcortes</Divider>
-          <Stack spacing={2}>
-            {subcortes.map((corte) => {
-              const data = subcorteDatos.find(
-                (entry) => entry.corte.id === corte.id
-              );
-              const porcentaje = data?.porcentaje ?? null;
-
-              return (
-                <Stack key={corte.id} spacing={1.5}>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                  >
-                    <TextField
-                      label={`Peso de ${corte.nombre_corte}`}
-                      value={pesos[corte.id] ?? ""}
-                      onChange={(event) =>
-                        handleChange(corte.id, event.target.value)
-                      }
-                      type="number"
-                      inputProps={{ step: 0.001, min: 0 }}
-                      helperText={`Peso registrado para ${corte.nombre_corte.toLowerCase()}`}
-                      disabled={disabled}
-                      fullWidth
-                    />
-                    <Chip
-                      label={formatPercentage(porcentaje)}
-                      color={porcentaje !== null ? "success" : "default"}
-                    />
-                  </Stack>
-                </Stack>
-              );
-            })}
-          </Stack>
-        </>
-      )}
-
-      <Divider textAlign="left">{finalLabel}</Divider>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
-        alignItems={{ xs: "flex-start", sm: "center" }}
+        alignItems="center"
       >
         <TextField
-          label={finalLabel}
-          value={pesos[finalCorte.id] ?? ""}
-          onChange={(event) => handleChange(finalCorte.id, event.target.value)}
+          label={`Peso de ${primaryLabel}`}
+          value={pesoInicial}
+          onChange={(event) => handlePesoInicialChange(event.target.value)}
           type="number"
           inputProps={{ step: 0.001, min: 0 }}
-          helperText={`Peso reportado para ${finalCorte.nombre_corte}`}
-          disabled={disabled}
+          helperText="Peso inicial del corte principal en kilogramos"
+          disabled={disabled || pesoBloqueado}
           fullWidth
         />
-        <Chip
-          label={formatPercentage(porcentajeFinal)}
-          color={porcentajeFinal !== null ? "primary" : "default"}
-        />
+        {!botonOculto && (
+          <Button
+            variant={pesoBloqueado ? "outlined" : "contained"}
+            color={pesoBloqueado ? "secondary" : "primary"}
+            onClick={() => {
+              // Lógica actual
+              setPesoBloqueado((prev) =>
+                prev
+                  ? false
+                  : pesoInicialNumber !== null && pesoInicialNumber > 0
+              );
+
+              // Ocultar el botón
+              setBotonOculto(true);
+            }}
+            disabled={disabled || (!pesoBloqueado && !puedeGuardarPeso)}
+          >
+            {pesoBloqueado ? "Editar peso" : "Guardar peso"}
+          </Button>
+        )}
       </Stack>
 
-      <Alert severity="info">
-        <AlertTitle>Resumen de porcentajes</AlertTitle>
-        <Stack spacing={0.5}>
-          <Typography>
-            Porcentaje total calculado:{" "}
-            <strong>{formatPercentage(totalPorcentaje)}</strong>
-          </Typography>
-          {perdidaPorcentaje !== null && (
-            <Typography>
-              Pérdida estimada frente al peso inicial:{" "}
-              <strong style={{ color: "#FF0000" }}>
-                {formatPercentage(perdidaPorcentaje)}
-              </strong>
-            </Typography>
-          )}
+      {!pesoBloqueado && (
+        <Alert severity="info">
+          Ingresa el peso inicial para habilitar el registro de recortes.
+        </Alert>
+      )}
+
+      {pesoBloqueado && (
+        <Stack spacing={2}>
+          <Divider textAlign="left">Subcortes </Divider>
+          {uniqueSecondaryCuts.map((label) => {
+            const datos = subcorteDatos.find((entry) => entry.label === label);
+            const porcentaje = datos?.porcentaje ?? null;
+
+            return (
+              <Stack key={label} spacing={1.5}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                >
+                  <TextField
+                    label={`Peso de ${label}`}
+                    value={subPesos[label] ?? ""}
+                    onChange={(event) =>
+                      handleSubPesoChange(label, event.target.value)
+                    }
+                    type="number"
+                    inputProps={{ step: 0.001, min: 0 }}
+                    helperText={`Peso registrado para ${label.toLowerCase()}`}
+                    disabled={disabled}
+                    fullWidth
+                    InputLabelProps={{
+                      sx: {
+                        color: "#1A1A1A", // label normal (más oscuro)
+                        "&.Mui-focused": {
+                          color: "#1A1A1A", // label cuando sube (oscuro también)
+                        },
+                      },
+                    }}
+                    sx={{
+                      "& .MuiInputBase-input": {
+                        color: "#1A1A1A", // texto dentro del input
+                      },
+                      "& .MuiFormHelperText-root": {
+                        color: "#3A3A3A", // texto del helper más oscuro pero discreto
+                      },
+                    }}
+                  />
+                  <Chip
+                    label={formatPercentage(porcentaje)}
+                    color={porcentaje !== null ? "success" : "default"}
+                  />
+                </Stack>
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                ></Stack>
+              </Stack>
+            );
+          })}
+
+          <Divider textAlign="left">Peso luego del taller</Divider>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          >
+            <TextField
+              label="Peso del corte después del taller"
+              value={pesoFinal}
+              onChange={(event) => handlePesoFinalChange(event.target.value)}
+              type="number"
+              inputProps={{ step: 0.001, min: 0 }}
+              helperText="Peso del corte principal tras hacer el taller"
+              disabled={disabled}
+              fullWidth
+            />
+            <Chip
+              label={formatPercentage(porcentajeFinal)}
+              color={porcentajeFinal !== null ? "primary" : "default"}
+            />
+          </Stack>
+
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          ></Stack>
+
+          <Alert severity="info">
+            <AlertTitle>Resumen de porcentajes</AlertTitle>
+            <Stack spacing={0.5}>
+              <Typography>
+                Porcentaje total calculado:{" "}
+                <strong>{formatPercentage(totalPorcentaje)}</strong>
+              </Typography>
+              {perdidaPorcentaje !== null && (
+                <Typography>
+                  Pérdida estimada frente al peso inicial:{" "}
+                  <strong style={{ color: "#FF0000" }}>
+                    {formatPercentage(perdidaPorcentaje)}
+                  </strong>
+                </Typography>
+              )}
+            </Stack>
+          </Alert>
         </Stack>
-      </Alert>
+      )}
     </Stack>
   );
 };
