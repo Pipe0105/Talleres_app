@@ -388,7 +388,7 @@ const SeguimientoTalleres = () => {
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} className="animate-fade-up">
       <PageHeader
         title="Seguimiento de talleres"
         description="Visualiza qué sedes registran talleres cada día y detecta rápidamente las que no tienen actividad."

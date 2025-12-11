@@ -186,7 +186,7 @@ const ListaPrecios = () => {
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} className="animate-fade-up">
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <PageHeader
           title="Lista de Precios"

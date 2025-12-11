@@ -274,7 +274,7 @@ const UsersAdmin = () => {
   };
 
   return (
-    <Stack spacing={4}>
+    <Stack spacing={4} className="animate-fade-up">
       <Stack
         direction={{ xs: "column", md: "row" }}
         justifyContent="space-between"

@@ -465,7 +465,7 @@ const InformesHistoricos = () => {
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} className="animate-fade-up">
       <PageSection
         title={
           <PageHeader

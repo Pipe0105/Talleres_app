@@ -477,7 +477,12 @@ const TallerWorkflow = ({
   };
 
   return (
-    <Stack spacing={4} component="form" onSubmit={handleSubmit}>
+    <Stack
+      spacing={4}
+      component="form"
+      onSubmit={handleSubmit}
+      className="animate-fade-up"
+    >
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <PageHeader title={title} description={description} />
       </Paper>
