@@ -172,93 +172,97 @@ const SeguimientoTalleres = () => {
     }
 
     return (
-      <Table size={tableSize} sx={{ minWidth: "100%" }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ minWidth: 200, fontSize: "1.4rem" }}>
-              Sede
-            </TableCell>
-            {displayedDates.map((fecha) => {
-              const { label, helper } = formatTableDay(fecha);
-              return (
-                <TableCell key={fecha} align="center">
-                  <Typography variant="subtitle1">{label}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {helper}
-                  </Typography>
-                </TableCell>
-              );
-            })}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredActividad.map((usuario) => (
-            <TableRow key={usuario.user_id} hover>
-              <TableCell>
-                <Stack spacing={0.5}>
-                  <Typography variant="subtitle1" color="text.primary">
-                    {resolveSede(usuario)}
-                  </Typography>
-                </Stack>
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
+        <Table size={tableSize} sx={{ minWidth: 680 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                sx={{ minWidth: { xs: 180, md: 220 }, fontSize: "1.2rem" }}
+              >
+                Sede
               </TableCell>
               {displayedDates.map((fecha) => {
-                const actividadDia =
-                  usuario.dias.find((dia) => dia.fecha === fecha) ??
-                  ({ fecha, cantidad: 0 } as const);
-                const hasRegistro = actividadDia.cantidad > 0;
+                const { label, helper } = formatTableDay(fecha);
                 return (
-                  <TableCell key={fecha} align="center">
-                    <Box
-                      sx={{
-                        bgcolor: hasRegistro ? "success.light" : "grey.100",
-                        color: hasRegistro
-                          ? "success.contrastText"
-                          : "text.secondary",
-                        borderRadius: 1,
-                        px: 1,
-                        py: 0.75,
-                        border: (theme) =>
-                          `1px solid ${
-                            hasRegistro
-                              ? theme.palette.success.main
-                              : theme.palette.grey[200]
-                          }`,
-                      }}
-                    >
-                      <Typography variant="subtitle2" display="block">
-                        {hasRegistro ? "Con taller" : "Sin registro"}
-                      </Typography>
-                      <Typography variant="caption" display="block">
-                        {hasRegistro
-                          ? `${actividadDia.cantidad} en el día`
-                          : "—"}
-                      </Typography>
-                    </Box>
+                  <TableCell key={fecha} align="center" sx={{ minWidth: 132 }}>
+                    <Typography variant="subtitle1">{label}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {helper}
+                    </Typography>
                   </TableCell>
                 );
               })}
             </TableRow>
-          ))}
-          {!filteredActividad.length && !loading && (
-            <TableRow>
-              <TableCell colSpan={displayedDates.length + 1} align="center">
-                <Typography variant="body2" color="text.secondary">
-                  No hay usuarios activos para mostrar en este rango.
-                </Typography>
-              </TableCell>
-            </TableRow>
-          )}
-          {loading && (
-            <TableRow>
-              <TableCell colSpan={displayedDates.length + 1} align="center">
-                <Typography variant="body2" color="text.secondary">
-                  Cargando actividad…
-                </Typography>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {filteredActividad.map((usuario) => (
+              <TableRow key={usuario.user_id} hover>
+                <TableCell>
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle1" color="text.primary">
+                      {resolveSede(usuario)}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                {displayedDates.map((fecha) => {
+                  const actividadDia =
+                    usuario.dias.find((dia) => dia.fecha === fecha) ??
+                    ({ fecha, cantidad: 0 } as const);
+                  const hasRegistro = actividadDia.cantidad > 0;
+                  return (
+                    <TableCell key={fecha} align="center">
+                      <Box
+                        sx={{
+                          bgcolor: hasRegistro ? "success.light" : "grey.100",
+                          color: hasRegistro
+                            ? "success.contrastText"
+                            : "text.secondary",
+                          borderRadius: 1,
+                          px: { xs: 0.75, sm: 1 },
+                          py: { xs: 0.75, sm: 1 },
+                          border: (theme) =>
+                            `1px solid ${
+                              hasRegistro
+                                ? theme.palette.success.main
+                                : theme.palette.grey[200]
+                            }`,
+                        }}
+                      >
+                        <Typography variant="subtitle2" display="block">
+                          {hasRegistro ? "Con taller" : "Sin registro"}
+                        </Typography>
+                        <Typography variant="caption" display="block">
+                          {hasRegistro
+                            ? `${actividadDia.cantidad} en el día`
+                            : "—"}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+            {!filteredActividad.length && !loading && (
+              <TableRow>
+                <TableCell colSpan={displayedDates.length + 1} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    No hay usuarios activos para mostrar en este rango.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+            {loading && (
+              <TableRow>
+                <TableCell colSpan={displayedDates.length + 1} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Cargando actividad…
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Box>
     );
   };
 

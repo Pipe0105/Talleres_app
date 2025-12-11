@@ -58,15 +58,19 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             disableGutters
             sx={{
               py: { xs: 2.5, md: 3 },
-              gap: 3,
-              alignItems: "center",
+              gap: { xs: 2, md: 3 },
+              alignItems: { xs: "flex-start", md: "center" },
+              flexDirection: { xs: "column", md: "row" },
             }}
           >
             <Stack
               direction="row"
               spacing={2}
               alignItems="center"
-              sx={{ flexGrow: 1 }}
+              sx={{
+                flexGrow: 1,
+                width: "100%",
+              }}
             >
               <Box
                 sx={(theme) => ({
@@ -141,9 +145,11 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 alignItems: "center",
                 justifyContent: "center",
                 maxWidth: "100%",
+                width: "100%",
                 overflowX: "auto",
                 scrollbarWidth: "none",
                 "&::-webkit-scrollbar": { display: "none" },
+                mt: { xs: 1.5, md: 0 },
               })}
             >
               <Stack
@@ -151,8 +157,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 spacing={0.5}
                 alignItems="center"
                 sx={{
-                  flexWrap: "nowrap",
+                  flexWrap: { xs: "wrap", md: "nowrap" },
                   whiteSpace: "nowrap",
+                  width: "100%",
+                  justifyContent: { xs: "flex-start", md: "center" },
                 }}
               >
                 {navItems.map((item) => (

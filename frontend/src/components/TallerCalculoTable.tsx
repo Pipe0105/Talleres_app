@@ -62,8 +62,8 @@ const TallerCalculoTable = ({
           )}
         </div>
 
-        <TableContainer>
-          <Table size="small">
+        <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+          <Table size="small" sx={{ minWidth: 720 }}>
             <TableHead>
               <TableRow>
                 <TableCell align="right">Corte</TableCell>

@@ -69,7 +69,15 @@ const ListaPreciosTable = ({
   }
 
   return (
-    <TableContainer sx={{ borderRadius: 3 }}>
+    <TableContainer
+      sx={{
+        borderRadius: 3,
+        overflowX: "auto",
+        width: "100%",
+        boxShadow: "inset 0 0 0 1px rgba(15, 41, 69, 0.1)",
+        "& table": { minWidth: 650 },
+      }}
+    >
       <Table size="medium">
         <TableHead>
           <TableRow>

@@ -9,9 +9,9 @@ interface PageHeaderProps {
 
 const PageHeader = ({ title, description, action }: PageHeaderProps) => (
   <Stack
-    direction={{ sx: "column", sm: "row" }}
+    direction={{ xs: "column", sm: "row" }}
     spacing={2}
-    alignItems={{ sx: "flex-start", sm: "center" }}
+    alignItems={{ xs: "flex-start", sm: "center" }}
     justifyContent="space-between"
   >
     <Stack spacing={0.75}>
