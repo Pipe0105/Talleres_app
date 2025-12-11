@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./layout/AppLayout";
 import Home from "./pages/home/Home";
@@ -45,57 +46,62 @@ const App = () => {
   return (
     <div className="page-fade" key={location.pathname}>
       <AppLayout navItems={navItems}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/talleres"
-            element={
-              <ProtectedRoute>
-                <Talleres />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/talleres/desposte"
-            element={
-              <ProtectedRoute>
-                <TalleresDesposte />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/seguimiento-talleres"
-            element={
-              <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
-                <SeguimientoTalleres />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/informes-historicos" element={<InformesHistoricos />} />
-          <Route path="/lista-precios" element={<ListaPrecios />} />
-          <Route
-            path="/perfil"
-            element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
-            }
-          ></Route>
-          <Route
-            path="/usuarios"
-            element={
-              <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
-                <UsersAdmin />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/usuarios"
-            element={<Navigate to="/usuarios" replace />}
-          />
-          <Route path="/logout" element={<Logout />}></Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Box key={location.pathname} className="animate-fade-up">
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/talleres"
+              element={
+                <ProtectedRoute>
+                  <Talleres />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/talleres/desposte"
+              element={
+                <ProtectedRoute>
+                  <TalleresDesposte />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seguimiento-talleres"
+              element={
+                <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
+                  <SeguimientoTalleres />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/informes-historicos"
+              element={<InformesHistoricos />}
+            />
+            <Route path="/lista-precios" element={<ListaPrecios />} />
+            <Route
+              path="/perfil"
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              }
+            ></Route>
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+                  <UsersAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/usuarios"
+              element={<Navigate to="/usuarios" replace />}
+            />
+            <Route path="/logout" element={<Logout />}></Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Box>
       </AppLayout>
     </div>
   );
