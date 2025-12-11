@@ -71,6 +71,7 @@ const Login = () => {
       })}
     >
       <Paper
+        className="animate-fade-up"
         elevation={8}
         sx={{
           width: "100%",

@@ -213,7 +213,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             px: { xs: 2, md: 4 },
           })}
         >
-          {children}
+          <Box className="animate-fade-up">{children}</Box>
         </Container>
       </Box>
     </Box>

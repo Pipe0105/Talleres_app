@@ -1,4 +1,4 @@
-import { act, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
   Alert,
@@ -192,7 +192,7 @@ const SeguimientoTalleres = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {actividad.map((usuario) => (
+          {filteredActividad.map((usuario) => (
             <TableRow key={usuario.user_id} hover>
               <TableCell>
                 <Stack spacing={0.5}>
@@ -239,7 +239,7 @@ const SeguimientoTalleres = () => {
               })}
             </TableRow>
           ))}
-          {!actividad.length && !loading && (
+          {!filteredActividad.length && !loading && (
             <TableRow>
               <TableCell colSpan={displayedDates.length + 1} align="center">
                 <Typography variant="body2" color="text.secondary">
@@ -271,7 +271,7 @@ const SeguimientoTalleres = () => {
     const leftColumnWidth = 260;
     const headerHeight = 72;
     const rowHeight = 64;
-    const rowsCount = Math.max(actividad.length, 1);
+    const rowsCount = Math.max(filteredActividad.length, 1);
     const width = leftColumnWidth + displayedDates.length * cellWidth;
     const height = headerHeight + rowsCount * rowHeight;
 
@@ -312,8 +312,8 @@ const SeguimientoTalleres = () => {
     });
 
     const rows =
-      actividad.length > 0
-        ? actividad
+      filteredActividad.length > 0
+        ? filteredActividad
         : ([
             {
               user_id: "sin-usuarios",
@@ -333,7 +333,9 @@ const SeguimientoTalleres = () => {
       ctx.fillStyle = "#111111";
       ctx.font = "14px Inter, Arial, sans-serif";
       ctx.fillText(
-        actividad.length ? resolveSede(usuario) : "Sin usuarios activos",
+        filteredActividad.length
+          ? resolveSede(usuario)
+          : "Sin usuarios activos",
         16,
         y + rowHeight / 2 + 5
       );
