@@ -1,5 +1,5 @@
 import { Avatar, Grid, Paper, Stack, Typography } from "@mui/material";
-
+import { fadeUpDelayStyle } from "../../../utils/animations";
 const testimonials = [
   {
     quote: "Ganamos visibilidad total de la cadena fría en tres plantas.",
@@ -31,7 +31,7 @@ const TestimonialsSection = () => {
           <Grid item xs={12} md={6} key={testimonial.name}>
             <Paper
               className="animate-fade-up"
-              style={{ "--fade-up-delay": `${index * 120}ms` }}
+              style={fadeUpDelayStyle(index * 120)}
               sx={(theme) => ({
                 p: 3,
                 height: "100%",

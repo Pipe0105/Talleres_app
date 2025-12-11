@@ -1,5 +1,5 @@
 import { Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
-
+import { fadeUpDelayStyle } from "../../../utils/animations";
 const maturityIndicators = [
   {
     label: "Eficiencia de producción",
@@ -29,7 +29,7 @@ const OperationsSection = () => {
           <Grid item xs={12} md={4} key={indicator.label}>
             <Paper
               className="animate-fade-up"
-              style={{ "--fade-up-delay": `${index * 140}ms` }}
+              style={fadeUpDelayStyle(index * 140)}
               sx={(theme) => ({
                 p: 3,
                 height: "100%",

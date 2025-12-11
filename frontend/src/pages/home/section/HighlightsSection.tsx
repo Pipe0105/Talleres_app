@@ -4,6 +4,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import { Link as RouterLink } from "react-router-dom";
 import { TextSnippet, ThreeMp } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
+import { fadeUpDelayStyle } from "../../../utils/animations";
 
 const capabilityPillars = [
   {
@@ -46,7 +47,7 @@ const HighlightsSection = () => {
               component={RouterLink}
               to={pillar.to}
               className="animate-fade-up"
-              style={{ "--fade-up-delay": `${index * 120}ms` }}
+              style={fadeUpDelayStyle(index * 120)}
               sx={{
                 p: 3,
                 height: "100%",

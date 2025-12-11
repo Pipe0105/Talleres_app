@@ -14,6 +14,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import ScaleOutlinedIcon from "@mui/icons-material/ScaleOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
+import { fadeUpDelayStyle } from "../../../utils/animations";
 
 const summaryStats = [
   {
@@ -136,7 +137,7 @@ const HeroSection = () => {
             <Grid item xs={12} sm={6} md={3} key={item.label}>
               <Paper
                 className="animate-fade-up"
-                style={{ "--fade-up-delay": `${index * 80}ms` }}
+                style={fadeUpDelayStyle(index * 80)}
                 sx={(theme) => ({
                   p: 2.5,
                   height: "100%",
