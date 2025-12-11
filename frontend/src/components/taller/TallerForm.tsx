@@ -27,6 +27,7 @@ interface TallerFormProps {
   submitting?: boolean;
   onNombreChange: (value: string) => void;
   onPesoChange: (corteId: string, value: string) => void;
+  getCorteIdByLabel?: (label: string) => string | null;
   onOpenSelector: () => void;
   onSubcortePesoChange?: (label: string, value: string) => void;
   onSubmit?: () => void;
@@ -47,6 +48,7 @@ const TallerForm = ({
   submitting = false,
   onNombreChange,
   onPesoChange,
+  getCorteIdByLabel,
   onOpenSelector,
   onSubcortePesoChange,
   onSubmit,
@@ -171,6 +173,7 @@ const TallerForm = ({
               secondaryCuts={secondaryCuts ?? []}
               finalLabel={finalCorteLabel ?? `${primaryCorteLabel} FINAL`}
               cortes={cortes}
+              getCorteIdByLabel={getCorteIdByLabel}
               pesos={pesos}
               onPesoChange={onPesoChange}
             />

@@ -517,6 +517,7 @@ const TallerWorkflow = ({
             submitting={submitting}
             onNombreChange={handleNombreChange}
             onPesoChange={handlePesoChange}
+            getCorteIdByLabel={resolveCorteIdByLabel}
             onOpenSelector={() => setSelectorOpen(true)}
             onSubcortePesoChange={handleSubcortePesoChange}
             onSubmit={handleSubmit}

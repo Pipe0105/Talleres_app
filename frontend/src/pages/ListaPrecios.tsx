@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControl,
   InputLabel,
   MenuItem,
@@ -9,7 +14,10 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import { Close, Download, ZoomOutMap } from "@mui/icons-material";
 import { getItems } from "../api/talleresApi";
 import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
@@ -39,6 +47,10 @@ const ListaPrecios = () => {
     "descripcion" | "precio-asc" | "precio-desc"
   >("descripcion");
   const [species, setSpecies] = useState<"todas" | "res" | "cerdo">("todas");
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     let isMounted = true;
@@ -142,6 +154,37 @@ const ListaPrecios = () => {
     setFilter(sanitizeSearchQuery(value));
   };
 
+  const handleDownload = () => {
+    if (!filteredItems.length) return;
+
+    const escapeCsvValue = (value: string | number) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    const rows = [
+      ["Código", "Producto", "Precio (COP)", "Especie", "Fecha de vigencia"],
+      ...filteredItems.map((item) => [
+        item.codigo_producto,
+        item.descripcion,
+        currencyFormatter.format(Number(item.precio)),
+        item.especie,
+        item.fecha_vigencia,
+      ]),
+    ];
+
+    const csvContent = rows
+      .map((row) => row.map(escapeCsvValue).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `lista_precios_${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -178,6 +221,29 @@ const ListaPrecios = () => {
             value={filter}
             onChange={(event) => handleFilterChange(event.target.value)}
           />
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            justifyContent="flex-end"
+          >
+            <Button
+              variant="outlined"
+              startIcon={<ZoomOutMap />}
+              onClick={() => setPreviewOpen(true)}
+              disabled={!filteredItems.length}
+            >
+              Previsualizacion Ampliada
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Download />}
+              onClick={handleDownload}
+              disabled={!filteredItems.length}
+            >
+              {" "}
+              Descargar lista de precios
+            </Button>
+          </Stack>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <FormControl fullWidth>
               <InputLabel id="sort-order-label">Ordenar por</InputLabel>
@@ -219,6 +285,36 @@ const ListaPrecios = () => {
           />
         </Stack>
       </Paper>
+      <Dialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        fullScreen={fullScreenDialog}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <ZoomOutMap fontSize="small" />
+            <Typography component="span" variant="h6">
+              Previsualización Ampliada de la Lista de Precios
+            </Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers>
+          <ListaPreciosTable
+            loading={loading}
+            error={error}
+            items={items}
+            visibleItems={filteredItems}
+            formatCurrency={(value) => currencyFormatter.format(Number(value))}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button startIcon={<Close />} onClick={() => setPreviewOpen(false)}>
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };

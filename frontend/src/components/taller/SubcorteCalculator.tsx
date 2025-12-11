@@ -20,6 +20,7 @@ interface SubcorteCalculatorProps {
   finalLabel?: string;
   cortes: corte[]; // 👈 CORTES REALES DEL BACKEND
   onPesoChange?: (corteId: string, value: string) => void;
+  getCorteIdByLabel?: (label: string) => string | null;
   pesos: Record<string, string>;
 }
 
@@ -59,6 +60,7 @@ export default function SubcorteCalculator({
   finalLabel,
   cortes,
   onPesoChange,
+  getCorteIdByLabel,
 }: SubcorteCalculatorProps) {
   const [botonOculto, setBotonOculto] = useState(false);
   const [pesoInicial, setPesoInicial] = useState("");
@@ -67,14 +69,16 @@ export default function SubcorteCalculator({
   const [pesoBloqueado, setPesoBloqueado] = useState(false);
   const [subPesos, setSubPesos] = useState<Record<string, string>>({});
 
-  // 👇 MAPEA LABEL → corte_id REAL
-  const getCorteIdByLabel = useCallback(
+  const resolveCorteId = useCallback(
     (label: string): string | null => {
+      if (getCorteIdByLabel) {
+        return getCorteIdByLabel(label);
+      }
       const normLabel = normalize(label);
       const found = cortes.find((c) => normalize(c.nombre_corte) === normLabel);
       return found ? String(found.id) : null;
     },
-    [cortes]
+    [cortes, getCorteIdByLabel]
   );
 
   const pesoInicialNumber = useMemo(
@@ -86,7 +90,7 @@ export default function SubcorteCalculator({
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setPesoInicial(sanitized);
 
-    const id = getCorteIdByLabel(primaryLabel);
+    const id = resolveCorteId(primaryLabel);
     if (typeof id === "string") {
       onPesoChange?.(id, sanitized);
     }
@@ -98,7 +102,7 @@ export default function SubcorteCalculator({
     const sanitized = sanitizeInput(value, { maxLength: 18 });
     setSubPesos((prev) => ({ ...prev, [label]: sanitized }));
 
-    const id = getCorteIdByLabel(label);
+    const id = resolveCorteId(label);
     if (typeof id === "string") {
       onPesoChange?.(id, sanitized);
     }
@@ -109,7 +113,7 @@ export default function SubcorteCalculator({
     setPesoFinal(sanitized);
 
     const labelFinal = finalLabel?.trim() || `${primaryLabel} FINAL`;
-    const id = getCorteIdByLabel(labelFinal);
+    const id = resolveCorteId(labelFinal);
     if (typeof id === "string") {
       onPesoChange?.(id, sanitized);
     }
