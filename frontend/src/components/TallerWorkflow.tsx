@@ -90,14 +90,15 @@ const TallerWorkflow = ({
 
   const corteNameMap = useMemo(() => {
     const entries = cortes.map(
-      (corte) => [normalizeCorteName(corte.nombre_corte), corte.id] as const
+      (corte) =>
+        [normalizeCorteName(corte.nombre_corte), String(corte.id)] as const
     );
 
     return new Map(entries);
   }, [cortes]);
 
   const resolveCorteIdByLabel = useCallback(
-    (label: string) => {
+    (label: string): string | null => {
       const normalizedLabel = normalizeCorteName(label);
       const directMatch = corteNameMap.get(normalizedLabel);
       if (directMatch) {
@@ -112,7 +113,7 @@ const TallerWorkflow = ({
         );
       });
 
-      return fallbackMatch?.id;
+      return fallbackMatch ? String(fallbackMatch.id) : null;
     },
     [corteNameMap, cortes]
   );
