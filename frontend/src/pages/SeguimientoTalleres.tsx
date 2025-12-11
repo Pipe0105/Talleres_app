@@ -27,10 +27,11 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
 
+import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import PageHeader from "../components/PageHeader";
 import { getTallerActividad } from "../api/talleresApi";
 import { TallerActividadUsuario } from "../types";
-import { TextFields } from "@mui/icons-material";
+import { Close, TextFields } from "@mui/icons-material";
 
 const formatDateInput = (value: Date): string =>
   value.toISOString().slice(0, 10);
@@ -454,6 +455,16 @@ const SeguimientoTalleres = () => {
         <CardHeader
           title="Registro por sede"
           subheader="Cada columna representa un día del rango seleccionado y cada fila una sede o usuario operador."
+          action={
+            <Button
+              variant="outlined"
+              startIcon={<ZoomOutMapIcon />}
+              onClick={() => setIsModalOpen(true)}
+              disabled={!displayedDates.length}
+            >
+              Ver más grande
+            </Button>
+          }
         />
         <CardContent>
           <Autocomplete
@@ -486,109 +497,62 @@ const SeguimientoTalleres = () => {
             openText="Abrir"
             noOptionsText="No hay sedes disponibles"
           />
-          {!displayedDates.length ? (
-            <Alert severity="info">
-              Define un rango de fechas válido para visualizar la actividad.
+          {renderTable()}
+          {downloadError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {downloadError}
             </Alert>
-          ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ minWidth: 200, fontSize: "1.4rem" }}>
-                    Sede
-                  </TableCell>
-                  {displayedDates.map((fecha) => {
-                    const { label, helper } = formatTableDay(fecha);
-                    return (
-                      <TableCell key={fecha} align="center">
-                        <Typography variant="subtitle1">{label}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {helper}
-                        </Typography>
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredActividad.map((usuario) => (
-                  <TableRow key={usuario.user_id} hover>
-                    <TableCell>
-                      <Stack spacing={0.5}>
-                        <Typography variant="subtitle1" color="text.primary">
-                          {resolveSede(usuario)}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                    {displayedDates.map((fecha) => {
-                      const actividadDia =
-                        usuario.dias.find((dia) => dia.fecha === fecha) ??
-                        ({ fecha, cantidad: 0 } as const);
-                      const hasRegistro = actividadDia.cantidad > 0;
-                      return (
-                        <TableCell key={fecha} align="center">
-                          <Box
-                            sx={{
-                              bgcolor: hasRegistro
-                                ? "success.light"
-                                : "grey.100",
-                              color: hasRegistro
-                                ? "success.contrastText"
-                                : "text.secondary",
-                              borderRadius: 1,
-                              px: 1,
-                              py: 0.75,
-                              border: (theme) =>
-                                `1px solid ${
-                                  hasRegistro
-                                    ? theme.palette.success.main
-                                    : theme.palette.grey[200]
-                                }`,
-                            }}
-                          >
-                            <Typography variant="subtitle2" display="block">
-                              {hasRegistro ? "Con taller" : "Sin registro"}
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                              {hasRegistro
-                                ? `${actividadDia.cantidad} en el día`
-                                : "—"}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-                {!filteredActividad.length && !loading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={displayedDates.length + 1}
-                      align="center"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No hay usuarios activos para mostrar en este rango.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-                {loading && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={displayedDates.length + 1}
-                      align="center"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        Cargando actividad…
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
           )}
         </CardContent>
       </Card>
+      <Dialog
+        fullWidth
+        maxWidth="xl"
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <InsightsOutlinedIcon color="primary" />
+          <Box sx={{ flexGrow: 1 }}>Tabla de seguimiento ampliada</Box>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleDownloadImage}
+            disabled={!displayedDates.length}
+          >
+            Descargar como imagen
+          </Button>
+          <Button
+            variant="text"
+            color="inherit"
+            startIcon={<CloseIcon />}
+            onClick={() => setIsModalOpen(false)}
+          >
+            Cerrar
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ overflow: "auto" }}>{renderTable("medium")}</Box>
+        </DialogContent>
+        <DialogContent>
+          <DialogActions>
+            <Button
+              startIcon={<DownloadIcon />}
+              onClick={handleDownloadImage}
+              variant="contained"
+              disabled={!displayedDates.length}
+            >
+              Descargar imagen
+            </Button>
+            <Button
+              startIcon={<CloseIcon />}
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cerrar
+            </Button>
+          </DialogActions>
+        </DialogContent>
+      </Dialog>
     </Stack>
   );
 };
