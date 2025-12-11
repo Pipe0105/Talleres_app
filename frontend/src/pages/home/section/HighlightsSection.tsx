@@ -39,12 +39,14 @@ const HighlightsSection = () => {
         Funcionalidades Principales
       </Typography>
       <Grid container spacing={3}>
-        {capabilityPillars.map((pillar) => (
+        {capabilityPillars.map((pillar, index) => (
           <Grid item xs={12} md={4} key={pillar.title}>
             <Paper
               elevation={0}
               component={RouterLink}
               to={pillar.to}
+              className="animate-fade-up"
+              style={{ "--fade-up-delay": `${index * 120}ms` }}
               sx={{
                 p: 3,
                 height: "100%",

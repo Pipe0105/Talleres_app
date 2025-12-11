@@ -27,9 +27,11 @@ const TestimonialsSection = () => {
         Historias reales de impacto
       </Typography>
       <Grid container spacing={3}>
-        {testimonials.map((testimonial) => (
+        {testimonials.map((testimonial, index) => (
           <Grid item xs={12} md={6} key={testimonial.name}>
             <Paper
+              className="animate-fade-up"
+              style={{ "--fade-up-delay": `${index * 120}ms` }}
               sx={(theme) => ({
                 p: 3,
                 height: "100%",

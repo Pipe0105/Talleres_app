@@ -25,9 +25,11 @@ const OperationsSection = () => {
         Indicadores de madurez operativa
       </Typography>
       <Grid container spacing={3}>
-        {maturityIndicators.map((indicator) => (
+        {maturityIndicators.map((indicator, index) => (
           <Grid item xs={12} md={4} key={indicator.label}>
             <Paper
+              className="animate-fade-up"
+              style={{ "--fade-up-delay": `${index * 140}ms` }}
               sx={(theme) => ({
                 p: 3,
                 height: "100%",

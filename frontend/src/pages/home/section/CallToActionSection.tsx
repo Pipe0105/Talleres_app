@@ -4,6 +4,7 @@ import { Button, Card, Stack, Typography } from "@mui/material";
 const CallToActionSection = () => {
   return (
     <Card
+      className="animate-fade-up"
       sx={(theme) => ({
         p: { xs: 4, md: 6 },
         textAlign: "center",

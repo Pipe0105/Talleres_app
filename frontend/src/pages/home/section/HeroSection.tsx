@@ -45,6 +45,7 @@ const summaryStats = [
 const HeroSection = () => {
   return (
     <Card
+      className="animate-fade-up"
       sx={(theme) => ({
         p: { xs: 3, md: 4 },
         overflow: "hidden",
@@ -131,9 +132,11 @@ const HeroSection = () => {
           </Card>
         </Stack>
         <Grid container spacing={2}>
-          {summaryStats.map((item) => (
+          {summaryStats.map((item, index) => (
             <Grid item xs={12} sm={6} md={3} key={item.label}>
               <Paper
+                className="animate-fade-up"
+                style={{ "--fade-up-delay": `${index * 80}ms` }}
                 sx={(theme) => ({
                   p: 2.5,
                   height: "100%",

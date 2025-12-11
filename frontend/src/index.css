@@ -18,3 +18,54 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--fade-up-distance, 16px));
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  opacity: 0;
+  transform: translateY(var(--fade-up-distance, 16px));
+  animation: fade-up var(--fade-up-duration, 650ms)
+    var(--fade-up-easing, cubic-bezier(0.16, 1, 0.3, 1))
+    var(--fade-up-delay, 0ms) forwards;
+  will-change: opacity, transform;
+}
+
+.animate-fade-up.skeleton-placeholder {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 41, 69, 0.06),
+    rgba(15, 41, 69, 0.04),
+    rgba(15, 41, 69, 0.06)
+  );
+
+  background-size: 200% 100%;
+  animation-name: fade-up, shimmer;
+  animation-duration: var(--fade-up-duration, 650ms), 1.5s;
+  animation-timing-function: var(
+      --fade-up-easing,
+      cubic-bezier(0.16, 1, 0.3, 1)
+    ),
+    linear;
+  animation-delay: var(--fade-up-delay, 0ms), 0s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
