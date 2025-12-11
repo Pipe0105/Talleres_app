@@ -90,6 +90,6 @@ export interface TallerActividadUsuario {
   username: string;
   full_name: string | null;
   sede: string | null;
-  is_active: boolean;
+  is_active?: boolean;
   dias: TallerActividadDia[];
 }

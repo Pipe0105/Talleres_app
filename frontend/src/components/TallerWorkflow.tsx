@@ -143,28 +143,21 @@ const TallerWorkflow = ({
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   }, []);
 
+  const validPesosCount = useMemo(
+    () =>
+      cortes
+        .map((corte) => parsePesoValue(pesos[corte.id]))
+        .filter((peso) => peso !== null).length,
+    [cortes, parsePesoValue, pesos]
+  );
+
   const canSubmit = useMemo(() => {
     if (!selectedItem || !selectedItemId || !nombreTaller.trim()) {
       return false;
     }
 
-    if (!cortes.length) {
-      return false;
-    }
-
-    if (!cortes.length) {
-      return false;
-    }
-
-    return cortes.every((corte) => parsePesoValue(pesos[corte.id]) !== null);
-  }, [
-    cortes,
-    nombreTaller,
-    parsePesoValue,
-    pesos,
-    selectedItem,
-    selectedItemId,
-  ]);
+    return validPesosCount > 0;
+  }, [nombreTaller, selectedItem, selectedItemId, validPesosCount]);
 
   const secondaryCuts = useMemo(() => {
     if (!selectedSpecies) {
