@@ -168,24 +168,39 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       textTransform: "none",
                       gap: 0.75,
                       px: 1.8,
-                      py: 0.75,
+                      py: 1,
                       minWidth: "auto",
-                      fontSize: "0.86rem",
+                      fontSize: "0.81rem",
                       justifyContent: "center",
                       borderRadius: 999,
-                      backgroundColor: item.isActive
-                        ? alpha(theme.palette.common.white, 0.9)
-                        : "transparent",
+                      position: "relative",
                       color: item.isActive
                         ? theme.palette.primary.main
-                        : theme.palette.common.white,
+                        : alpha(theme.palette.common.white, 0.9),
+                      backgroundImage: item.isActive
+                        ? "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72))"
+                        : "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
+                      backgroundColor: "transparent",
+                      border: `1px solid ${alpha(
+                        theme.palette.common.white,
+                        item.isActive ? 0.75 : 0.24
+                      )}`,
                       boxShadow: item.isActive
-                        ? theme.customShadows.surface
-                        : "none",
+                        ? "0 18px 36px rgba(4,17,37,0.32), inset 0 1px 0 rgba(255,255,255,0.45)"
+                        : "0 12px 30px rgba(4,17,37,0.18), inset 0 1px 0 rgba(255,255,255,0.18)",
+                      backdropFilter: "blur(12px)",
+                      transition: "all 0.2s ease",
                       "&:hover": {
-                        backgroundColor: item.isActive
-                          ? alpha(theme.palette.common.white, 0.9)
-                          : alpha(theme.palette.common.white, 0.14),
+                        backgroundImage: item.isActive
+                          ? "linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.78))"
+                          : "linear-gradient(135deg, rgba(255,255,255,0.26), rgba(255,255,255,0.14))",
+                        boxShadow: item.isActive
+                          ? "0 20px 40px rgba(4,17,37,0.36), inset 0 1px 0 rgba(255,255,255,0.5)"
+                          : "0 16px 36px rgba(4,17,37,0.22), inset 0 1px 0 rgba(255,255,255,0.22)",
+                        borderColor: alpha(
+                          theme.palette.common.white,
+                          item.isActive ? 0.85 : 0.32
+                        ),
                       },
                     })}
                     disabled={item.disabled}

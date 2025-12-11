@@ -33,67 +33,71 @@ const App = () => {
 
   if (isLoginRoute) {
     return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <div className="page-fade" key="login">
+        <Routes>
+          <Route path="/login" element={<Login />}></Route>
+          <Route path="*" element={<Navigate to="login" replace />}></Route>
+        </Routes>
+      </div>
     );
   }
 
   return (
-    <AppLayout navItems={navItems}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/talleres"
-          element={
-            <ProtectedRoute>
-              <Talleres />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/talleres/desposte"
-          element={
-            <ProtectedRoute>
-              <TalleresDesposte />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/seguimiento-talleres"
-          element={
-            <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
-              <SeguimientoTalleres />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/informes-historicos" element={<InformesHistoricos />} />
-        <Route path="/lista-precios" element={<ListaPrecios />} />
-        <Route
-          path="/perfil"
-          element={
-            <ProtectedRoute>
-              <UserProfile />
-            </ProtectedRoute>
-          }
-        ></Route>
-        <Route
-          path="/usuarios"
-          element={
-            <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
-              <UsersAdmin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/usuarios"
-          element={<Navigate to="/usuarios" replace />}
-        />
-        <Route path="/logout" element={<Logout />}></Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AppLayout>
+    <div className="page-fade" key={location.pathname}>
+      <AppLayout navItems={navItems}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/talleres"
+            element={
+              <ProtectedRoute>
+                <Talleres />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/talleres/desposte"
+            element={
+              <ProtectedRoute>
+                <TalleresDesposte />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seguimiento-talleres"
+            element={
+              <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
+                <SeguimientoTalleres />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/informes-historicos" element={<InformesHistoricos />} />
+          <Route path="/lista-precios" element={<ListaPrecios />} />
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          ></Route>
+          <Route
+            path="/usuarios"
+            element={
+              <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+                <UsersAdmin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={<Navigate to="/usuarios" replace />}
+          />
+          <Route path="/logout" element={<Logout />}></Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AppLayout>
+    </div>
   );
 };
 
