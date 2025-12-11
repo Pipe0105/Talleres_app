@@ -1,5 +1,4 @@
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { ReactNode, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { UserProfile } from "../types";
@@ -51,9 +50,7 @@ export const useNavigationItems = ({
             {
               label: displayName || "Usuario",
               to: "/perfil",
-              icon: <PersonOutlineIcon fontSize="small" />,
             },
-            { label: "Cerrar sesión", to: "/logout" },
           ]
         : [{ label: "Iniciar sesión", to: "/login" }]),
     ];

@@ -1,25 +1,44 @@
-import { Chip, Divider, Paper, Stack, Typography } from "@mui/material";
+import { Button, Chip, Divider, Paper, Stack, Typography } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const maskedPassword = "*********";
 
 const UserProfile = () => {
   const { user } = useAuth();
-
+  const navigate = useNavigate();
   if (!user) {
     return null;
   }
+  const handleLogout = () => {
+    navigate("/logout");
+  };
 
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <PageHeader
-          title="Mi perfil"
-          description="Consulta informacion basica de tu cuenta"
-          action={<PersonOutlineIcon color="primary" fontSize="large" />}
-        />
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          justifyContent="space-between"
+          spacing={2}
+        >
+          <PageHeader
+            title="Mi perfil"
+            description="Consulta informacion basica de tu cuenta"
+            action={<PersonOutlineIcon color="primary" fontSize="large" />}
+          />
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleLogout}
+            sx={{ alignSelf: { xs: "stretch", sm: "center" } }}
+          >
+            Cerrar sesión
+          </Button>
+        </Stack>
       </Paper>
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>

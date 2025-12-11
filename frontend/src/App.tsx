@@ -44,7 +44,7 @@ const App = () => {
   }
 
   return (
-    <div className="page-fade" key={location.pathname}>
+    <div className="page-fade">
       <AppLayout navItems={navItems}>
         <Box key={location.pathname} className="animate-fade-up">
           <Routes location={location}>

@@ -157,10 +157,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 spacing={0.5}
                 alignItems="center"
                 sx={{
-                  flexWrap: { xs: "wrap", md: "nowrap" },
-                  whiteSpace: "nowrap",
+                  flexWrap: "wrap",
+                  whiteSpace: "normal",
                   width: "100%",
-                  justifyContent: { xs: "flex-start", md: "center" },
+                  justifyContent: "flex-start",
                 }}
               >
                 {navItems.map((item) => (
