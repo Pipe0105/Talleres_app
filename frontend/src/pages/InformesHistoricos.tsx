@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, CircularProgress, Stack, Typography } from "@mui/material";
 import { getTallerCalculo, getTalleres } from "../api/talleresApi";
 import { TallerCalculoRow, TallerListItem } from "../types";
-import TallerCalculoTable from "../components/TallerCalculoTable";
 import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
 import TallerSelectionCard, {
@@ -507,43 +506,7 @@ const InformesHistoricos = () => {
         title="Detalle del taller seleccionado"
         description="Visualiza el desempeño por corte con los filtros aplicados."
       >
-        <Stack spacing={2.5}>
-          {!selectedTaller ? (
-            <Alert severity="info">
-              Selecciona un taller para ver su cálculo consolidado y los
-              indicadores de porcentaje.
-            </Alert>
-          ) : loadingCalculo ? (
-            <Stack spacing={1} alignItems="center" justifyContent="center">
-              <CircularProgress />
-              <Typography variant="body2" color="text.secondary">
-                Obteniendo el cálculo del taller seleccionado...
-              </Typography>
-            </Stack>
-          ) : error ? (
-            <Alert severity="error" onClose={() => setError(null)}>
-              {error}
-            </Alert>
-          ) : !calculo || calculo.length === 0 ? (
-            <Alert severity="info">
-              No se encontró cálculo para el taller seleccionado.
-            </Alert>
-          ) : !filteredCalculo.length ? (
-            <Alert severity="info">
-              No se encontraron cortes que cumplan con los filtros
-              seleccionados.
-            </Alert>
-          ) : (
-            <TallerCalculoTable
-              titulo={`Detalle del taller · ${selectedTaller.label}`}
-              calculo={filteredCalculo}
-              observaciones={
-                talleres.find((t) => t.id === selectedTaller.id)?.descripcion ??
-                null
-              }
-            />
-          )}
-        </Stack>
+        <Stack spacing={2.5}></Stack>
       </PageSection>
 
       <InformeExportPanel

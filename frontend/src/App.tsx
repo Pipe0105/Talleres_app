@@ -2,8 +2,6 @@ import { Box } from "@mui/material";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./layout/AppLayout";
 import Home from "./pages/home/Home";
-import Talleres from "./pages/Talleres";
-import TalleresDesposte from "./pages/TalleresDesposte";
 import InformesHistoricos from "./pages/InformesHistoricos";
 import ListaPrecios from "./pages/ListaPrecios";
 import Login from "./pages/Login";
@@ -48,23 +46,6 @@ const App = () => {
       <AppLayout navItems={navItems}>
         <Box key={location.pathname} className="animate-fade-up">
           <Routes location={location}>
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/talleres"
-              element={
-                <ProtectedRoute>
-                  <Talleres />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/talleres/desposte"
-              element={
-                <ProtectedRoute>
-                  <TalleresDesposte />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/seguimiento-talleres"
               element={
