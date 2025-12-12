@@ -275,7 +275,7 @@ const TallerWorkflow = ({
   }, []);
 
   useEffect(() => {
-    if (!selectedItem?.codigo_producto) {
+    if (!selectedItem) {
       setCortes([]);
       setPesos({});
       return;
@@ -287,19 +287,16 @@ const TallerWorkflow = ({
       try {
         setLoadingCortes(true);
 
-        console.log(
-          "Solicitando cortes para código:",
-          selectedItem.codigo_producto
-        );
+        console.log("Solicitando cortes para item_id:", selectedItem.id);
 
-        const response = await getCortesPorItem(selectedItemId);
+        const response = await getCortesPorItem(String(selectedItem.id));
 
         if (!isMounted) return;
 
         setCortes(response);
         setPesos((prev) => {
           const next: Record<string, string> = {};
-          response.forEach((corte: corte) => {
+          response.forEach((corte) => {
             next[corte.id] = prev[corte.id] ?? "";
           });
           return next;
