@@ -61,6 +61,7 @@ export default function SubcorteCalculator({
   cortes,
   onPesoChange,
   getCorteIdByLabel,
+  pesos,
 }: SubcorteCalculatorProps) {
   const [botonOculto, setBotonOculto] = useState(false);
   const [pesoInicial, setPesoInicial] = useState("");
@@ -75,7 +76,14 @@ export default function SubcorteCalculator({
         return getCorteIdByLabel(label);
       }
       const normLabel = normalize(label);
-      const found = cortes.find((c) => normalize(c.nombre_corte) === normLabel);
+      const found = cortes.find((c) => {
+        const normalizedCorte = normalize(c.nombre_corte);
+        return (
+          normalizedCorte === normLabel ||
+          normalizedCorte.includes(normLabel) ||
+          normLabel.includes(normalizedCorte)
+        );
+      });
       return found ? String(found.id) : null;
     },
     [cortes, getCorteIdByLabel]
@@ -128,6 +136,25 @@ export default function SubcorteCalculator({
       return true;
     });
   }, [secondaryCuts]);
+
+  useEffect(() => {
+    const primaryId = resolveCorteId(primaryLabel);
+    const finalId = resolveCorteId(
+      finalLabel?.trim() || `${primaryLabel} FINAL`
+    );
+
+    setPesoInicial(primaryId ? pesos[primaryId] ?? "" : "");
+    setPesoFinal(finalId ? pesos[finalId] ?? "" : "");
+
+    setSubPesos((prev) => {
+      const next: Record<string, string> = {};
+      uniqueSecondaryCuts.forEach((label) => {
+        const corteId = resolveCorteId(label);
+        next[label] = corteId ? pesos[corteId] ?? "" : prev[label] ?? "";
+      });
+      return next;
+    });
+  }, [finalLabel, pesos, primaryLabel, resolveCorteId, uniqueSecondaryCuts]);
 
   useEffect(() => {
     setPesoInicial("");
