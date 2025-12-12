@@ -154,13 +154,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             >
               <Stack
                 direction="row"
-                spacing={0.5}
+                spacing={0.75}
                 alignItems="center"
                 sx={{
-                  flexWrap: "wrap",
-                  whiteSpace: "normal",
-                  width: "100%",
-                  justifyContent: "flex-start",
+                  flexWrap: "nowrap", // ✅ nunca baja de línea
+                  whiteSpace: "nowrap", // ✅ texto en una sola línea
+                  width: "max-content", // ✅ se ajusta al contenido
                 }}
               >
                 {navItems.map((item) => (

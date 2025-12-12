@@ -4,7 +4,7 @@ import { Paper, Stack, Typography } from "@mui/material";
 
 import {
   createTaller,
-  getCortesPorItem,
+  getCortesPorItem, // 👈 NUEVO
   getItems,
   getTallerCalculo,
   getTalleres,
@@ -147,7 +147,7 @@ const TallerWorkflow = ({
   const validPesosCount = useMemo(
     () =>
       cortes
-        .map((corte) => parsePesoValue(pesos[corte.id]))
+        .map((corte) => parsePesoValue(pesos[String(corte.id)]))
         .filter((peso) => peso !== null).length,
     [cortes, parsePesoValue, pesos]
   );
@@ -275,10 +275,9 @@ const TallerWorkflow = ({
   }, []);
 
   useEffect(() => {
-    if (!selectedItemId) {
+    if (!selectedItem?.codigo_producto) {
       setCortes([]);
       setPesos({});
-      setError(null);
       return;
     }
 
@@ -287,24 +286,31 @@ const TallerWorkflow = ({
     const fetchCortes = async () => {
       try {
         setLoadingCortes(true);
+
+        console.log(
+          "Solicitando cortes para código:",
+          selectedItem.codigo_producto
+        );
+
         const response = await getCortesPorItem(selectedItemId);
-        if (!isMounted) {
-          return;
-        }
+
+        if (!isMounted) return;
+
         setCortes(response);
-        setError(null);
         setPesos((prev) => {
           const next: Record<string, string> = {};
-          response.forEach((corte) => {
+          response.forEach((corte: corte) => {
             next[corte.id] = prev[corte.id] ?? "";
           });
           return next;
         });
+
+        setError(null);
       } catch (err) {
         console.error(err);
         if (isMounted) {
           setError(
-            "No fue posible cargar los cortes del material. Verifica tu sesión e inténtalo nuevamente."
+            "No fue posible cargar los cortes del material seleccionado."
           );
         }
       } finally {
@@ -314,27 +320,25 @@ const TallerWorkflow = ({
       }
     };
 
-    void fetchCortes();
+    fetchCortes();
 
     return () => {
       isMounted = false;
     };
-  }, [selectedItemId]);
+  }, [selectedItem]);
 
   useEffect(() => {
     if (!selectedItemId) {
+      setNombreTaller("");
       return;
     }
 
-    const selectedItem = items.find(
-      (item) => item.id === Number(selectedItemId)
-    );
-    if (selectedItem) {
-      setNombreTaller((current) =>
-        current?.trim() ? current : resolveItemLabel(selectedItem)
-      );
+    const item = items.find((i) => i.id === Number(selectedItemId));
+    if (item) {
+      const nombre = resolveItemLabel(item);
+      setNombreTaller(nombre);
     }
-  }, [items, selectedItemId]);
+  }, [items, selectedItemId, resolveItemLabel]);
 
   useEffect(() => {
     if (!selectedTallerId) {
@@ -422,7 +426,11 @@ const TallerWorkflow = ({
     // Construye los cortes que se enviarán al backend
     const cortesParaGuardar = cortes
       .map((corte) => {
-        const peso = parsePesoValue(pesos[corte.id]);
+        const peso = parsePesoValue(pesos[String(corte.id)]);
+        console.log("Pesos:", pesos);
+        console.log("ID del corte:", corte.id);
+        console.log("Valor leído:", pesos[String(corte.id)]);
+
         return peso !== null
           ? {
               item_id: selectedItemId,
@@ -437,6 +445,15 @@ const TallerWorkflow = ({
         ): detalle is { item_id: string; corte_id: string; peso: number } =>
           detalle !== null
       );
+
+    console.log("======== SUBMITTING ========");
+    console.log("selectedItemId:", selectedItemId);
+    console.log("selectedItem:", selectedItem);
+    console.log("nombreTaller:", nombreTaller);
+    console.log("pesos:", pesos);
+    console.log("cortes:", cortes);
+    console.log("validPesosCount:", validPesosCount);
+    console.log("canSubmit:", canSubmit);
 
     if (!canSubmit || !cortesParaGuardar.length) {
       setError(

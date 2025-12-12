@@ -10,19 +10,25 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from .database import Base
+from sqlalchemy import (
+    Column, Integer, String, Text, Numeric, Boolean, DateTime, ForeignKey
+)
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 class Item(Base):
     __tablename__ = "items"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    item_code = Column(Text, unique=True, nullable=False)
-    descripcion = Column(Text, nullable=False)
-    precio_venta = Column(Numeric(14, 4), nullable=False)
-    fuente_archivo = Column(Text)
-    creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    actualizado_en = Column(
-        TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
-    )
 
+    id = Column(Integer, primary_key=True)
+    item_code = Column(String)          # Código del producto
+    nombre = Column(String(120))        # NUEVO: Nombre limpio usado por el frontend
+    descripcion = Column(Text)          # Nombre largo o texto original del archivo
+    especie = Column(String(10))        # NUEVO: "res" o "cerdo"
+    activo = Column(Boolean, default=True)  # NUEVO: control de catálogo
+    precio_venta = Column(Numeric(14,4))
+    fuente_archivo = Column(Text)
+    creado_en = Column(DateTime, default=datetime.utcnow)
+    actualizado_en = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     cortes = relationship(
         "Corte", back_populates="item", cascade="all, delete-orphan"
     )

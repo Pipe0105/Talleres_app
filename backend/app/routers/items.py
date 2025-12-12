@@ -1,6 +1,7 @@
 from decimal import Decimal
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from ..database import get_db
 from ..models import ListaPrecios
 from ..schemas import ListaPreciosOut
@@ -12,9 +13,15 @@ router = APIRouter(
 
 @router.get("", response_model=list[ListaPreciosOut])
 def listar_items(db: Session = Depends(get_db)):
-    registros = db.query(ListaPrecios).order_by(ListaPrecios.codigo_producto).all()
+    registros = (
+        db.query(ListaPrecios)
+        .filter(ListaPrecios.activo == True)
+        .order_by(ListaPrecios.codigo_producto)
+        .all()
+    )
 
     items = []
+
     for item in registros:
         precio_raw = item.precio
 
@@ -29,12 +36,12 @@ def listar_items(db: Session = Depends(get_db)):
             ListaPreciosOut(
                 id=item.id,
                 codigo_producto=item.codigo_producto,
-                descripcion=item.descripcion,
+                descripcion=item.descripcion,  # 👈 ESTO ES LO QUE USA EL FRONT
                 precio=precio,
-                especie=item.especie,
+                especie=item.especie.lower() if item.especie else None,
                 fecha_vigencia=item.fecha_vigencia,
                 fuente=item.fuente,
-                activo=item.activo
+                activo=item.activo,
             )
         )
 

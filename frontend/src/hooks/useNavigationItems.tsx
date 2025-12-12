@@ -48,7 +48,7 @@ export const useNavigationItems = ({
       ...(user
         ? [
             {
-              label: displayName || "Usuario",
+              label: "Usuario", // 👈 fijo, genérico
               to: "/perfil",
             },
           ]

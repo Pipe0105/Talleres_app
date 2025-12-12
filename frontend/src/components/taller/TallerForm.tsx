@@ -190,12 +190,12 @@ const TallerForm = ({
             <Button
               variant="contained"
               color="primary"
-              onClick={onSubmit}
-              type="submit"
               disabled={!selectedItem || submitting}
+              onClick={onSubmit}
             >
               {submitting ? "Guardando…" : "Guardar taller"}
             </Button>
+
             <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
               Guarda el taller para registrar el peso inicial, los subcortes y
               el peso final en el historial.
