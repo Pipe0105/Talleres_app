@@ -324,9 +324,9 @@ const TalleresDesposte = () => {
                     Material Principal
                   </InputLabel>
                   <Select
-                    labelId="material-label"
+                    labelId="material-select-label"
                     label="Material Principal"
-                    value={selectedItem}
+                    value={selectedItemId}
                     onChange={(event) =>
                       setSelectedItemId(event.target.value as string)
                     }
