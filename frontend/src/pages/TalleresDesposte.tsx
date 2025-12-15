@@ -377,7 +377,25 @@ const TalleresDesposte = () => {
                 <FormControl
                   fullWidth
                   disabled={loadingItems || submitting || !allowedItems.length}
-                ></FormControl>
+                >
+                  <InputLabel id="material-select-label">
+                    Material Principal
+                  </InputLabel>
+                  <Select
+                    labelId="material-select-label"
+                    label="Material Principal"
+                    value={selectedItemId}
+                    onChange={(event) =>
+                      setSelectedItemId(event.target.value as string)
+                    }
+                  >
+                    {allowedItems.map((item) => (
+                      <MenuItem key={item.id} value={String(item.id)}>
+                        {item.descripcion || item.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
                 {!loadingItems && !allowedItems.length && (
                   <Alert severity="warning">
