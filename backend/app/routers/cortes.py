@@ -5,7 +5,7 @@ from ..database import get_db
 from ..dependencies import get_current_active_user, get_current_admin_user
 from ..models import Corte, Item
 from ..schemas import CorteIn, CorteOut
-
+from ..services.cortes_defaults import get_default_cortes
 router = APIRouter(
     prefix="/cortes",
     tags=["cortes"],
@@ -46,9 +46,8 @@ def cortes_por_item(
     item_id: int,
     db: Session = Depends(get_db),
 ):
-    return (
-        db.query(Corte)
-        .filter(Corte.item_id == item_id)
-        .order_by(Corte.nombre_corte)
-        .all()
-    )
+    item = db.get(Item, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="El item no existe")
+
+    return get_default_cortes(db, item)
