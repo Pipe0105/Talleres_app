@@ -7,11 +7,7 @@ import {
   CardHeader,
   CircularProgress,
   Divider,
-  FormControl,
   Grid,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -374,34 +370,21 @@ const TalleresDesposte = () => {
                   locked={submitting}
                 />
 
-                <FormControl
-                  fullWidth
-                  disabled={loadingItems || submitting || !allowedItems.length}
-                >
-                  <InputLabel id="material-select-label">
-                    Material Principal
-                  </InputLabel>
-                  <Select
-                    labelId="material-select-label"
-                    label="Material Principal"
-                    value={selectedItemId}
-                    onChange={(event) =>
-                      setSelectedItemId(event.target.value as string)
-                    }
-                  >
-                    {allowedItems.map((item) => (
-                      <MenuItem key={item.id} value={String(item.id)}>
-                        {item.descripcion || item.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {!loadingItems && !allowedItems.length && (
-                  <Alert severity="warning">
-                    No se encontraron materiales configurados para la especie
-                    seleccionada. Ajusta la selección o verifica el catálogo.
+                {selectedItem ? (
+                  <Alert severity="info">
+                    Material seleccionado:{" "}
+                    <strong>
+                      {selectedItem.descripcion || selectedItem.nombre}
+                    </strong>
                   </Alert>
+                ) : (
+                  !loadingItems && (
+                    <Alert severity="warning">
+                      {allowedItems.length
+                        ? 'Selecciona el material principal usando el botón "Registrar nuevo taller".'
+                        : "No se encontraron materiales configurados para la especie seleccionada. Ajusta la selección o verifica el catálogo."}
+                    </Alert>
+                  )
                 )}
 
                 {selectedItem && (

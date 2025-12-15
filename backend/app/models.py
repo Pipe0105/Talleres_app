@@ -20,7 +20,7 @@ class Item(Base):
     __tablename__ = "items"
 
     id = Column(Integer, primary_key=True)
-    item_code = Column(String)          # Código del producto
+    item_code = Column("codigo_producto", String)  # Código del producto
     nombre = Column(String(120))        # NUEVO: Nombre limpio usado por el frontend
     descripcion = Column(Text)          # Nombre largo o texto original del archivo
     especie = Column(String(10))        # NUEVO: "res" o "cerdo"
