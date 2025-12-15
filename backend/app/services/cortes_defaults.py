@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+from typing import List, Sequence
+
+from sqlalchemy.orm import Session
+
+from ..models import Corte, Item
+
+
+DEFAULT_CORTES_BY_CODE: dict[str, Sequence[str]] = {
+    # Res
+    "7776": ["Recorte", "Gordana"],
+    "5585": ["Recorte", "Gordana", "Pulpa"],
+    "25493": ["Recorte", "Gordana", "Caderita Normal"],
+    "6415": ["Recorte", "Gordana", "Costilla Especial", "Costilla Light", "Hueso Promo"],
+    "5834": ["Recorte", "Gordana"],
+    "5856": ["Recorte", "Gordana"],
+    "5871": ["Recorte", "Gordana", "Desperdicio"],
+    "7843": ["Recorte", "Gordana"],
+    "5854": ["Recorte 5843", "Gordana"],
+    "11018": ["Recorte", "Gordana", "Desperdicio"],
+    "7767": ["Recorte", "Gordana", "Ampolleta Normal"],
+    "7768": ["Recorte", "Gordana", "Pulpa"],
+    "8037": ["Recorte", "Gordana"],
+    "5837": ["Recorte", "Gordana"],
+    "5844": ["Recorte", "Gordana", "Espadilla/Paloma"],
+    "8005": ["Recorte", "Gordana", "Pulpa"],
+    "5848": ["Recorte", "Gordana"],
+    # Cerdo
+    "9324": ["Recorte", "Empella"],
+    "10251": ["Costichi", "Empella", "Garra"],
+    "5810": ["Recorte", "Empella"],
+    "35164": ["Recorte", "Empella"],
+    "5828": ["Recorte", "Empella"],
+}
+
+
+def normalize_code(value: str | None) -> str:
+    return (value or "").strip().upper()
+
+
+def ensure_default_cortes(db: Session, item: Item) -> List[Corte]:
+    code = normalize_code(item.item_code)
+    defaults = DEFAULT_CORTES_BY_CODE.get(code)
+    if not defaults:
+        return []
+
+    created: List[Corte] = []
+    for nombre_corte in defaults:
+        corte = Corte(
+            item_id=item.id,
+            nombre_corte=nombre_corte,
+            porcentaje_default=0,
+        )
+        db.add(corte)
+        created.append(corte)
+
+    db.commit()
+    for corte in created:
+        db.refresh(corte)
+
+    return created
+
+
+def get_default_cortes(db: Session, item: Item) -> List[Corte]:
+    """
+    Return cortes configured for the item, creating defaults when none exist.
+    """
+
+    cortes: List[Corte] = (
+        db.query(Corte)
+        .filter(Corte.item_id == item.id)
+        .order_by(Corte.nombre_corte)
+        .all()
+    )
+    if cortes:
+        return cortes
+
+    return ensure_default_cortes(db, item)
