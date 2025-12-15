@@ -37,6 +37,8 @@ import {
   Item,
   corte,
 } from "../types";
+import MaterialSelector from "../components/taller/MaterialSelector";
+import { EspecieKey, resolveMaterialOptions } from "../data/materialesTaller";
 
 const numberFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 0,
@@ -59,6 +61,10 @@ const TalleresDesposte = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [selectedSpecies, setSelectedSpecies] = useState<EspecieKey | null>(
+    null
+  );
+  const [materialSelectorOpen, setMaterialSelectorOpen] = useState(false);
   const [cortes, setCortes] = useState<corte[]>([]);
   const [pesos, setPesos] = useState<Record<string, number>>({});
   const [calculo, setCalculo] = useState<TallerCalculoRow[]>([]);
@@ -74,9 +80,25 @@ const TalleresDesposte = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const speciesToUse = selectedSpecies ?? "res";
+
+  const resolvedMaterialOptions = useMemo(
+    () => resolveMaterialOptions(items, speciesToUse),
+    [items, speciesToUse]
+  );
+
+  const allowedItems = useMemo(
+    () =>
+      resolvedMaterialOptions
+        .filter((option) => option.item && option.config.principal)
+        .map((option) => option.item as Item),
+    [resolvedMaterialOptions]
+  );
+
   const selectedItem = useMemo(
-    () => items.find((item) => String(item.id) === selectedItemId) ?? null,
-    [items, selectedItemId]
+    () =>
+      allowedItems.find((item) => String(item.id) === selectedItemId) ?? null,
+    [allowedItems, selectedItemId]
   );
 
   const pesoInicial = useMemo(() => {
@@ -138,6 +160,21 @@ const TalleresDesposte = () => {
   }, []);
 
   useEffect(() => {
+    setSelectedItemId("");
+    setCortes([]);
+    setPesos({});
+  }, [selectedSpecies]);
+
+  useEffect(() => {
+    if (
+      selectedItemId &&
+      !allowedItems.find((item) => String(item.id) === selectedItemId)
+    ) {
+      setSelectedItemId("");
+    }
+  }, [allowedItems, selectedItemId]);
+
+  useEffect(() => {
     if (!selectedItemId) {
       setCortes([]);
       setPesos({});
@@ -191,6 +228,11 @@ const TalleresDesposte = () => {
     setPesoFinalInput("");
     setCalculo([]);
   }, [selectedItemId]);
+
+  const handleSelectMaterial = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setMaterialSelectorOpen(false);
+  };
 
   const handlePesoChange = (corteId: string, value: string) => {
     const parsed = Number(value);
@@ -319,25 +361,30 @@ const TalleresDesposte = () => {
             <Divider />
             <CardContent>
               <Stack spacing={2}>
-                <FormControl fullWidth disabled={loadingItems || submitting}>
-                  <InputLabel id="material-select-label">
-                    Material Principal
-                  </InputLabel>
-                  <Select
-                    labelId="material-select-label"
-                    label="Material Principal"
-                    value={selectedItemId}
-                    onChange={(event) =>
-                      setSelectedItemId(event.target.value as string)
-                    }
-                  >
-                    {items.map((item) => (
-                      <MenuItem key={item.id} value={String(item.id)}>
-                        {item.descripcion || item.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <MaterialSelector
+                  items={items}
+                  selectedSpecies={selectedSpecies}
+                  onSpeciesChange={setSelectedSpecies}
+                  selectedItemId={selectedItemId}
+                  onSelectMaterial={handleSelectMaterial}
+                  open={materialSelectorOpen}
+                  onOpen={() => setMaterialSelectorOpen(true)}
+                  onClose={() => setMaterialSelectorOpen(false)}
+                  loadingItems={loadingItems}
+                  locked={submitting}
+                />
+
+                <FormControl
+                  fullWidth
+                  disabled={loadingItems || submitting || !allowedItems.length}
+                ></FormControl>
+
+                {!loadingItems && !allowedItems.length && (
+                  <Alert severity="warning">
+                    No se encontraron materiales configurados para la especie
+                    seleccionada. Ajusta la selección o verifica el catálogo.
+                  </Alert>
+                )}
 
                 {selectedItem && (
                   <Box>
