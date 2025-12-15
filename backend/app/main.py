@@ -258,6 +258,26 @@ def _startup():
                 "ADD COLUMN IF NOT EXISTS creado_por_id INTEGER REFERENCES users(id)"
             )
         )
+        
+                # Campos de peso
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS peso_inicial NUMERIC(14, 4)"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS peso_final NUMERIC(14, 4)"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS porcentaje_perdida NUMERIC(7, 4)"
+            )
+        )
     # Crear/asegurar vista v_taller_calculo (idem potente)
     create_view_sql = dedent(
         """
