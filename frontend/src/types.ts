@@ -22,6 +22,9 @@ export interface TallerListItem {
   id: string;
   nombre_taller: string;
   descripcion: string | null;
+  peso_inicial: number | null;
+  peso_final: number | null;
+  porcentaje_perdida: number | null;
   total_peso: number;
   detalles_count: number;
 }
@@ -35,6 +38,9 @@ export interface TallerDetalleInput {
 export interface CrearTallerPayload {
   nombre_taller: string;
   descripcion?: string | null;
+  peso_inicial?: number | null;
+  peso_final?: number | null;
+  porcentaje_perdida?: number | null;
   cortes: {
     item_id: string | number;
     corte_id: string | number;
@@ -46,6 +52,9 @@ export interface TallerCreado {
   id: string;
   nombre_taller: string;
   descripcion: string | null;
+  peso_inicial: number | null;
+  peso_final: number | null;
+  porcentaje_perdida: number | null;
 }
 
 export interface TallerCalculoRow {

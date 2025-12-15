@@ -173,6 +173,10 @@ const mapTaller = (raw: any): TallerListItem => ({
   id: toStringOr(raw?.id, ""),
   nombre_taller: toStringOr(raw?.nombre_taller, ""),
   descripcion: raw?.descripcion ?? null,
+  peso_inicial: raw?.peso_inicial != null ? toNumber(raw?.peso_inicial) : null,
+  peso_final: raw?.peso_final != null ? toNumber(raw?.peso_final) : null,
+  porcentaje_perdida:
+    raw?.porcentaje_perdida != null ? toNumber(raw?.porcentaje_perdida) : null,
   total_peso: toNumber(raw?.total_peso),
   detalles_count: Math.max(0, Math.trunc(toNumber(raw?.detalles_count, 0))),
 });
@@ -280,11 +284,17 @@ export const getCortesPorItem = async (itemId: string): Promise<corte[]> => {
 export const createTaller = async (
   payload: CrearTallerPayload
 ): Promise<TallerCreado> => {
-  const { data } = await api.post<TallerCreado>("/talleres", payload);
+  const { cortes, ...rest } = payload;
+  const body = { ...rest, detalles: cortes };
+
+  const { data } = await api.post<TallerCreado>("/talleres", body);
   return {
     id: toStringOr((data as any)?.id, ""),
     nombre_taller: toStringOr((data as any)?.nombre_taller, ""),
     descripcion: (data as any)?.descripcion ?? null,
+    peso_inicial: (data as any)?.peso_inicial ?? null,
+    peso_final: (data as any)?.peso_final ?? null,
+    porcentaje_perdida: (data as any)?.porcentaje_perdida ?? null,
   };
 };
 
