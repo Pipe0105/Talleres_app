@@ -1,7 +1,10 @@
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -97,3 +100,63 @@ def crear_taller(
             for det in taller.detalles
         ],
     )
+    
+@router.get("/actividad", response_class=list[schemas.TallerActividadUsuarioOut])
+def obtener_actividad_talleres(
+    *,
+    startDate: date,
+    endDate: date,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    if endDate < startDate:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El rango de fechas es invalido",
+        )
+        
+    start_dt = datetime.combine(startDate, datetime.min.time())
+    end_dt = datetime.combine(endDate + timedelta(days=1), datetime.min.time())
+    
+    rows = (
+        db.query(
+            models.User.id.label("user_id"),
+            models.User.username,
+            models.User.full_name,
+            models.User.sede,
+            func.date(models.Taller.creado_en).label("fecha"),
+            func.count(models.Taller.id).label("cantidad"),
+        )
+        .join(models.Taller, models.Taller.creado_por_id == models.User.id)
+        .filter(models.Taller.creado_en >= start_dt)
+        .filter(models.Taller.creado_en < end_dt)
+        .group_by(
+            models.User.id,
+            models.User.username,
+            models.User.full_name,
+            models.User.sede,
+            func.date(models.Taller.creado_en),
+        )
+        .order_by(
+            models.User.sede,
+            models.User.username,
+            func.date(models.Taller.creado_en),
+        )
+        .all()
+    )
+    
+    actividad: dict[int, dict] = defaultdict(lambda: {"dias": []})
+    for row in rows:
+        actividad[row.user_id].update(
+            {
+                "user_id": row.user_id,
+                "username": row.username,
+                "full_name": row.full_name,
+                "sede": row.sede,
+            }
+        )
+        actividad[row.user_id]["dias"].append(
+            {"fecha": row.fecha, "cantidad": int(row.cantidad)}
+        )
+
+    return list(actividad.values())

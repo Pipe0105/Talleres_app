@@ -64,3 +64,16 @@ export interface TallerResponse {
   creado_en: string;
   subcortes: TallerDetalleResponse[];
 }
+
+export interface TallerActividadDia {
+  fecha: string;
+  cantidad: number;
+}
+
+export interface TallerActividadUsuario {
+  user_id: number;
+  username: string;
+  full_name: string | null;
+  sede: string | null;
+  dias: TallerActividadDia[];
+}

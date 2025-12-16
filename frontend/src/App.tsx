@@ -8,6 +8,7 @@ import Logout from "./pages/Logout";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
 import CreateTaller from "./pages/talleres/CreateTaller";
+import SeguimientoTalleres from "./pages/talleres/SeguimientoTalleres";
 import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -52,6 +53,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <CreateTaller />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/talleres/seguimiento"
+              element={
+                <ProtectedRoute>
+                  <SeguimientoTalleres />
                 </ProtectedRoute>
               }
             />

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, Annotated
 from decimal import Decimal
 
@@ -173,3 +173,14 @@ class TallerOut(BaseModel):
     subcortes: list[TallerDetalleOut]
 
     model_config = ConfigDict(from_attributes=True)
+    
+class TallerActividadDia(BaseModel):
+    fecha: date
+    cantidad: int
+    
+class TallerActividadUsuarioOut(BaseModel):
+    user_id: int
+    username: str
+    full_name: Optional[str] = None
+    sede: Optional[str] = None
+    dias: list[TallerActividadDia]

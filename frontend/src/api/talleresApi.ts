@@ -4,6 +4,7 @@ import {
   AuthToken,
   CrearTallerPayload,
   Item,
+  TallerActividadUsuario,
   TallerResponse,
   UserProfile,
 } from "../types";
@@ -193,6 +194,21 @@ const mapTaller = (raw: any): TallerResponse => ({
     : [],
 });
 
+const mapTallerActividadUsuario = (raw: any): TallerActividadUsuario => ({
+  user_id: toNumber(raw?.user_id, 0),
+  username: toStringOr(raw?.username, ""),
+  full_name: raw?.full_name ?? null,
+  sede: raw?.sede ?? null,
+  dias: Array.isArray(raw?.dias)
+    ? raw.dias
+        .map((dia: any) => ({
+          fecha: toStringOr(dia?.fecha, ""),
+          cantidad: toNumber(dia?.cantidad, 0),
+        }))
+        .filter((dia: any) => dia.fecha)
+    : [],
+});
+
 export const login = async (
   username: string,
   password: string
@@ -281,4 +297,19 @@ export const adminUpdateUser = async (
 
 export const adminDeleteUser = async (userId: string): Promise<void> => {
   await api.delete(`/users/${userId}`);
+};
+
+export interface GetTallerActividadParams {
+  startDate: string;
+  endDate: string;
+}
+
+export const getTallerActividad = async (
+  params: GetTallerActividadParams
+): Promise<TallerActividadUsuario[]> => {
+  const { data } = await api.get<unknown[]>("/talleres/actividad", {
+    params,
+  });
+
+  return (Array.isArray(data) ? data : []).map(mapTallerActividadUsuario);
 };

@@ -27,6 +27,7 @@ export const useNavigationItems = ({
     const navigationConfig: NavigationItem[] = [
       { label: "Lista de precios", to: "/lista-precios" },
       { label: "Talleres", to: "/talleres" },
+      { label: "Seguimiento", to: "/talleres/seguimiento" },
       ...(user?.is_admin
         ? [
             {
