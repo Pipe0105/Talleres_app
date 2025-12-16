@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Divider,
   Grid,
   MenuItem,
@@ -12,6 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { Assessment, CheckCircle, SaveRounded } from "@mui/icons-material";
 
 import { createTaller } from "../../api/talleresApi";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
@@ -156,16 +158,47 @@ const CreateTaller = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1080, margin: "0 auto" }}>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        py: 4,
+        px: { xs: 2, sm: 3 },
+        background:
+          "radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08), transparent 30%), radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.12), transparent 25%)",
+      }}
+    >
       <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" fontWeight={800} gutterBottom>
-            Crear taller
-          </Typography>
-          <Typography color="text.secondary">
-            Configura el taller seleccionando la especie, el corte principal y
-            registra los pesos para calcular la pérdida.
-          </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          <Box>
+            <Typography variant="h4" fontWeight={800} gutterBottom>
+              Crear taller
+            </Typography>
+            <Typography color="text.secondary">
+              Configura el taller seleccionando la especie, el corte principal y
+              registra los pesos para calcular la pérdida.
+            </Typography>
+          </Box>
+
+          <Chip
+            icon={<CheckCircle />}
+            label="Pasos guiados"
+            color="success"
+            variant="outlined"
+            sx={{
+              fontWeight: 700,
+              bgcolor: "rgba(16, 185, 129, 0.08)",
+              borderColor: "rgba(16, 185, 129, 0.3)",
+            }}
+          />
         </Box>
 
         {mensaje && (
@@ -174,9 +207,56 @@ const CreateTaller = () => {
           </Alert>
         )}
 
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={3}>
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 4,
+            borderColor: "rgba(0,0,0,0.04)",
+            boxShadow:
+              "0 20px 80px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
+            <Stack spacing={4}>
+              <Grid container spacing={2}>
+                {[
+                  "Define la especie",
+                  "Añade el material",
+                  "Registra los pesos",
+                ].map((step, index) => (
+                  <Grid item xs={12} md={4} key={step}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        height: "100%",
+                        borderRadius: 3,
+                        borderColor: "rgba(99, 102, 241, 0.15)",
+                        bgcolor: "rgba(99, 102, 241, 0.04)",
+                      }}
+                    >
+                      <CardContent>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              bgcolor: "primary.main",
+                              color: "primary.contrastText",
+                              display: "grid",
+                              placeItems: "center",
+                              fontWeight: 800,
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          <Typography fontWeight={700}>{step}</Typography>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -275,6 +355,92 @@ const CreateTaller = () => {
 
               <Divider />
 
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={4}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: "100%",
+                      borderRadius: 3,
+                      bgcolor: "rgba(16, 185, 129, 0.05)",
+                      borderColor: "rgba(16, 185, 129, 0.18)",
+                    }}
+                  >
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Typography color="success.main" fontWeight={700}>
+                          Peso inicial
+                        </Typography>
+                        <Typography variant="h5" fontWeight={800}>
+                          {pesoInicial
+                            ? `${formatKg(pesoInicialNumero)} kg`
+                            : "—"}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Guarda este valor para habilitar los subcortes.
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: "100%",
+                      borderRadius: 3,
+                      bgcolor: "rgba(59, 130, 246, 0.05)",
+                      borderColor: "rgba(59, 130, 246, 0.18)",
+                    }}
+                  >
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Assessment fontSize="small" color="primary" />
+                          <Typography color="primary" fontWeight={700}>
+                            Proceso actual
+                          </Typography>
+                        </Stack>
+                        <Typography variant="h5" fontWeight={800}>
+                          {formatKg(totalProcesado)} kg
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Subcortes + corte final registrados.
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: "100%",
+                      borderRadius: 3,
+                      bgcolor: "rgba(239, 68, 68, 0.05)",
+                      borderColor: "rgba(239, 68, 68, 0.18)",
+                    }}
+                  >
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <CheckCircle fontSize="small" color="error" />
+                          <Typography color="error" fontWeight={700}>
+                            Pérdida estimada
+                          </Typography>
+                        </Stack>
+                        <Typography variant="h5" fontWeight={800} color="error">
+                          {formatKg(perdida)} kg
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {porcentajePerdida.toFixed(2)}% del peso inicial.
+                        </Typography>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
               {readyForSubcortes && (
                 <Stack spacing={3}>
                   <Box>
@@ -342,6 +508,7 @@ const CreateTaller = () => {
                   variant="contained"
                   color="secondary"
                   disabled={!readyForSubcortes || submitting}
+                  startIcon={<SaveRounded />}
                   onClick={handleSubmit}
                 >
                   {submitting ? "Guardando..." : "Guardar taller"}
