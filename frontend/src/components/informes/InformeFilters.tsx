@@ -1,31 +1,25 @@
 import SearchIcon from "@mui/icons-material/Search";
-import { InputAdornment, MenuItem, Stack, TextField } from "@mui/material";
+import { InputAdornment, Stack, TextField } from "@mui/material";
 import PageSection from "../PageSection";
-
-export type DeltaFilter = "all" | "above" | "below";
 
 interface InformeFiltersProps {
   searchQuery: string;
   minPeso: string;
   maxPeso: string;
-  deltaFilter: DeltaFilter;
   disabled?: boolean;
   onSearchChange: (value: string) => void;
   onMinPesoChange: (value: string) => void;
   onMaxPesoChange: (value: string) => void;
-  onDeltaFilterChange: (value: DeltaFilter) => void;
 }
 
 const InformeFilters = ({
   searchQuery,
   minPeso,
   maxPeso,
-  deltaFilter,
   disabled = false,
   onSearchChange,
   onMinPesoChange,
   onMaxPesoChange,
-  onDeltaFilterChange,
 }: InformeFiltersProps) => (
   <PageSection
     title="Filtros y búsqueda"
@@ -50,22 +44,6 @@ const InformeFilters = ({
       />
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-        <TextField
-          select
-          label="Comparación vs. objetivo"
-          value={deltaFilter}
-          onChange={(event) =>
-            onDeltaFilterChange(event.target.value as DeltaFilter)
-          }
-          helperText="Filtra según si el porcentaje real está sobre o bajo el objetivo"
-          disabled={disabled}
-          sx={{ minWidth: { md: 260 } }}
-        >
-          <MenuItem value="all">Todos</MenuItem>
-          <MenuItem value="above">Sobre o igual al objetivo</MenuItem>
-          <MenuItem value="below">Por debajo del objetivo</MenuItem>
-        </TextField>
-
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
           <TextField
             label="Peso mínimo (KG)"

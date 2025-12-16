@@ -221,6 +221,8 @@ const mapTallerListItem = (raw: any): TallerListItem => ({
   peso_final: toNumber(raw?.peso_final, 0),
   total_peso: toNumber(raw?.total_peso, 0),
   especie: toStringOr(raw?.especie, ""),
+  sede: raw?.sede ?? null,
+  codigo_principal: raw?.codigo_principal ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
 });
 

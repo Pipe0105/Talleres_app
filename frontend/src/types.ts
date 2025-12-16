@@ -89,6 +89,7 @@ export interface TallerListItem {
   peso_final: number;
   total_peso: number;
   especie: string;
+  codigo_principal?: string | null;
   creado_en: string;
 }
 

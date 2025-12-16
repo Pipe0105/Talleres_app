@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Autocomplete,
+  Chip,
   CircularProgress,
   Divider,
   Paper,
   Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { getTallerCalculo, getTalleres } from "../api/talleresApi";
 import { TallerCalculoRow, TallerListItem } from "../types";
 import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
-import TallerSelectionCard, {
-  TallerOption,
-} from "../components/informes/TallerSelectionCard";
-import InformeFilters, {
-  DeltaFilter,
-} from "../components/informes/InformeFilters";
+import type { TallerOption } from "../components/informes/TallerSelectionCard";
+import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel, {
   ExportField,
 } from "../components/informes/InformeExportPanel";
@@ -38,11 +39,37 @@ const currencyFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
+type InformeScope = "taller" | "sede" | "material";
+
+type TallerCalculoWithMeta = TallerCalculoRow & {
+  tallerId: number;
+  tallerNombre: string;
+  sede?: string | null;
+  material?: string | null;
+};
+
+const UNKNOWN_BRANCH_LABEL = "Sin sede asignada";
+
 interface ExportFieldDefinition extends ExportField {
-  getValue: (row: TallerCalculoRow) => string;
+  getValue: (row: TallerCalculoWithMeta) => string;
 }
 
 const exportFieldDefinitions: ExportFieldDefinition[] = [
+  {
+    key: "taller_nombre",
+    label: "Taller",
+    getValue: (row) => row.tallerNombre,
+  },
+  {
+    key: "sede",
+    label: "Sede",
+    getValue: (row) => row.sede ?? UNKNOWN_BRANCH_LABEL,
+  },
+  {
+    key: "material",
+    label: "Material",
+    getValue: (row) => row.material ?? "Sin material",
+  },
   {
     key: "nombre_corte",
     label: "Corte",
@@ -67,16 +94,6 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
     key: "porcentaje_real",
     label: "% real",
     getValue: (row) => `${porcentajeFormatter.format(row.porcentaje_real)}%`,
-  },
-  {
-    key: "porcentaje_default",
-    label: "% objetivo",
-    getValue: (row) => `${porcentajeFormatter.format(row.porcentaje_default)}%`,
-  },
-  {
-    key: "delta_pct",
-    label: "Δ %",
-    getValue: (row) => `${porcentajeFormatter.format(row.delta_pct)}%`,
   },
   {
     key: "precio_venta",
@@ -110,6 +127,15 @@ const escapePdfText = (value: string) =>
     .replace(/\\/g, "\\\\")
     .replace(/\(/g, "\\(")
     .replace(/\)/g, "\\)");
+
+const slugify = (value: string) =>
+  normalizeWhitespace(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
 const createSimplePdf = (title: string, header: string[], rows: string[][]) => {
   const encoder = new TextEncoder();
@@ -258,12 +284,15 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 const InformesHistoricos = () => {
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
+  const [scope, setScope] = useState<InformeScope>("taller");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTaller, setSelectedTaller] = useState<TallerOption | null>(
     null
   );
-  const [calculo, setCalculo] = useState<TallerCalculoRow[] | null>(null);
+  const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [calculo, setCalculo] = useState<TallerCalculoWithMeta[] | null>(null);
   const [loadingCalculo, setLoadingCalculo] = useState(false);
   const [selectedFields, setSelectedFields] = useState<string[]>(
     exportFieldDefinitions.map((field) => field.key)
@@ -271,9 +300,7 @@ const InformesHistoricos = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minPeso, setMinPeso] = useState("");
   const [maxPeso, setMaxPeso] = useState("");
-  const [deltaFilter, setDeltaFilter] = useState<DeltaFilter>("all");
-
-  const tallerOptions = useMemo<TallerOption[]>(() => {
+  const individualTallerOptions = useMemo<TallerOption[]>(() => {
     return talleres.map((taller) => ({
       id: String(taller.id),
       label: `${taller.nombre_taller} · ${pesoFormatter.format(
@@ -281,6 +308,73 @@ const InformesHistoricos = () => {
       )} kg`,
     }));
   }, [talleres]);
+
+  const availableSedes = useMemo(() => {
+    const sedeSet = new Set<string>();
+    talleres.forEach((taller) => {
+      const sedeLabel = taller.sede ?? UNKNOWN_BRANCH_LABEL;
+      sedeSet.add(sedeLabel);
+    });
+    return Array.from(sedeSet).sort();
+  }, [talleres]);
+
+  const materialOptions = useMemo(() => {
+    const materials = new Set<string>();
+    talleres.forEach((taller) => {
+      const material = taller.codigo_principal?.trim();
+      if (material) {
+        materials.add(material);
+      }
+    });
+    return Array.from(materials).sort();
+  }, [talleres]);
+
+  const selectedTallerIds = useMemo(() => {
+    if (scope === "taller") {
+      return selectedTaller ? [selectedTaller.id] : [];
+    }
+
+    let filtered = talleres;
+    const normalizedSedes =
+      scope === "sede"
+        ? selectedSedes.length
+          ? selectedSedes
+          : availableSedes
+        : selectedSedes;
+
+    if (normalizedSedes.length) {
+      filtered = filtered.filter((taller) => {
+        const sedeLabel = taller.sede ?? UNKNOWN_BRANCH_LABEL;
+        return normalizedSedes.includes(sedeLabel);
+      });
+    }
+
+    if (scope === "material") {
+      if (!selectedMaterial) {
+        return [];
+      }
+      filtered = filtered.filter(
+        (taller) => taller.codigo_principal === selectedMaterial
+      );
+    }
+
+    return filtered.map((taller) => String(taller.id));
+  }, [
+    availableSedes,
+    scope,
+    selectedMaterial,
+    selectedSedes,
+    selectedTaller,
+    talleres,
+  ]);
+
+  const selectedTalleres = useMemo(
+    () =>
+      talleres.filter((taller) =>
+        selectedTallerIds.includes(String(taller.id))
+      ),
+    [selectedTallerIds, talleres]
+  );
 
   const fetchTalleres = async () => {
     try {
@@ -301,7 +395,21 @@ const InformesHistoricos = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedTaller) {
+    if (scope !== "taller") {
+      setSelectedTaller(null);
+    }
+
+    if (scope !== "material") {
+      setSelectedMaterial(null);
+    }
+
+    if (scope === "taller") {
+      setSelectedSedes([]);
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    if (!selectedTallerIds.length) {
       setCalculo(null);
       return;
     }
@@ -311,17 +419,50 @@ const InformesHistoricos = () => {
     const fetchCalculo = async () => {
       try {
         setLoadingCalculo(true);
-        const response = await getTallerCalculo(selectedTaller.id);
+        const responses = await Promise.allSettled(
+          selectedTallerIds.map(async (tallerId) => {
+            const data = await getTallerCalculo(tallerId);
+            const meta = talleres.find(
+              (taller) => String(taller.id) === tallerId
+            );
+
+            return data.map((row) => ({
+              ...row,
+              tallerId: Number(tallerId),
+              tallerNombre: meta?.nombre_taller ?? `Taller ${tallerId}`,
+              sede: meta?.sede ?? null,
+              material: meta?.codigo_principal ?? null,
+            }));
+          })
+        );
         if (!isMounted) {
           return;
         }
-        setCalculo(response);
-        setError(null);
+
+        const fulfilledResults = responses.filter(
+          (result): result is PromiseFulfilledResult<TallerCalculoWithMeta[]> =>
+            result.status === "fulfilled"
+        );
+
+        const merged = fulfilledResults.flatMap((result) => result.value);
+        setCalculo(merged);
+
+        const hasFailures = responses.some(
+          (result) => result.status === "rejected"
+        );
+
+        if (hasFailures) {
+          setError(
+            "Algunos talleres no pudieron cargarse. Verifica la conexión e inténtalo de nuevo."
+          );
+        } else {
+          setError(null);
+        }
       } catch (err) {
         console.error(err);
         if (isMounted) {
           setError(
-            "No fue posible obtener el cálculo del taller seleccionado."
+            "No fue posible obtener el cálculo de los talleres seleccionados."
           );
         }
       } finally {
@@ -336,15 +477,14 @@ const InformesHistoricos = () => {
     return () => {
       isMounted = false;
     };
-  }, [selectedTaller]);
+  }, [selectedTallerIds, talleres]);
 
   useEffect(() => {
     setSelectedFields(exportFieldDefinitions.map((field) => field.key));
     setSearchQuery("");
     setMinPeso("");
     setMaxPeso("");
-    setDeltaFilter("all");
-  }, [selectedTaller]);
+  }, [selectedTallerIds]);
 
   const filteredCalculo = useMemo(() => {
     if (!calculo) {
@@ -367,16 +507,9 @@ const InformesHistoricos = () => {
       const matchesMaxPeso =
         Number.isNaN(maxPesoValue) || row.peso <= maxPesoValue;
 
-      const matchesDelta =
-        deltaFilter === "all" ||
-        (deltaFilter === "above" &&
-          row.porcentaje_real >= row.porcentaje_default) ||
-        (deltaFilter === "below" &&
-          row.porcentaje_real < row.porcentaje_default);
-
-      return matchesQuery && matchesMinPeso && matchesMaxPeso && matchesDelta;
+      return matchesQuery && matchesMinPeso && matchesMaxPeso;
     });
-  }, [calculo, deltaFilter, maxPeso, minPeso, searchQuery]);
+  }, [calculo, maxPeso, minPeso, searchQuery]);
 
   const selectedFieldDefinitions = useMemo(
     () =>
@@ -404,11 +537,37 @@ const InformesHistoricos = () => {
   );
 
   const exportFileName = useMemo(() => {
-    if (!selectedTaller) {
+    if (!selectedTallerIds.length) {
       return "detalle_taller";
     }
-    return `taller_${selectedTaller.id}`;
-  }, [selectedTaller]);
+
+    if (scope === "taller" && selectedTaller) {
+      return `taller_${selectedTaller.id}`;
+    }
+
+    if (scope === "sede") {
+      const sedesSlug = (selectedSedes.length ? selectedSedes : availableSedes)
+        .map((value) => slugify(value))
+        .join("-");
+      return `talleres_sede_${sedesSlug || "todas"}`;
+    }
+
+    if (scope === "material" && selectedMaterial) {
+      const sedesSlug = (selectedSedes.length ? selectedSedes : ["todas_sedes"])
+        .map((value) => slugify(value))
+        .join("-");
+      return `material_${slugify(selectedMaterial)}_${sedesSlug}`;
+    }
+
+    return "detalle_taller";
+  }, [
+    availableSedes,
+    scope,
+    selectedMaterial,
+    selectedSedes,
+    selectedTaller,
+    selectedTallerIds.length,
+  ]);
 
   const handleFieldToggle = (fieldKey: string) => {
     setSelectedFields((prev) => {
@@ -471,11 +630,12 @@ const InformesHistoricos = () => {
       return;
     }
 
-    const pdfBlob = createSimplePdf(
-      `Detalle del taller ${selectedTaller?.label ?? ""}`.trim(),
-      headers,
-      formattedRows
-    );
+    const pdfTitle =
+      scope === "taller" && selectedTaller
+        ? `Detalle del taller ${selectedTaller.label}`
+        : "Detalle de los talleres seleccionados";
+
+    const pdfBlob = createSimplePdf(pdfTitle, headers, formattedRows);
 
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
   };
@@ -486,11 +646,14 @@ const InformesHistoricos = () => {
       (acc, row) => acc + row.valor_estimado,
       0
     );
+    const talleresContados = new Set(filteredCalculo.map((row) => row.tallerId))
+      .size;
 
     return {
       totalPeso,
       totalValor,
       cortes: filteredCalculo.length,
+      talleres: talleresContados,
     };
   }, [filteredCalculo]);
 
@@ -500,7 +663,7 @@ const InformesHistoricos = () => {
         title={
           <PageHeader
             title="Informes históricos de talleres"
-            description="Consulta la información registrada de talleres anteriores. El detalle proviene de la vista consolidada en la base de datos y refleja los porcentajes reales versus los objetivos de cada corte."
+            description="Consulta la información registrada de talleres anteriores. El detalle proviene de la vista consolidada en la base de datos y refleja los porcentajes reales de cada corte."
           />
         }
         description={null}
@@ -511,49 +674,160 @@ const InformesHistoricos = () => {
         </Typography>
       </PageSection>
 
-      <TallerSelectionCard
-        options={tallerOptions}
-        value={selectedTaller}
-        loading={loading}
-        error={error}
-        onChange={setSelectedTaller}
-        onRetry={fetchTalleres}
-        helperText="Selecciona el taller que deseas revisar para habilitar los filtros y exportaciones."
-      />
+      <PageSection
+        title="Alcance del informe"
+        description="Elige si quieres analizar un taller individual, todas las operaciones de una sede o comparar un material entre sedes."
+        spacing={2.5}
+      >
+        <Stack spacing={2.5}>
+          <ToggleButtonGroup
+            value={scope}
+            exclusive
+            onChange={(_, value) => {
+              if (value) {
+                setScope(value);
+              }
+            }}
+            aria-label="Alcance del informe"
+            size="small"
+          >
+            <ToggleButton value="taller">Taller individual</ToggleButton>
+            <ToggleButton value="sede">Sede</ToggleButton>
+            <ToggleButton value="material">Material</ToggleButton>
+          </ToggleButtonGroup>
+
+          {scope === "taller" ? (
+            <Autocomplete
+              value={selectedTaller}
+              options={individualTallerOptions}
+              loading={loading}
+              onChange={(_, selected) => setSelectedTaller(selected)}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, optionValue) =>
+                option.id === optionValue.id
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Taller"
+                  placeholder="Ej: Material o rango de fechas"
+                  helperText="Selecciona un taller específico o cambia el alcance para comparar varios."
+                />
+              )}
+            />
+          ) : (
+            <Stack spacing={1.5}>
+              {scope === "material" ? (
+                <Autocomplete
+                  value={selectedMaterial}
+                  options={materialOptions}
+                  onChange={(_, value) => setSelectedMaterial(value)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Material principal"
+                      placeholder="Ej: código del ítem"
+                      helperText="Elige el material que deseas comparar entre sedes."
+                    />
+                  )}
+                />
+              ) : null}
+
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                value={
+                  scope === "sede" && selectedSedes.length === 0
+                    ? availableSedes
+                    : selectedSedes
+                }
+                options={availableSedes}
+                onChange={(_, values) => setSelectedSedes(values)}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option}
+                      label={option}
+                      size="small"
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Sedes"
+                    placeholder="Selecciona una o más sedes"
+                    helperText={
+                      scope === "sede"
+                        ? "Si no eliges sedes se incluirán todas."
+                        : "Usa sedes para acotar la comparación del material."
+                    }
+                  />
+                )}
+              />
+
+              <Typography variant="body2" color="text.secondary">
+                {scope === "material" && !selectedMaterial
+                  ? "Selecciona un material para ver los talleres disponibles."
+                  : selectedTallerIds.length
+                  ? `Se incluirán ${selectedTallerIds.length} talleres en el informe.`
+                  : "Ajusta los filtros de alcance para incluir talleres en el informe."}
+              </Typography>
+
+              {selectedTalleres.length ? (
+                <Stack direction="row" flexWrap="wrap" gap={1}>
+                  {selectedTalleres.map((taller) => (
+                    <Chip
+                      key={taller.id}
+                      label={`${taller.nombre_taller}${
+                        taller.sede ? ` · ${taller.sede}` : ""
+                      }`}
+                      size="small"
+                    />
+                  ))}
+                </Stack>
+              ) : null}
+            </Stack>
+          )}
+
+          {error ? <Alert severity="error">{error}</Alert> : null}
+        </Stack>
+      </PageSection>
 
       <InformeFilters
         searchQuery={searchQuery}
         minPeso={minPeso}
         maxPeso={maxPeso}
-        deltaFilter={deltaFilter}
-        disabled={!selectedTaller || loadingCalculo}
+        disabled={!selectedTallerIds.length || loadingCalculo || loading}
         onSearchChange={setSearchQuery}
         onMinPesoChange={setMinPeso}
         onMaxPesoChange={setMaxPeso}
-        onDeltaFilterChange={setDeltaFilter}
       />
 
       <PageSection
-        title="Detalle del taller seleccionado"
+        title="Detalle de los talleres seleccionados"
         description="Visualiza el desempeño por corte con los filtros aplicados."
       >
         <Stack spacing={2.5}>
-          {!selectedTaller ? (
+          {!selectedTallerIds.length ? (
             <Alert severity="info">
-              Selecciona un taller para ver su detalle.
+              Selecciona un taller o ajusta el alcance para ver su detalle.
             </Alert>
           ) : null}
 
-          {selectedTaller && loadingCalculo ? (
+          {selectedTallerIds.length && loadingCalculo ? (
             <Stack direction="row" spacing={2} alignItems="center">
               <CircularProgress size={20} />
               <Typography variant="body2">
-                Cargando detalle del taller...
+                Cargando detalle de los talleres seleccionados...
               </Typography>
             </Stack>
           ) : null}
 
-          {selectedTaller && !loadingCalculo && filteredCalculo.length === 0 ? (
+          {selectedTallerIds.length &&
+          !loadingCalculo &&
+          filteredCalculo.length === 0 ? (
             <Alert severity="warning">
               No se encontraron cortes que coincidan con los filtros aplicados.
             </Alert>
