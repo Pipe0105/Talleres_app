@@ -126,6 +126,7 @@ class TallerDetalleCreate(BaseModel):
 class TallerCreate(BaseModel):
     nombre_taller: str
     descripcion: Optional[str] = None
+    sede: Optional[str] = None
     peso_inicial: Annotated[
     Decimal,
     condecimal(ge=0, max_digits=14, decimal_places=4)
@@ -147,6 +148,23 @@ class TallerCreate(BaseModel):
         if normalized not in {"res", "cerdo"}:
             raise ValueError("La especie debe ser 'res' o 'cerdo'.")
         return normalized
+    
+    @field_validator("sede")
+    @classmethod
+    def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+
+        from .constants import BRANCH_LOCATIONS
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        if normalized not in BRANCH_LOCATIONS:
+            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+
+        return normalized
 
 
 class TallerDetalleOut(BaseModel):
@@ -163,6 +181,7 @@ class TallerOut(BaseModel):
     id: int
     nombre_taller: str
     descripcion: Optional[str]
+    sede: Optional[str]
     peso_inicial: Decimal
     peso_final: Decimal
     porcentaje_perdida: Decimal | None
@@ -189,6 +208,7 @@ class TallerListItem(BaseModel):
     id: int
     nombre_taller: str
     descripcion: Optional[str] = None
+    sede: Optional[str] = None
     peso_inicial: Decimal
     peso_final: Decimal
     total_peso: Decimal

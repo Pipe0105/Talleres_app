@@ -39,6 +39,7 @@ export interface TallerDetallePayload {
 export interface CrearTallerPayload {
   nombre_taller: string;
   descripcion?: string;
+  sede?: string;
   peso_inicial: number;
   peso_final: number;
   especie: string;
@@ -55,6 +56,7 @@ export interface TallerResponse {
   id: number;
   nombre_taller: string;
   descripcion?: string | null;
+  sede?: string;
   peso_inicial: number;
   peso_final: number;
   porcentaje_perdida?: number | null;
@@ -82,6 +84,7 @@ export interface TallerListItem {
   id: number;
   nombre_taller: string;
   descripcion?: string | null;
+  sede?: string;
   peso_inicial: number;
   peso_final: number;
   total_peso: number;

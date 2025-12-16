@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
@@ -14,12 +14,14 @@ import {
 } from "@mui/material";
 
 import { createTaller } from "../../api/talleresApi";
+import { BRANCH_LOCATIONS } from "../../data/branchLocations";
 import {
   Especie,
   MaterialDefinition,
   SubcorteDefinition,
   getMaterialesPorEspecie,
 } from "../../data/talleres";
+import { useAuth } from "../../context/AuthContext";
 
 const toNumber = (value: string): number => {
   const parsed = Number(value.replace(/,/g, "."));
@@ -48,6 +50,16 @@ const CreateTaller = () => {
   const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>(
     {}
   );
+  const [sede, setSede] = useState<string>("");
+
+  const { user } = useAuth();
+  const isAdmin = Boolean(user?.is_admin);
+
+  useEffect(() => {
+    if (!isAdmin && user?.sede) {
+      setSede(user.sede);
+    }
+  }, [isAdmin, user?.sede]);
 
   const materiales = useMemo(() => {
     if (!especie) return [];
@@ -110,6 +122,7 @@ const CreateTaller = () => {
         nombre_taller:
           nombreTaller.trim() || `Taller de ${materialSeleccionado.nombre}`,
         descripcion: descripcion || undefined,
+        sede: isAdmin ? sede || undefined : undefined,
         peso_inicial: pesoInicialNumero,
         peso_final: pesoFinalNumero,
         especie,
@@ -131,6 +144,7 @@ const CreateTaller = () => {
       setPesoFinal("");
       setNombreTaller("");
       setDescripcion("");
+      setSede(isAdmin ? "" : user?.sede ?? "");
     } catch (error) {
       setMensaje({
         tipo: "error",
@@ -217,6 +231,25 @@ const CreateTaller = () => {
                     onChange={(e) => setDescripcion(e.target.value)}
                   />
                 </Grid>
+                {isAdmin && (
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Sede del taller"
+                      value={sede}
+                      onChange={(e) => setSede(e.target.value)}
+                      helperText="Solo visible para administradores"
+                    >
+                      <MenuItem value="">Selecciona la sede</MenuItem>
+                      {BRANCH_LOCATIONS.map((branch) => (
+                        <MenuItem key={branch} value={branch}>
+                          {branch}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                )}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth

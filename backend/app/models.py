@@ -76,6 +76,7 @@ class Taller(Base):
     id = Column(Integer, primary_key=True)
     nombre_taller = Column(String)
     descripcion = Column(Text)
+    sede = Column(String)
     creado_en = Column(DateTime, default=datetime.utcnow)
     creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     peso_inicial = Column(Numeric(14, 4))

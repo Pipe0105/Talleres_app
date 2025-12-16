@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from ..constants import BRANCH_LOCATIONS
 from ..dependencies import get_current_active_user
 from ..database import get_db
 
@@ -47,10 +48,20 @@ def crear_taller(
     item_principal_id = payload.item_principal_id or _find_item_id_by_code(
         db, payload.codigo_principal
     )
+    
+    sede_registro: str | None = None
+    if current_user.is_admin:
+        if payload.sede and payload.sede in BRANCH_LOCATIONS:
+            sede_registro = payload.sede
+        else:
+            sede_registro = current_user.sede
+    else:
+        sede_registro = current_user.sede
 
     taller = models.Taller(
         nombre_taller=payload.nombre_taller,
         descripcion=payload.descripcion,
+        sede=sede_registro,
         peso_inicial=peso_inicial,
         peso_final=peso_final,
         porcentaje_perdida=porcentaje_perdida,
@@ -87,6 +98,7 @@ def crear_taller(
         id=taller.id,
         nombre_taller=taller.nombre_taller,
         descripcion=taller.descripcion,
+        sede=taller.sede,
         peso_inicial=taller.peso_inicial,
         peso_final=taller.peso_final,
         porcentaje_perdida=taller.porcentaje_perdida,
@@ -99,36 +111,6 @@ def crear_taller(
             for det in taller.detalles
         ],
     )
-    
-@router.get("", response_model=list[schemas.TallerListItem])
-def obtener_talleres(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_active_user),
-):
-    talleres = (
-        db.query(models.Taller)
-        .order_by(models.Taller.creado_en.desc())
-        .all()
-    )
-    
-    result: list[schemas.TallerListItem] = []
-    for taller in talleres:
-        total_peso = sum((det.peso or Decimal("0")) for det in taller.detalles)
-        total_peso += taller.peso_final or Decimal("0")
-        
-        result.append(
-            schemas.TallerListItem(
-                id=taller.id,
-                nombre_taller=taller.nombre_taller,
-                descripcion=taller.descripcion,
-                peso_inicial=taller.peso_inicial,
-                peso_final=taller.peso_final,
-                total_peso=total_peso,
-                especio=taller.especie,
-                creado_en = taller.creado_en,
-            )
-        )
-    return result
 
 @router.get("", response_model=list[schemas.TallerListItem])
 def obtener_talleres(
@@ -155,6 +137,7 @@ def obtener_talleres(
                 peso_final=taller.peso_final,
                 total_peso=total_peso,
                 especie=taller.especie,
+                sede=taller.sede,
                 creado_en=taller.creado_en,
             )
         )
@@ -229,24 +212,29 @@ def obtener_actividad_talleres(
     usuarios_activos = (
         db.query(models.User)
         .filter(models.User.is_active.is_(True))
+        .filter(models.User.sede.isnot(None))
+        .filter(models.User.sede != "")
         .order_by(models.User.sede, models.User.username)
         .all()
     )
 
-    actividad: dict[int, dict] = {
-        user.id: {
+    actividad: dict[tuple[int, str | None], dict] = {}
+    user_map = {user.id: user for user in usuarios_activos}
+
+    for user in usuarios_activos:
+        sede_usuario = user.sede
+        actividad[(user.id, sede_usuario)] = {
             "user_id": user.id,
             "username": user.username,
             "full_name": user.full_name,
-            "sede": user.sede,
+            "sede": sede_usuario,
             "dias": [],
         }
-        for user in usuarios_activos
-    }
-    
+        
     rows = (
         db.query(
             models.User.id.label("user_id"),
+            func.coalesce(models.Taller.sede, models.User.sede).label("sede"),
             func.date(models.Taller.creado_en).label("fecha"),
             func.count(models.Taller.id).label("cantidad"),
         )
@@ -254,13 +242,37 @@ def obtener_actividad_talleres(
         .filter(models.Taller.creado_en >= start_dt)
         .filter(models.Taller.creado_en < end_dt)
         .filter(models.User.is_active.is_(True))
-        .group_by(models.User.id, func.date(models.Taller.creado_en))
-        .order_by(models.User.sede, models.User.username, func.date(models.Taller.creado_en))
+        .filter(models.User.sede.isnot(None))
+        .filter(models.User.sede != "")
+        .group_by(
+            models.User.id,
+            func.coalesce(models.Taller.sede, models.User.sede),
+            func.date(models.Taller.creado_en),
+        )
+        .order_by(
+            func.coalesce(models.Taller.sede, models.User.sede),
+            models.User.username,
+            func.date(models.Taller.creado_en),
+        )
         .all()
     )
     for row in rows:
-        actividad[row.user_id]["dias"].append(
+        user = user_map.get(row.user_id)
+        if user is None:
+            continue
+
+        key = (row.user_id, row.sede)
+        if key not in actividad:
+            actividad[key] = {
+                "user_id": row.user_id,
+                "username": user.username,
+                "full_name": user.full_name,
+                "sede": row.sede,
+                "dias": [],
+            }
+
+        actividad[key]["dias"].append(
             {"fecha": row.fecha, "cantidad": int(row.cantidad)}
         )
 
-    return [actividad[user.id] for user in usuarios_activos]
+    return list(actividad.values())

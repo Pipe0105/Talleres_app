@@ -176,6 +176,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   id: toNumber(raw?.id, 0),
   nombre_taller: toStringOr(raw?.nombre_taller, ""),
   descripcion: raw?.descripcion ?? null,
+  sede: raw?.sede ?? null,
   peso_inicial: toNumber(raw?.peso_inicial, 0),
   peso_final: toNumber(raw?.peso_final, 0),
   porcentaje_perdida: raw?.porcentaje_perdida
@@ -215,6 +216,7 @@ const mapTallerListItem = (raw: any): TallerListItem => ({
   id: toNumber(raw?.id, 0),
   nombre_taller: toStringOr(raw?.nombre_taller, ""),
   descripcion: raw?.descripcion ?? null,
+  sede: raw?.sede ?? null,
   peso_inicial: toNumber(raw?.peso_inicial, 0),
   peso_final: toNumber(raw?.peso_final, 0),
   total_peso: toNumber(raw?.total_peso, 0),

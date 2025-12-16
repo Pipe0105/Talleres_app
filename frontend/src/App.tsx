@@ -30,6 +30,10 @@ const App = () => {
     return <LoadingScreen />;
   }
 
+  if (!user && !isLoginRoute) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (isLoginRoute) {
     return (
       <div className="page-fade" key="login">

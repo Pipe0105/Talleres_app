@@ -86,6 +86,9 @@ const resolveDisplayName = (usuario: TallerActividadUsuario): string =>
 const resolveSede = (usuario: TallerActividadUsuario): string =>
   usuario.sede?.trim() || "Sede no registrada";
 
+const resolveActividadKey = (usuario: TallerActividadUsuario): string =>
+  `${usuario.user_id}-${resolveSede(usuario)}`;
+
 const SeguimientoTalleres = () => {
   const [startDate, setStartDate] = useState<string>(() =>
     formatDateInput(startOfWeek())
@@ -195,7 +198,7 @@ const SeguimientoTalleres = () => {
           </TableHead>
           <TableBody>
             {filteredActividad.map((usuario) => (
-              <TableRow key={usuario.user_id} hover>
+              <TableRow key={resolveActividadKey(usuario)} hover>
                 <TableCell>
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle1" color="text.primary">
