@@ -8,11 +8,15 @@ import {
   CardContent,
   CardHeader,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   Table,
   TableBody,
@@ -29,8 +33,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 
 import PageHeader from "../../components/PageHeader";
-import { getTallerActividad } from "../../api/talleresApi";
-import { TallerActividadUsuario } from "../../types";
+import {
+  getTallerActividad,
+  getTallerActividadDetalle,
+} from "../../api/talleresApi";
+import { TallerActividadUsuario, TallerResponse } from "../../types";
 
 const formatDateInput = (value: Date): string =>
   value.toISOString().slice(0, 10);
@@ -86,6 +93,36 @@ const resolveDisplayName = (usuario: TallerActividadUsuario): string =>
 const resolveSede = (usuario: TallerActividadUsuario): string =>
   usuario.sede?.trim() || "Sede no registrada";
 
+const formatFriendlyDate = (value: string | null): string => {
+  if (!value) {
+    return "";
+  }
+  return new Date(`${value}T00:00:00`).toLocaleDateString("es-CO", {
+    weekday: "long",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const formatDateTime = (value: string): string =>
+  new Date(value).toLocaleString("es-ES", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+interface DetalleDiaState {
+  open: boolean;
+  usuario: TallerActividadUsuario | null;
+  fecha: string | null;
+  talleres: TallerResponse[];
+  loading: boolean;
+  error: string | null;
+}
+
 const resolveActividadKey = (usuario: TallerActividadUsuario): string =>
   `${usuario.user_id}-${resolveSede(usuario)}`;
 
@@ -102,6 +139,14 @@ const SeguimientoTalleres = () => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
+  const [detalleDia, setDetalleDia] = useState<DetalleDiaState>({
+    open: false,
+    usuario: null,
+    fecha: null,
+    talleres: [],
+    loading: false,
+    error: null,
+  });
 
   const displayedDates = useMemo(
     () => buildDateRange(startDate, endDate),
@@ -164,6 +209,52 @@ const SeguimientoTalleres = () => {
     setDownloadError(null);
   }, [startDate, endDate]);
 
+  const handleCellClick = async (
+    usuario: TallerActividadUsuario,
+    fecha: string,
+    hasRegistro: boolean
+  ) => {
+    setDetalleDia({
+      open: true,
+      usuario,
+      fecha,
+      talleres: [],
+      loading: hasRegistro,
+      error: null,
+    });
+
+    if (!hasRegistro) {
+      return;
+    }
+
+    try {
+      const data = await getTallerActividadDetalle({
+        userId: usuario.user_id,
+        fecha,
+      });
+      setDetalleDia((prev) => ({ ...prev, talleres: data }));
+    } catch (err) {
+      console.error(err);
+      setDetalleDia((prev) => ({
+        ...prev,
+        error: "No se pudieron cargar los talleres registrados para este día.",
+      }));
+    } finally {
+      setDetalleDia((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const closeDetalleDia = () => {
+    setDetalleDia({
+      open: false,
+      usuario: null,
+      fecha: null,
+      talleres: [],
+      loading: false,
+      error: null,
+    });
+  };
+
   const renderTable = (tableSize: "small" | "medium" = "small") => {
     if (!displayedDates.length) {
       return (
@@ -217,6 +308,20 @@ const SeguimientoTalleres = () => {
                   return (
                     <TableCell key={fecha} align="center">
                       <Box
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Ver detalles de ${resolveSede(
+                          usuario
+                        )} el ${formatFriendlyDate(actividadDia.fecha)}`}
+                        onClick={() =>
+                          handleCellClick(usuario, fecha, hasRegistro)
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleCellClick(usuario, fecha, hasRegistro);
+                          }
+                        }}
                         sx={{
                           bgcolor: hasRegistro ? "success.light" : "grey.100",
                           color: hasRegistro
@@ -231,6 +336,16 @@ const SeguimientoTalleres = () => {
                                 ? theme.palette.success.main
                                 : theme.palette.grey[200]
                             }`,
+                          cursor: "pointer",
+                          transition:
+                            "transform 150ms ease, box-shadow 150ms ease",
+                          boxShadow: hasRegistro
+                            ? "0 1px 6px rgba(0,0,0,0.12)"
+                            : undefined,
+                          "&:hover": {
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                          },
                         }}
                       >
                         <Typography variant="subtitle2" display="block">
@@ -516,6 +631,126 @@ const SeguimientoTalleres = () => {
           )}
         </CardContent>
       </Card>
+      <Dialog
+        fullWidth
+        maxWidth="md"
+        open={detalleDia.open}
+        onClose={closeDetalleDia}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <InsightsOutlinedIcon color="primary" />
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              {detalleDia.usuario
+                ? `${resolveSede(detalleDia.usuario)} · ${resolveDisplayName(
+                    detalleDia.usuario
+                  )}`
+                : ""}
+            </Typography>
+            <Typography variant="h6">
+              Talleres del {formatFriendlyDate(detalleDia.fecha)}
+            </Typography>
+          </Box>
+          <Button
+            variant="text"
+            color="inherit"
+            startIcon={<CloseIcon />}
+            onClick={closeDetalleDia}
+          >
+            Cerrar
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers>
+          {detalleDia.loading && (
+            <Stack
+              spacing={2}
+              alignItems="center"
+              justifyContent="center"
+              sx={{ minHeight: 220 }}
+            >
+              <CircularProgress size={32} />
+              <Typography color="text.secondary">
+                Consultando talleres del día…
+              </Typography>
+            </Stack>
+          )}
+          {!detalleDia.loading && detalleDia.error && (
+            <Alert severity="error">{detalleDia.error}</Alert>
+          )}
+          {!detalleDia.loading &&
+            !detalleDia.error &&
+            (detalleDia.talleres.length ? (
+              <Stack spacing={2}>
+                {detalleDia.talleres.map((taller) => (
+                  <Card key={taller.id} variant="outlined">
+                    <CardHeader
+                      title={taller.nombre_taller || "Taller sin nombre"}
+                      subheader={`Creado el ${formatDateTime(
+                        taller.creado_en
+                      )}`}
+                    />
+                    <CardContent>
+                      <Stack spacing={1.5}>
+                        <Typography color="text.secondary">
+                          {taller.descripcion || "Sin descripción registrada."}
+                        </Typography>
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={2}
+                        >
+                          <Typography variant="body2">
+                            <strong>Especie:</strong> {taller.especie}
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>Peso inicial:</strong> {taller.peso_inicial}{" "}
+                            kg
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>Peso final:</strong> {taller.peso_final} kg
+                          </Typography>
+                          <Typography variant="body2">
+                            <strong>Pérdida:</strong>{" "}
+                            {taller.porcentaje_perdida ?? "N/D"}%
+                          </Typography>
+                        </Stack>
+                        <Typography variant="body2">
+                          <strong>Código principal:</strong>{" "}
+                          {taller.codigo_principal}
+                        </Typography>
+                        <Box>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Subcortes registrados
+                          </Typography>
+                          {taller.subcortes.length ? (
+                            <List dense disablePadding>
+                              {taller.subcortes.map((subcorte) => (
+                                <ListItem key={subcorte.id} disableGutters>
+                                  <ListItemText
+                                    primary={subcorte.nombre_subcorte}
+                                    secondary={`Código: ${subcorte.codigo_producto} · Peso: ${subcorte.peso} kg`}
+                                  />
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No se registraron subcortes en este taller.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            ) : (
+              <Alert severity="info">
+                No se registraron talleres para esta sede en la fecha
+                seleccionada.
+              </Alert>
+            ))}
+        </DialogContent>
+      </Dialog>
       <Dialog
         fullWidth
         maxWidth="xl"

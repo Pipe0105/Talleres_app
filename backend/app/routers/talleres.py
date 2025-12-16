@@ -28,6 +28,25 @@ def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
     )
     return item.id if item else None
 
+def _serialize_taller(taller: models.Taller) -> schemas.TallerOut:
+    return schemas.TallerOut(
+        id=taller.id,
+        nombre_taller=taller.nombre_taller,
+        descripcion=taller.descripcion,
+        peso_inicial=taller.peso_inicial,
+        peso_final=taller.peso_final,
+        porcentaje_perdida=taller.porcentaje_perdida,
+        especie=taller.especie,
+        codigo_principal=taller.codigo_principal,
+        item_principal_id=taller.item_principal_id,
+        creado_en=taller.creado_en,
+        subcortes=[
+            schemas.TallerDetalleOut.model_validate(det)
+            for det in taller.detalles
+        ],
+    )
+
+
 
 @router.post("", response_model=schemas.TallerOut, status_code=status.HTTP_201_CREATED)
 def crear_taller(
@@ -191,6 +210,29 @@ def obtener_calculo_taller(
         )
 
     return calculo
+
+@router.get("/actividad/detalle", response_model=list[schemas.TallerOut])
+def obtener_detalle_actividad(
+    *,
+    userId: int,
+    fecha: date,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    start_dt = datetime.combine(fecha, datetime.min.time())
+    end_dt = datetime.combine(fecha + timedelta(days=1), datetime.min.time())
+
+    talleres = (
+        db.query(models.Taller)
+        .filter(models.Taller.creado_por_id == userId)
+        .filter(models.Taller.creado_en >= start_dt)
+        .filter(models.Taller.creado_en < end_dt)
+        .order_by(models.Taller.creado_en.asc())
+        .all()
+    )
+
+    return [_serialize_taller(taller) for taller in talleres]
+
     
 @router.get("/actividad", response_model=list[schemas.TallerActividadUsuarioOut])
 def obtener_actividad_talleres(

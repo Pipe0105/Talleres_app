@@ -341,6 +341,17 @@ export const getTallerActividad = async (
   return (Array.isArray(data) ? data : []).map(mapTallerActividadUsuario);
 };
 
+export const getTallerActividadDetalle = async (params: {
+  userId: number;
+  fecha: string;
+}): Promise<TallerResponse[]> => {
+  const { data } = await api.get<unknown[]>("/talleres/actividad/detalle", {
+    params,
+  });
+
+  return (Array.isArray(data) ? data : []).map(mapTaller);
+};
+
 export const getTalleres = async (): Promise<TallerListItem[]> => {
   const { data } = await api.get<unknown[]>("/talleres");
   return (Array.isArray(data) ? data : []).map(mapTallerListItem);
