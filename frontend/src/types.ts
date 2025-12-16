@@ -25,6 +25,7 @@ export interface UserProfile {
   is_admin: boolean;
   is_gerente: boolean;
   sede: string | null;
+  hashed_password?: string | null;
   creado_en: string;
   actualizado_en: string;
 }

@@ -325,6 +325,7 @@ const UsersAdmin = () => {
                   <TableCell>Usuario</TableCell>
                   <TableCell>Correo</TableCell>
                   <TableCell>Nombre</TableCell>
+                  <TableCell>Contraseña</TableCell>
                   <TableCell>Sede</TableCell>
                   <TableCell>Rol</TableCell>
                   <TableCell>Estado</TableCell>
@@ -338,6 +339,18 @@ const UsersAdmin = () => {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
+                    <TableCell>
+                      <Typography
+                        component="code"
+                        sx={{
+                          fontFamily: "monospace",
+                          fontSize: "0.85rem",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {user.hashed_password || "—"}
+                      </Typography>
+                    </TableCell>
                     <TableCell>{user.sede || "—"}</TableCell>
                     <TableCell>
                       <Chip
@@ -485,7 +498,7 @@ const UsersAdmin = () => {
                 ))}
                 {!loading && users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
                       </Typography>
@@ -494,7 +507,7 @@ const UsersAdmin = () => {
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Cargando usuarios…
                       </Typography>

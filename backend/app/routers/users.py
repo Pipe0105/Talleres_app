@@ -6,24 +6,24 @@ from sqlalchemy.orm import Session
 from .. import crud, models
 from ..database import get_db
 from ..dependencies import get_current_admin_user
-from ..schemas import UserAdminCreate, UserOut, UserUpdate
+from ..schemas import AdminUserOut, UserAdminCreate, UserUpdate
 from ..security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("", response_model=List[UserOut])
+@router.get("", response_model=List[AdminUserOut])
 def list_users(
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_admin_user),
-) -> List[UserOut]:
+) -> List[AdminUserOut]:
     return crud.list_users(db)
 
-@router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
     payload: UserAdminCreate,
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_admin_user),
-) -> UserOut:
+) -> AdminUserOut:
     existing = crud.get_user_by_username(db, payload.username)
     if existing:
         raise HTTPException(
@@ -53,13 +53,13 @@ def create_user(
     )
     return user
 
-@router.patch("/{user_id}", response_model=UserOut)
+@router.patch("/{user_id}", response_model=AdminUserOut)
 def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
     current_admin = Depends(get_current_admin_user),
-) -> UserOut:
+) -> AdminUserOut:
     user = crud.get_user(db, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
