@@ -746,7 +746,6 @@ const InformesHistoricos = () => {
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip
-                      key={option}
                       label={option}
                       size="small"
                       {...getTagProps({ index })}
