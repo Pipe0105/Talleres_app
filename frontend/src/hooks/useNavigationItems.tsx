@@ -28,6 +28,7 @@ export const useNavigationItems = ({
       { label: "Lista de precios", to: "/lista-precios" },
       { label: "Talleres", to: "/talleres" },
       { label: "Seguimiento", to: "/talleres/seguimiento" },
+      { label: "Informes", to: "/informes-historicos" },
       ...(user?.is_admin
         ? [
             {

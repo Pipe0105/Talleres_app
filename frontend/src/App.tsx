@@ -9,6 +9,7 @@ import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
 import CreateTaller from "./pages/talleres/CreateTaller";
 import SeguimientoTalleres from "./pages/talleres/SeguimientoTalleres";
+import InformesHistoricos from "./pages/InformesHistoricos";
 import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -61,6 +62,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <SeguimientoTalleres />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/informes-historicos"
+              element={
+                <ProtectedRoute>
+                  <InformesHistoricos />
                 </ProtectedRoute>
               }
             />

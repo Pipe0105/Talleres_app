@@ -5,6 +5,8 @@ import {
   CrearTallerPayload,
   Item,
   TallerActividadUsuario,
+  TallerCalculoRow,
+  TallerListItem,
   TallerResponse,
   UserProfile,
 } from "../types";
@@ -209,6 +211,29 @@ const mapTallerActividadUsuario = (raw: any): TallerActividadUsuario => ({
     : [],
 });
 
+const mapTallerListItem = (raw: any): TallerListItem => ({
+  id: toNumber(raw?.id, 0),
+  nombre_taller: toStringOr(raw?.nombre_taller, ""),
+  descripcion: raw?.descripcion ?? null,
+  peso_inicial: toNumber(raw?.peso_inicial, 0),
+  peso_final: toNumber(raw?.peso_final, 0),
+  total_peso: toNumber(raw?.total_peso, 0),
+  especie: toStringOr(raw?.especie, ""),
+  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+});
+
+const mapTallerCalculoRow = (raw: any): TallerCalculoRow => ({
+  nombre_corte: toStringOr(raw?.nombre_corte, ""),
+  descripcion: toStringOr(raw?.descripcion, ""),
+  item_code: toStringOr(raw?.item_code, ""),
+  peso: toNumber(raw?.peso, 0),
+  porcentaje_real: toNumber(raw?.porcentaje_real, 0),
+  porcentaje_default: toNumber(raw?.porcentaje_default, 0),
+  delta_pct: toNumber(raw?.delta_pct, 0),
+  precio_venta: toNumber(raw?.precio_venta, 0),
+  valor_estimado: toNumber(raw?.valor_estimado, 0),
+});
+
 export const login = async (
   username: string,
   password: string
@@ -312,4 +337,16 @@ export const getTallerActividad = async (
   });
 
   return (Array.isArray(data) ? data : []).map(mapTallerActividadUsuario);
+};
+
+export const getTalleres = async (): Promise<TallerListItem[]> => {
+  const { data } = await api.get<unknown[]>("/talleres");
+  return (Array.isArray(data) ? data : []).map(mapTallerListItem);
+};
+
+export const getTallerCalculo = async (
+  tallerId: string | number
+): Promise<TallerCalculoRow[]> => {
+  const { data } = await api.get<unknown[]>(`/talleres/${tallerId}/calculo`);
+  return (Array.isArray(data) ? data : []).map(mapTallerCalculoRow);
 };

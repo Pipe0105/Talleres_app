@@ -77,3 +77,26 @@ export interface TallerActividadUsuario {
   sede: string | null;
   dias: TallerActividadDia[];
 }
+
+export interface TallerListItem {
+  id: number;
+  nombre_taller: string;
+  descripcion?: string | null;
+  peso_inicial: number;
+  peso_final: number;
+  total_peso: number;
+  especie: string;
+  creado_en: string;
+}
+
+export interface TallerCalculoRow {
+  nombre_corte: string;
+  descripcion: string;
+  item_code: string;
+  peso: number;
+  porcentaje_real: number;
+  porcentaje_default: number;
+  delta_pct: number;
+  precio_venta: number;
+  valor_estimado: number;
+}

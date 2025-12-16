@@ -101,7 +101,116 @@ def crear_taller(
         ],
     )
     
-@router.get("/actividad", response_class=list[schemas.TallerActividadUsuarioOut])
+@router.get("", response_model=list[schemas.TallerListItem])
+def obtener_talleres(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    talleres = (
+        db.query(models.Taller)
+        .order_by(models.Taller.creado_en.desc())
+        .all()
+    )
+    
+    result: list[schemas.TallerListItem] = []
+    for taller in talleres:
+        total_peso = sum((det.peso or Decimal("0")) for det in taller.detalles)
+        total_peso += taller.peso_final or Decimal("0")
+        
+        result.append(
+            schemas.TallerListItem(
+                id=taller.id,
+                nombre_taller=taller.nombre_taller,
+                descripcion=taller.descripcion,
+                peso_inicial=taller.peso_inicial,
+                peso_final=taller.peso_final,
+                total_peso=total_peso,
+                especio=taller.especie,
+                creado_en = taller.creado_en,
+            )
+        )
+    return result
+
+@router.get("", response_model=list[schemas.TallerListItem])
+def obtener_talleres(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    talleres = (
+        db.query(models.Taller)
+        .order_by(models.Taller.creado_en.desc())
+        .all()
+    )
+
+    result: list[schemas.TallerListItem] = []
+    for taller in talleres:
+        total_peso = sum((det.peso or Decimal("0")) for det in taller.detalles)
+        total_peso += taller.peso_final or Decimal("0")
+
+        result.append(
+            schemas.TallerListItem(
+                id=taller.id,
+                nombre_taller=taller.nombre_taller,
+                descripcion=taller.descripcion,
+                peso_inicial=taller.peso_inicial,
+                peso_final=taller.peso_final,
+                total_peso=total_peso,
+                especie=taller.especie,
+                creado_en=taller.creado_en,
+            )
+        )
+
+    return result
+
+
+@router.get("/{taller_id}/calculo", response_model=list[schemas.TallerCalculoRow])
+def obtener_calculo_taller(
+    taller_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    taller = db.get(models.Taller, taller_id)
+    if taller is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller solicitado no existe",
+        )
+
+    peso_inicial = Decimal(taller.peso_inicial or Decimal("0"))
+    if peso_inicial < 0:
+        peso_inicial = Decimal("0")
+
+    calculo: list[schemas.TallerCalculoRow] = []
+    for detalle in taller.detalles:
+        peso = Decimal(detalle.peso or Decimal("0"))
+        porcentaje_real = (
+            (peso / peso_inicial * Decimal("100")) if peso_inicial > 0 else Decimal("0")
+        )
+
+        item = db.get(models.Item, detalle.item_id) if detalle.item_id else None
+        precio_venta = Decimal(item.precio_venta or Decimal("0")) if item else Decimal("0")
+
+        porcentaje_default = Decimal("0")
+        delta_pct = porcentaje_real - porcentaje_default
+        valor_estimado = peso * precio_venta
+
+        calculo.append(
+            schemas.TallerCalculoRow(
+                nombre_corte=detalle.nombre_subcorte,
+                descripcion=(item.nombre if item else detalle.nombre_subcorte) or "",
+                item_code=(item.item_code if item else detalle.codigo_producto) or "",
+                peso=peso,
+                porcentaje_real=porcentaje_real,
+                porcentaje_default=porcentaje_default,
+                delta_pct=delta_pct,
+                precio_venta=precio_venta,
+                valor_estimado=valor_estimado,
+            )
+        )
+
+    return calculo
+    
+@router.get("/actividad", response_model=list[schemas.TallerActividadUsuarioOut])
 def obtener_actividad_talleres(
     *,
     startDate: date,

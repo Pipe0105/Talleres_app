@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional, Annotated
+from typing import Annotated, Optional
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
@@ -184,3 +184,28 @@ class TallerActividadUsuarioOut(BaseModel):
     full_name: Optional[str] = None
     sede: Optional[str] = None
     dias: list[TallerActividadDia]
+    
+class TallerListItem(BaseModel):
+    id: int
+    nombre_taller: str
+    descripcion: Optional[str] = None
+    peso_inicial: Decimal
+    peso_final: Decimal
+    total_peso: Decimal
+    especie: str
+    creado_en: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+class TallerCalculoRow(BaseModel):
+    nombre_corte: str
+    descripcion: str
+    item_code: str
+    peso: Decimal
+    porcentaje_real: Decimal
+    porcentaje_default: Decimal
+    delta_pct: Decimal
+    precio_venta: Decimal
+    valor_estimado: Decimal
+    
+    model_config = ConfigDict(from_attributes=True)
