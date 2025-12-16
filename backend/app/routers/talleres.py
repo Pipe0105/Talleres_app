@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
@@ -227,45 +226,41 @@ def obtener_actividad_talleres(
     start_dt = datetime.combine(startDate, datetime.min.time())
     end_dt = datetime.combine(endDate + timedelta(days=1), datetime.min.time())
     
+    usuarios_activos = (
+        db.query(models.User)
+        .filter(models.User.is_active.is_(True))
+        .order_by(models.User.sede, models.User.username)
+        .all()
+    )
+
+    actividad: dict[int, dict] = {
+        user.id: {
+            "user_id": user.id,
+            "username": user.username,
+            "full_name": user.full_name,
+            "sede": user.sede,
+            "dias": [],
+        }
+        for user in usuarios_activos
+    }
+    
     rows = (
         db.query(
             models.User.id.label("user_id"),
-            models.User.username,
-            models.User.full_name,
-            models.User.sede,
             func.date(models.Taller.creado_en).label("fecha"),
             func.count(models.Taller.id).label("cantidad"),
         )
         .join(models.Taller, models.Taller.creado_por_id == models.User.id)
         .filter(models.Taller.creado_en >= start_dt)
         .filter(models.Taller.creado_en < end_dt)
-        .group_by(
-            models.User.id,
-            models.User.username,
-            models.User.full_name,
-            models.User.sede,
-            func.date(models.Taller.creado_en),
-        )
-        .order_by(
-            models.User.sede,
-            models.User.username,
-            func.date(models.Taller.creado_en),
-        )
+        .filter(models.User.is_active.is_(True))
+        .group_by(models.User.id, func.date(models.Taller.creado_en))
+        .order_by(models.User.sede, models.User.username, func.date(models.Taller.creado_en))
         .all()
     )
-    
-    actividad: dict[int, dict] = defaultdict(lambda: {"dias": []})
     for row in rows:
-        actividad[row.user_id].update(
-            {
-                "user_id": row.user_id,
-                "username": row.username,
-                "full_name": row.full_name,
-                "sede": row.sede,
-            }
-        )
         actividad[row.user_id]["dias"].append(
             {"fecha": row.fecha, "cantidad": int(row.cantidad)}
         )
 
-    return list(actividad.values())
+    return [actividad[user.id] for user in usuarios_activos]
