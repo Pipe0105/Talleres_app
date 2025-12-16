@@ -168,7 +168,6 @@ const mapUser = (raw: any): UserProfile => ({
   is_admin: toBoolean(raw?.is_admin, false),
   is_gerente: toBoolean(raw?.is_gerente, false),
   sede: raw?.sede ?? null,
-  hashed_password: raw?.hashed_password ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
   actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
 });

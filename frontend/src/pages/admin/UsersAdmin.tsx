@@ -12,6 +12,8 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Stack,
   Switch,
@@ -37,7 +39,7 @@ import {
   adminUpdateUser,
 } from "../../api/talleresApi";
 import type { UserProfile } from "../../types";
-import { Person } from "@mui/icons-material";
+import { Person, Visibility, VisibilityOff } from "@mui/icons-material";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
 
 interface NewUserForm {
@@ -89,6 +91,8 @@ const UsersAdmin = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [editSubmitting, setEditSubmitting] = useState<boolean>(false);
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -128,6 +132,7 @@ const UsersAdmin = () => {
       setFormSuccess("Usuario creado correctamente.");
       setFormState(INITIAL_FORM_STATE);
       setCreateDialogOpen(false);
+      setShowCreatePassword(false);
       await loadUsers();
     } catch (error) {
       console.error(error);
@@ -192,12 +197,14 @@ const UsersAdmin = () => {
       sede: target.sede ?? "",
     });
     setEditError(null);
+    setShowEditPassword(false);
   };
 
   const closeEditDialog = () => {
     setEditTarget(null);
     setEditForm(null);
     setEditError(null);
+    setShowEditPassword(false);
   };
 
   const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -219,6 +226,7 @@ const UsersAdmin = () => {
         sede: editForm.sede.trim() || undefined,
       });
       closeEditDialog();
+      setShowEditPassword(false);
       await loadUsers();
     } catch (error) {
       console.error(error);
@@ -265,12 +273,16 @@ const UsersAdmin = () => {
     setFormError(null);
     setFormSuccess(null);
     setCreateDialogOpen(true);
+    setShowEditPassword(false);
+    setShowCreatePassword(false);
   };
 
   const closeCreateDialog = () => {
     if (submitting) return;
     setCreateDialogOpen(false);
     setFormError(null);
+    setShowEditPassword(false);
+    setShowCreatePassword(false);
   };
 
   return (
@@ -339,18 +351,7 @@ const UsersAdmin = () => {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
-                    <TableCell>
-                      <Typography
-                        component="code"
-                        sx={{
-                          fontFamily: "monospace",
-                          fontSize: "0.85rem",
-                          wordBreak: "break-all",
-                        }}
-                      >
-                        {user.hashed_password || "—"}
-                      </Typography>
-                    </TableCell>
+                    <TableCell></TableCell>
                     <TableCell>{user.sede || "—"}</TableCell>
                     <TableCell>
                       <Chip
@@ -555,8 +556,29 @@ const UsersAdmin = () => {
               />
               <TextField
                 label="Contraseña temporal"
-                type="password"
+                type={showCreatePassword ? "text" : "password"}
                 value={formState.password}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showCreatePassword
+                            ? "Ocultar contraseña"
+                            : "Mostrar contraseña"
+                        }
+                        onClick={() => setShowCreatePassword((prev) => !prev)}
+                        edge="end"
+                      >
+                        {showCreatePassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 onChange={(event) =>
                   setFormState((prev) => ({
                     ...prev,
@@ -728,9 +750,26 @@ const UsersAdmin = () => {
               </TextField>
               <TextField
                 label="Nueva contraseña"
-                type="password"
+                type={showEditPassword ? "text" : "password"}
                 helperText="dejalo en blanco para no cambiarla"
                 value={editForm?.password ?? ""}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showEditPassword
+                            ? "Ocultar contraseña"
+                            : "Mostrar contraseña"
+                        }
+                        onClick={() => setShowEditPassword((prev) => !prev)}
+                        edge="end"
+                      >
+                        {showEditPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 onChange={(event) =>
                   setEditForm((prev) =>
                     prev ? { ...prev, password: event.target.value } : prev

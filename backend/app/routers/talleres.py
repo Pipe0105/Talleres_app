@@ -131,39 +131,6 @@ def crear_taller(
         ],
     )
 
-@router.get("", response_model=list[schemas.TallerListItem])
-def obtener_talleres(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_active_user),
-):
-    talleres = (
-        db.query(models.Taller)
-        .order_by(models.Taller.creado_en.desc())
-        .all()
-    )
-
-    result: list[schemas.TallerListItem] = []
-    for taller in talleres:
-        total_peso = sum((det.peso or Decimal("0")) for det in taller.detalles)
-        total_peso += taller.peso_final or Decimal("0")
-
-        result.append(
-            schemas.TallerListItem(
-                id=taller.id,
-                nombre_taller=taller.nombre_taller,
-                descripcion=taller.descripcion,
-                peso_inicial=taller.peso_inicial,
-                peso_final=taller.peso_final,
-                total_peso=total_peso,
-                especie=taller.especie,
-                sede=taller.sede,
-                creado_en=taller.creado_en,
-            )
-        )
-
-    return result
-
-
 @router.get("/{taller_id}/calculo", response_model=list[schemas.TallerCalculoRow])
 def obtener_calculo_taller(
     taller_id: int,
@@ -276,7 +243,7 @@ def obtener_actividad_talleres(
     rows = (
         db.query(
             models.User.id.label("user_id"),
-            func.coalesce(models.Taller.sede, models.User.sede).label("sede"),
+            models.User.sede.label("sede"),
             func.date(models.Taller.creado_en).label("fecha"),
             func.count(models.Taller.id).label("cantidad"),
         )
@@ -288,11 +255,11 @@ def obtener_actividad_talleres(
         .filter(models.User.sede != "")
         .group_by(
             models.User.id,
-            func.coalesce(models.Taller.sede, models.User.sede),
+            models.User.sede,
             func.date(models.Taller.creado_en),
         )
         .order_by(
-            func.coalesce(models.Taller.sede, models.User.sede),
+            models.User.sede,
             models.User.username,
             func.date(models.Taller.creado_en),
         )
