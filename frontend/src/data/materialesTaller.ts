@@ -144,13 +144,13 @@ const withRecorteGordana = (...extras: MaterialConfig[]): MaterialConfig[] =>
 const resPrimaryCuts: MaterialConfig[] = [
   {
     label: "Ampolleta Normal",
-    codigo: "7776",
+    codigo: "57654",
     principal: true,
     children: withRecorteGordana(),
   },
   {
     label: "Bola Negra Especial",
-    codigo: "5585",
+    codigo: "5588",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.pulpa),
     aliases: ["Bola Negra Espec"],
@@ -180,26 +180,26 @@ const resPrimaryCuts: MaterialConfig[] = [
   },
   {
     label: "Lomo Caracha",
-    codigo: "5856",
+    codigo: "21274",
     principal: true,
     children: withRecorteGordana(),
   },
   {
     label: "Lomo Redondo",
-    codigo: "5871",
+    codigo: "26507",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.desperdicio),
   },
   {
     label: "Morrillo",
-    codigo: "7843",
+    codigo: "7849",
     principal: true,
     children: withRecorteGordana(),
     aliases: ["Morrillo*Kilo"],
   },
   {
     label: "Muchacho",
-    codigo: "5854",
+    codigo: "20182",
     principal: true,
     children: mergeMaterialConfigs([
       resSecondaryCuts.recorteMuchacho,
@@ -214,14 +214,14 @@ const resPrimaryCuts: MaterialConfig[] = [
   },
   {
     label: "Punta de Anca",
-    codigo: "7767",
+    codigo: "30358",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.ampolletaNormal),
     aliases: ["Punta Anca"],
   },
   {
     label: "Punta Falda",
-    codigo: "7768",
+    codigo: "25990",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.pulpa),
   },
@@ -233,25 +233,25 @@ const resPrimaryCuts: MaterialConfig[] = [
   },
   {
     label: "Sobrebarriga",
-    codigo: "5837",
+    codigo: "35139",
     principal: true,
     children: withRecorteGordana(),
   },
   {
     label: "Pecho",
-    codigo: "5844",
+    codigo: "70389",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.espadilla),
   },
   {
     label: "Pepino",
-    codigo: "8005",
+    codigo: "7755",
     principal: true,
     children: withRecorteGordana(resSecondaryCuts.pulpa),
   },
   {
     label: "Lomo Viche Especial",
-    codigo: "5848",
+    codigo: "25895",
     principal: true,
     children: withRecorteGordana(),
   },
@@ -263,15 +263,15 @@ const cerdoPrimaryCuts: {
   children: MaterialConfig[];
   extras?: MaterialConfig[];
 }[] = [
-  { label: "Brazo", codigo: "9324", children: cerdoCommonSecondaryCuts },
+  { label: "Brazo", codigo: "33649", children: cerdoCommonSecondaryCuts },
   {
     label: "Costilla",
-    codigo: "10251",
+    codigo: "10351",
     children: cerdoCostillaSecondaryCuts,
   },
-  { label: "Lomo", codigo: "5810", children: cerdoCommonSecondaryCuts },
-  { label: "Pernil", codigo: "35164", children: cerdoCommonSecondaryCuts },
-  { label: "Tocineta", codigo: "5828", children: cerdoCommonSecondaryCuts },
+  { label: "Lomo", codigo: "30151", children: cerdoCommonSecondaryCuts },
+  { label: "Pernil", codigo: "10358", children: cerdoCommonSecondaryCuts },
+  { label: "Tocineta", codigo: "30029", children: cerdoCommonSecondaryCuts },
 ];
 
 export const materialesPorEspecie: Record<EspecieKey, MaterialConfig[]> = {
