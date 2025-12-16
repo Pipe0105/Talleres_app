@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from sqlalchemy import select
 from ..database import get_db
 from ..dependencies import get_current_active_user, get_current_admin_user
 from ..models import Corte, Item, ListaPrecios
@@ -58,6 +58,12 @@ def _get_or_create_item_from_lista(db: Session, item_id: int) -> Item | None:
     lista = db.get(ListaPrecios, item_id)
     if not lista:
         return None
+    
+    existing_by_code = db.scalars(
+        select(Item).where(Item.item_code == lista.codigo_producto)
+    ).first()
+    if existing_by_code:
+        return existing_by_code
 
     item = Item(
         id=lista.id,
