@@ -12,6 +12,9 @@ body {
     sans-serif;
   background-color: #f3f6fb;
   color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 #root {

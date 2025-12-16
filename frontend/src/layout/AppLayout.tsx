@@ -186,7 +186,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       backgroundImage: item.isActive
                         ? "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72))"
                         : "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
-                      backgroundColor: "transparent",
+                      backgroundColor: item.isActive
+                        ? alpha(theme.palette.common.white, 0.92)
+                        : alpha(theme.palette.common.white, 0.16),
                       border: `1px solid ${alpha(
                         theme.palette.common.white,
                         item.isActive ? 0.75 : 0.24
@@ -194,7 +196,6 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       boxShadow: item.isActive
                         ? "0 18px 36px rgba(4,17,37,0.32), inset 0 1px 0 rgba(255,255,255,0.45)"
                         : "0 12px 30px rgba(4,17,37,0.18), inset 0 1px 0 rgba(255,255,255,0.18)",
-                      backdropFilter: "blur(12px)",
                       transition: "all 0.2s ease",
                       "&:hover": {
                         backgroundImage: item.isActive
