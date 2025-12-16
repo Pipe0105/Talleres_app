@@ -130,6 +130,44 @@ def crear_taller(
             for det in taller.detalles
         ],
     )
+    
+@router.get("", response_model=list[schemas.TallerListItem])
+def listar_talleres(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    """Listar los talleres con la sumatoria de sus subcortes."""
+
+    talleres = (
+        db.query(models.Taller)
+        .order_by(models.Taller.creado_en.desc())
+        .all()
+    )
+
+    listado: list[schemas.TallerListItem] = []
+
+    for taller in talleres:
+        total_detalles = sum(
+            (detalle.peso or Decimal("0")) for detalle in taller.detalles
+        )
+        total_peso = (taller.peso_final or Decimal("0")) + total_detalles
+
+        listado.append(
+            schemas.TallerListItem(
+                id=taller.id,
+                nombre_taller=taller.nombre_taller,
+                descripcion=taller.descripcion,
+                sede=taller.sede,
+                peso_inicial=taller.peso_inicial or Decimal("0"),
+                peso_final=taller.peso_final or Decimal("0"),
+                total_peso=total_peso,
+                especie=taller.especie,
+                codigo_principal=taller.codigo_principal,
+                creado_en=taller.creado_en,
+            )
+        )
+
+    return listado
 
 @router.get("/{taller_id}/calculo", response_model=list[schemas.TallerCalculoRow])
 def obtener_calculo_taller(
