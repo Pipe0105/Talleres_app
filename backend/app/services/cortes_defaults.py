@@ -50,7 +50,14 @@ DEFAULT_CORTES_BY_CODE: dict[str, Sequence[str]] = {
 
 
 def normalize_code(value: str | None) -> str:
-    return (value or "").strip().upper()
+    """Normalize any candidate code to an uppercase string.
+
+    The upstream ``codigo_producto`` values can be stored as integers in the
+    database; converting to ``str`` before stripping avoids ``AttributeError``
+    when defaults are resolved for those records.
+    """
+
+    return str(value or "").strip().upper()
 
 def resolve_item_code(item: Item) -> str:
     """Return a code that can be used to fetch default cortes for an item."""
@@ -79,16 +86,14 @@ def resolve_item_code(item: Item) -> str:
 
 def ensure_default_cortes(db: Session, item: Item) -> List[Corte]:
     code = resolve_item_code(item)
-    defaults = DEFAULT_CORTES_BY_CODE.get(code)
-    if not defaults:
-        return []
+    default_pct = 100 / len(defaults)
 
     created: List[Corte] = []
     for nombre_corte in defaults:
         corte = Corte(
             item_id=item.id,
             nombre_corte=nombre_corte,
-            porcentaje_default=0,
+            porcentaje_default=round(default_pct, 4),
         )
         db.add(corte)
         created.append(corte)
