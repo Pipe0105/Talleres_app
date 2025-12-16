@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Annotated
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
@@ -116,15 +116,25 @@ class ListaPreciosOut(BaseModel):
 class TallerDetalleCreate(BaseModel):
     codigo_producto: str
     nombre_subcorte: str
-    peso: condecimal(ge=0, max_digits=14, decimal_places=4)
+    peso: Annotated[
+    Decimal,
+    condecimal(ge=0, max_digits=14, decimal_places=4)
+]
     item_id: Optional[int] = None
 
 
 class TallerCreate(BaseModel):
     nombre_taller: str
     descripcion: Optional[str] = None
-    peso_inicial: condecimal(ge=0, max_digits=14, decimal_places=4)
-    peso_final: condecimal(ge=0, max_digits=14, decimal_places=4)
+    peso_inicial: Annotated[
+    Decimal,
+    condecimal(ge=0, max_digits=14, decimal_places=4)
+]
+
+    peso_final: Annotated[
+    Decimal,
+    condecimal(ge=0, max_digits=14, decimal_places=4)
+]
     especie: str
     item_principal_id: Optional[int] = None
     codigo_principal: str
