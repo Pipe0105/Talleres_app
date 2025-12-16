@@ -32,9 +32,6 @@ class CorteOut(CorteIn):
 class TallerIn(BaseModel):
     nombre_taller: str
     descripcion: Optional[str] = None
-    peso_inicial: Optional[condecimal(ge=0, max_digits=14, decimal_places=4)] = None  # type: ignore
-    peso_final: Optional[condecimal(ge=0, max_digits=14, decimal_places=4)] = None  # type: ignore
-    porcentaje_perdida: Optional[condecimal(ge=0, max_digits=7, decimal_places=4)] = None  # type: ignore
 
 class TallerDetalleIn(BaseModel):
     item_id: int
@@ -54,9 +51,6 @@ class TallerListItem(BaseModel):
     id: int
     nombre_taller: str
     descripcion: Optional[str] = None
-    peso_inicial: Optional[float] = None
-    peso_final: Optional[float] = None
-    porcentaje_perdida: Optional[float] = None
     total_peso: float
     detalles_count: int
     

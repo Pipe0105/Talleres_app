@@ -284,17 +284,24 @@ export const getCortesPorItem = async (itemId: string): Promise<corte[]> => {
 export const createTaller = async (
   payload: CrearTallerPayload
 ): Promise<TallerCreado> => {
-  const { cortes, ...rest } = payload;
-  const body = { ...rest, detalles: cortes };
+  const { data } = await api.post<unknown>("/talleres", payload);
 
-  const { data } = await api.post<TallerCreado>("/talleres", body);
   return {
     id: toStringOr((data as any)?.id, ""),
     nombre_taller: toStringOr((data as any)?.nombre_taller, ""),
     descripcion: (data as any)?.descripcion ?? null,
-    peso_inicial: (data as any)?.peso_inicial ?? null,
-    peso_final: (data as any)?.peso_final ?? null,
-    porcentaje_perdida: (data as any)?.porcentaje_perdida ?? null,
+    peso_inicial:
+      (data as any)?.peso_inicial != null
+        ? Number((data as any).peso_inicial)
+        : null,
+    peso_final:
+      (data as any)?.peso_final != null
+        ? Number((data as any).peso_final)
+        : null,
+    porcentaje_perdida:
+      (data as any)?.porcentaje_perdida != null
+        ? Number((data as any).porcentaje_perdida)
+        : null,
   };
 };
 
