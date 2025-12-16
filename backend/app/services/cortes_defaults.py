@@ -86,6 +86,11 @@ def resolve_item_code(item: Item) -> str:
 
 def ensure_default_cortes(db: Session, item: Item) -> List[Corte]:
     code = resolve_item_code(item)
+    
+    defaults = DEFAULT_CORTES_BY_CODE.get(code, [])
+    if not defaults:
+        return []
+    
     default_pct = 100 / len(defaults)
 
     created: List[Corte] = []
