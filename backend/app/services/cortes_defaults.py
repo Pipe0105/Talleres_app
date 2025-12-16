@@ -9,6 +9,20 @@ from ..models import Corte, Item
 
 DEFAULT_CORTES_BY_CODE: dict[str, Sequence[str]] = {
     # Res
+    "C/RES AMPOLLETA NORMAL": ["Recorte", "Gordana", "Ampolleta Normal"],
+    "C/RES BOLA NEGRA ESPEC": ["Recorte", "Gordana"],
+    "C/RES ESPALDILLA/PALOMILLA": ["Recorte", "Gordana", "Espadilla/Paloma"],
+    "C/RES LOMO CARACHA MAGRA": ["Recorte", "Gordana"],
+    "C/RES LOMO REDONDO ESPEC": ["Recorte", "Gordana"],
+    "C/RES MORRILLO": ["Recorte", "Gordana"],
+    "C/RES MUCHACHO ESPEC": ["Recorte", "Gordana"],
+    "C/RES PECHO": ["Recorte", "Gordana"],
+    "C/RES PEPINO ESPEC": ["Recorte", "Gordana"],
+    "C/RES PULPA NORMAL": ["Recorte", "Gordana", "Pulpa"],
+    "C/RES PUNTA ANCA ESPECIAL": ["Recorte", "Gordana"],
+    "C/RES PUNTA FALDA ESPEC": ["Recorte", "Gordana"],
+    "C/RES SOBACO": ["Recorte", "Gordana"],
+    "C/RES SOBREBARRIGA ESPEC": ["Recorte", "Gordana"],
     "7776": ["Recorte", "Gordana"],
     "5585": ["Recorte", "Gordana", "Pulpa"],
     "25493": ["Recorte", "Gordana", "Caderita Normal"],
