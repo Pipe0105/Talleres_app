@@ -26,6 +26,7 @@ export const useNavigationItems = ({
   return useMemo<NavigationItem[]>(() => {
     const navigationConfig: NavigationItem[] = [
       { label: "Lista de precios", to: "/lista-precios" },
+      { label: "Talleres", to: "/talleres" },
       ...(user?.is_admin
         ? [
             {

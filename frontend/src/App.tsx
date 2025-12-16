@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Logout from "./pages/Logout";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
+import CreateTaller from "./pages/talleres/CreateTaller";
 import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -46,6 +47,14 @@ const App = () => {
             <Route />
             <Route path="/" element={<Home />}></Route>
             <Route path="/lista-precios" element={<ListaPrecios />} />
+            <Route
+              path="/talleres"
+              element={
+                <ProtectedRoute>
+                  <CreateTaller />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/perfil"
               element={

@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 
@@ -108,5 +109,57 @@ class ListaPreciosOut(BaseModel):
     fecha_vigencia: datetime | None
     fuente: str | None
     activo: bool | None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TallerDetalleCreate(BaseModel):
+    codigo_producto: str
+    nombre_subcorte: str
+    peso: condecimal(ge=0, max_digits=14, decimal_places=4)
+    item_id: Optional[int] = None
+
+
+class TallerCreate(BaseModel):
+    nombre_taller: str
+    descripcion: Optional[str] = None
+    peso_inicial: condecimal(ge=0, max_digits=14, decimal_places=4)
+    peso_final: condecimal(ge=0, max_digits=14, decimal_places=4)
+    especie: str
+    item_principal_id: Optional[int] = None
+    codigo_principal: str
+    subcortes: list[TallerDetalleCreate]
+
+    @field_validator("especie")
+    @classmethod
+    def _validate_especie(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if normalized not in {"res", "cerdo"}:
+            raise ValueError("La especie debe ser 'res' o 'cerdo'.")
+        return normalized
+
+
+class TallerDetalleOut(BaseModel):
+    id: int
+    codigo_producto: str
+    nombre_subcorte: str
+    peso: Decimal
+    item_id: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TallerOut(BaseModel):
+    id: int
+    nombre_taller: str
+    descripcion: Optional[str]
+    peso_inicial: Decimal
+    peso_final: Decimal
+    porcentaje_perdida: Decimal | None
+    especie: str
+    codigo_principal: str
+    item_principal_id: Optional[int] = None
+    creado_en: datetime
+    subcortes: list[TallerDetalleOut]
 
     model_config = ConfigDict(from_attributes=True)

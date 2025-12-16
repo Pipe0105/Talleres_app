@@ -1,6 +1,12 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
-import { AuthToken, Item, UserProfile } from "../types";
+import {
+  AuthToken,
+  CrearTallerPayload,
+  Item,
+  TallerResponse,
+  UserProfile,
+} from "../types";
 import { safeStorage } from "../utils/storage";
 const TOKEN_STORAGE_KEY = "talleres.authToken";
 
@@ -163,6 +169,30 @@ const mapUser = (raw: any): UserProfile => ({
   actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
 });
 
+const mapTaller = (raw: any): TallerResponse => ({
+  id: toNumber(raw?.id, 0),
+  nombre_taller: toStringOr(raw?.nombre_taller, ""),
+  descripcion: raw?.descripcion ?? null,
+  peso_inicial: toNumber(raw?.peso_inicial, 0),
+  peso_final: toNumber(raw?.peso_final, 0),
+  porcentaje_perdida: raw?.porcentaje_perdida
+    ? toNumber(raw?.porcentaje_perdida, 0)
+    : null,
+  especie: toStringOr(raw?.especie, ""),
+  item_principal_id: raw?.item_principal_id ?? null,
+  codigo_principal: toStringOr(raw?.codigo_principal, ""),
+  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  subcortes: Array.isArray(raw?.subcortes)
+    ? raw.subcortes.map((det: any) => ({
+        id: toNumber(det?.id, 0),
+        codigo_producto: toStringOr(det?.codigo_producto, ""),
+        nombre_subcorte: toStringOr(det?.nombre_subcorte, ""),
+        peso: toNumber(det?.peso, 0),
+        item_id: det?.item_id ?? null,
+      }))
+    : [],
+});
+
 export const login = async (
   username: string,
   password: string
@@ -197,6 +227,13 @@ export const register = async (payload: RegisterUserPayload) => {
 export const getCurrentUser = async (): Promise<UserProfile> => {
   const { data } = await api.get<unknown>("/auth/me");
   return mapUser(data);
+};
+
+export const createTaller = async (
+  payload: CrearTallerPayload
+): Promise<TallerResponse> => {
+  const { data } = await api.post<unknown>("/talleres", payload);
+  return mapTaller(data);
 };
 
 export const getItems = async (): Promise<Item[]> => {

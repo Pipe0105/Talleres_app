@@ -28,3 +28,39 @@ export interface UserProfile {
   creado_en: string;
   actualizado_en: string;
 }
+
+export interface TallerDetallePayload {
+  codigo_producto: string;
+  nombre_subcorte: string;
+  peso: number;
+  item_id?: number | null;
+}
+
+export interface CrearTallerPayload {
+  nombre_taller: string;
+  descripcion?: string;
+  peso_inicial: number;
+  peso_final: number;
+  especie: string;
+  item_principal_id?: number | null;
+  codigo_principal: string;
+  subcortes: TallerDetallePayload[];
+}
+
+export interface TallerDetalleResponse extends TallerDetallePayload {
+  id: number;
+}
+
+export interface TallerResponse {
+  id: number;
+  nombre_taller: string;
+  descripcion?: string | null;
+  peso_inicial: number;
+  peso_final: number;
+  porcentaje_perdida?: number | null;
+  especie: string;
+  item_principal_id?: number | null;
+  codigo_principal: string;
+  creado_en: string;
+  subcortes: TallerDetalleResponse[];
+}

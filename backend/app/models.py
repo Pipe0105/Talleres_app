@@ -1,5 +1,16 @@
-from sqlalchemy import Boolean, Column, Integer, Numeric, Text, TIMESTAMP, func
-from sqlalchemy import String, DateTime
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    TIMESTAMP,
+    func,
+)
+from sqlalchemy.orm import relationship
 from .database import Base
 
 from datetime import datetime
@@ -56,4 +67,41 @@ class ListaPrecios(Base):
     fecha_vigencia = Column(TIMESTAMP, nullable=True)
     fuente = Column(Text, nullable=True)
     activo = Column(Boolean, nullable=True)
+    
+
+
+class Taller(Base):
+    __tablename__ = "talleres"
+
+    id = Column(Integer, primary_key=True)
+    nombre_taller = Column(String)
+    descripcion = Column(Text)
+    creado_en = Column(DateTime, default=datetime.utcnow)
+    creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    peso_inicial = Column(Numeric(14, 4))
+    peso_final = Column(Numeric(14, 4))
+    porcentaje_perdida = Column(Numeric(14, 4))
+    especie = Column(String(10))
+    item_principal_id = Column(Integer, ForeignKey("items.id"), nullable=True)
+    codigo_principal = Column(Text)
+
+    detalles = relationship(
+        "TallerDetalle",
+        back_populates="taller",
+        cascade="all, delete-orphan",
+    )
+
+
+class TallerDetalle(Base):
+    __tablename__ = "talleres_detalle"
+
+    id = Column(Integer, primary_key=True)
+    taller_id = Column(Integer, ForeignKey("talleres.id"), nullable=False)
+    item_id = Column(Integer, ForeignKey("items.id"), nullable=True)
+    codigo_producto = Column(Text)
+    nombre_subcorte = Column(Text)
+    peso = Column(Numeric(14, 4))
+    creado_en = Column(DateTime, default=datetime.utcnow)
+
+    taller = relationship("Taller", back_populates="detalles")
     
