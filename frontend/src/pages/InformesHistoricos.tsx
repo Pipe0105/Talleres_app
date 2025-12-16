@@ -44,8 +44,8 @@ type InformeScope = "taller" | "sede" | "material";
 type TallerCalculoWithMeta = TallerCalculoRow & {
   tallerId: number;
   tallerNombre: string;
-  sede?: string | null;
-  material?: string | null;
+  sede: string | null;
+  material: string | null;
 };
 
 const UNKNOWN_BRANCH_LABEL = "Sin sede asignada";
