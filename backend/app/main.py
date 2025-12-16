@@ -6,7 +6,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for loc
         "`python -m pip install -r backend/requirements.txt` and retry."
     ) from exc
 import logging
-from textwrap import dedent
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -27,7 +26,7 @@ from .config import (
 )
 from .constants import BRANCH_LOCATIONS
 from .database import Base, SessionLocal, engine
-from .routers import auth, upload, items, cortes, talleres, users
+from .routers import auth, upload, items, users
 from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
@@ -246,74 +245,7 @@ def _startup():
                 "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username)"
             )
         )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS creado_en TIMESTAMP NOT NULL DEFAULT NOW()"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS creado_por_id INTEGER REFERENCES users(id)"
-            )
-        )
-        
-                # Campos de peso
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS peso_inicial NUMERIC(14, 4)"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS peso_final NUMERIC(14, 4)"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS porcentaje_perdida NUMERIC(7, 4)"
-            )
-        )
-    # Crear/asegurar vista v_taller_calculo (idem potente)
-    create_view_sql = dedent(
-        """
-        CREATE OR REPLACE VIEW v_taller_calculo AS
-        SELECT
-        td.taller_id,
-        c.nombre_corte,
-        i.codigo_producto AS item_code,
-        i.descripcion,
-        i.precio_venta,
-        td.peso,
-        SUM(td.peso) OVER (PARTITION BY td.taller_id) AS peso_total,
-        c.porcentaje_default,
-        CASE
-            WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0
-            THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
-            ELSE 0
-        END AS porcentaje_real,
-        (
-            CASE
-            WHEN SUM(td.peso) OVER (PARTITION BY td.taller_id) > 0
-            THEN td.peso / SUM(td.peso) OVER (PARTITION BY td.taller_id) * 100
-            ELSE 0
-            END - c.porcentaje_default
-        ) AS delta_pct,
-        td.peso * i.precio_venta AS valor_estimado
-        FROM taller_detalles td
-        JOIN cortes c ON c.id = td.corte_id
-        JOIN talleres t ON t.id = td.taller_id
-        JOIN items i ON i.id = td.item_id;
 
-    """
-    )
-    with engine.begin() as conn:
-        conn.execute(text(create_view_sql))
-        
     _ensure_default_admin()
     _ensure_default_operator()
     _promote_user_to_admin("pipe@gmail.com")
@@ -325,6 +257,4 @@ def _startup():
 app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(upload.router, prefix=API_PREFIX)
 app.include_router(items.router, prefix=API_PREFIX)
-app.include_router(cortes.router, prefix=API_PREFIX)
-app.include_router(talleres.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)

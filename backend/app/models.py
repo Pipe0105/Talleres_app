@@ -1,19 +1,7 @@
-from sqlalchemy import (
-    Boolean,
-    Column,
-    ForeignKey,
-    Integer,
-    Numeric,
-    TIMESTAMP,
-    Text,
-    func,
-)
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, Integer, Numeric, Text, TIMESTAMP, func
+from sqlalchemy import String, DateTime
 from .database import Base
-from sqlalchemy import (
-    Column, Integer, String, Text, Numeric, Boolean, DateTime, ForeignKey
-)
-from sqlalchemy.orm import relationship
+
 from datetime import datetime
 
 class Item(Base):
@@ -29,50 +17,7 @@ class Item(Base):
     fuente_archivo = Column(Text)
     creado_en = Column(DateTime, default=datetime.utcnow)
     actualizado_en = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    cortes = relationship(
-        "Corte", back_populates="item", cascade="all, delete-orphan"
-    )
-    detalles = relationship("TallerDetalle", back_populates="item")
-
-class Corte(Base):
-    __tablename__ = "cortes"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
-    nombre_corte = Column(Text, nullable=False)
-    porcentaje_default = Column(Numeric(7, 4), nullable=False)
-    item = relationship("Item", back_populates="cortes")
-    detalles = relationship("TallerDetalle", back_populates="corte")
-
-class Taller(Base):
-    __tablename__ = "talleres"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    nombre_taller = Column(Text, nullable=False)
-    descripcion = Column(Text)
-    peso_inicial = Column(Numeric(14, 4), nullable=True)
-    peso_final = Column(Numeric(14, 4), nullable=True)
-    porcentaje_perdida = Column(Numeric(7, 4), nullable=True)
-    creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    creado_por = relationship("User")
-
-    detalles = relationship(
-        "TallerDetalle", back_populates="taller", cascade="all, delete-orphan"
-    )
-
-class TallerDetalle(Base):
-    __tablename__ = "taller_detalles"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    item_id = Column(Integer, ForeignKey("items.id", ondelete="CASCADE"), nullable=False)
-    corte_id = Column(Integer, ForeignKey("cortes.id"), nullable=False)
-    taller_id = Column(
-        Integer, ForeignKey("talleres.id", ondelete="CASCADE"), nullable=False
-    )
-    peso = Column(Numeric(14, 4), nullable=False)
-
-    taller = relationship("Taller", back_populates="detalles")
-    item = relationship("Item", back_populates="detalles")
-    corte = relationship("Corte", back_populates="detalles")
-
+    
 class PreciosRechazados(Base):
     __tablename__ = "precios_rechazados"
     id = Column(Integer, primary_key=True, autoincrement=True)

@@ -13,7 +13,6 @@ import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useNavigationItems } from "./hooks/useNavigationItems";
-import TalleresDesposte from "./pages/TalleresDesposte";
 
 const App = () => {
   const location = useLocation();
@@ -23,7 +22,6 @@ const App = () => {
 
   const navItems = useNavigationItems({
     user,
-    displayName: displayName || "Usuario",
     currentPath: location.pathname,
   });
 
@@ -55,18 +53,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/talleres/desposte"
-              element={
-                <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
-                  <TalleresDesposte />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/talleres"
-              element={<Navigate to="talleres/desposte" replace />}
-            ></Route>
             <Route path="/" element={<Home />}></Route>
             <Route
               path="/informes-historicos"

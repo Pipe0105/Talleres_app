@@ -91,7 +91,7 @@ const Login = () => {
               color="primary.main"
               gutterBottom
             >
-              Talleres Desposte
+              Panel Operativo
             </Typography>
             <Typography variant="body1" color="text.secondary" align="center">
               {mode === "login"

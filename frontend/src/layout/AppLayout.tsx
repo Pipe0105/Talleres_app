@@ -117,7 +117,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     fontWeight={800}
                     color="inherit"
                   >
-                    Talleres Desposte
+                    Panel Operativo
                   </Typography>
                 </Stack>
 
@@ -127,8 +127,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                     color: alpha(theme.palette.common.white, 0.86),
                   })}
                 >
-                  Un panel especializado para visualizar y registrar talleres de
-                  desposte.
+                  Panel principal para acceder a las herramientas disponibles.
                 </Typography>
               </Box>
             </Stack>

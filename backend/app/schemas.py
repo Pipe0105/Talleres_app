@@ -1,9 +1,7 @@
-from datetime import date, datetime
-from typing import List, Optional
+from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, condecimal, field_validator
-
-
+from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 
 
 class ItemIn(BaseModel):
@@ -19,68 +17,6 @@ class ItemOut(BaseModel):
     precio_venta: Optional[float] = None
     actualizado_en: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
-
-class CorteIn(BaseModel):
-    item_id: int
-    nombre_corte: str
-    porcentaje_default: condecimal(ge=0, max_digits=7, decimal_places=4)  # type: ignore
-
-class CorteOut(CorteIn):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
-
-class TallerIn(BaseModel):
-    nombre_taller: str
-    descripcion: Optional[str] = None
-
-class TallerDetalleIn(BaseModel):
-    item_id: int
-    corte_id: int
-    peso: condecimal(ge=0, max_digits=14, decimal_places=4)  # type: ignore
-
-class TallerCreatePayload(TallerIn):
-    cortes: List[TallerDetalleIn] = Field(alias="detalles")
-    model_config = ConfigDict(populate_by_name=True)
-
-class TallerOut(TallerIn):
-    id: int
-    creado_en: datetime
-    model_config = ConfigDict(from_attributes=True)
-    
-class TallerListItem(BaseModel):
-    id: int
-    nombre_taller: str
-    descripcion: Optional[str] = None
-    total_peso: float
-    detalles_count: int
-    
-    model_config = ConfigDict(from_attributes=True)
-    
-class TallerCalculoRow(BaseModel):
-    taller_id: int
-    nombre_corte: str
-    item_code: str
-    descripcion: str
-    precio_venta: float
-    peso: float
-    peso_total: float
-    porcentaje_default: float
-    porcentaje_real: float
-    delta_pct: float
-    valor_estimado: float
-    
-class TallerActividadDia(BaseModel):
-    fecha: date
-    cantidad: int
-
-
-class TallerActividadUsuario(BaseModel):
-    user_id: int
-    username: str
-    full_name: Optional[str] = None
-    sede: Optional[str] = None
-    is_active: bool
-    dias: List[TallerActividadDia]
 
 
 class UserBase(BaseModel):

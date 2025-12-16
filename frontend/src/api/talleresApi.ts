@@ -1,19 +1,7 @@
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
-import {
-  AuthToken,
-  corte,
-  CrearTallerPayload,
-  Item,
-  TallerCalculoRow,
-  TallerCreado,
-  TallerListItem,
-  TallerActividadUsuario,
-  UserProfile,
-} from "../types";
+import { AuthToken, Item, UserProfile } from "../types";
 import { safeStorage } from "../utils/storage";
-import { Description } from "@mui/icons-material";
-
 const TOKEN_STORAGE_KEY = "talleres.authToken";
 
 const normalizeBaseUrl = (rawUrl: string): string => rawUrl.replace(/\/+$/, "");
@@ -162,53 +150,6 @@ const mapItem = (raw: any): Item => {
   };
 };
 
-const mapCorte = (raw: any): corte => ({
-  id: toStringOr(raw?.id, ""),
-  item_id: toStringOr(raw?.item_id, ""),
-  nombre_corte: toStringOr(raw?.nombre_corte, ""),
-  porcentaje_default: toNumber(raw?.porcentaje_default),
-});
-
-const mapTaller = (raw: any): TallerListItem => ({
-  id: toStringOr(raw?.id, ""),
-  nombre_taller: toStringOr(raw?.nombre_taller, ""),
-  descripcion: raw?.descripcion ?? null,
-  peso_inicial: raw?.peso_inicial != null ? toNumber(raw?.peso_inicial) : null,
-  peso_final: raw?.peso_final != null ? toNumber(raw?.peso_final) : null,
-  porcentaje_perdida:
-    raw?.porcentaje_perdida != null ? toNumber(raw?.porcentaje_perdida) : null,
-  total_peso: toNumber(raw?.total_peso),
-  detalles_count: Math.max(0, Math.trunc(toNumber(raw?.detalles_count, 0))),
-});
-
-const mapCalculo = (raw: any): TallerCalculoRow => ({
-  taller_id: toStringOr(raw?.taller_id, ""),
-  nombre_corte: toStringOr(raw?.nombre_corte, ""),
-  item_code: toStringOr(raw?.item_code, ""),
-  descripcion: toStringOr(raw?.descripcion, ""),
-  precio_venta: toNumber(raw?.precio_venta),
-  peso: toNumber(raw?.peso),
-  peso_total: toNumber(raw?.peso_total),
-  porcentaje_default: toNumber(raw?.porcentaje_default),
-  porcentaje_real: toNumber(raw?.porcentaje_real),
-  delta_pct: toNumber(raw?.delta_pct),
-  valor_estimado: toNumber(raw?.valor_estimado),
-});
-
-const mapActividadDia = (raw: any) => ({
-  fecha: toStringOr(raw?.fecha, ""),
-  cantidad: toNumber(raw?.cantidad, 0),
-});
-
-const mapActividadUsuario = (raw: any): TallerActividadUsuario => ({
-  user_id: toStringOr(raw?.user_id, ""),
-  username: toStringOr(raw?.username, ""),
-  full_name: raw?.full_name ?? null,
-  sede: raw?.sede ?? null,
-  is_active: toBoolean(raw?.is_active, true),
-  dias: Array.isArray(raw?.dias) ? raw.dias.map(mapActividadDia) : [],
-});
-
 const mapUser = (raw: any): UserProfile => ({
   id: toStringOr(raw?.id, ""),
   username: toStringOr(raw?.username, ""),
@@ -261,78 +202,6 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
 export const getItems = async (): Promise<Item[]> => {
   const { data } = await api.get<unknown[]>("/items");
   return (Array.isArray(data) ? data : []).map(mapItem);
-};
-
-export interface CreateCortePayload {
-  item_id: string;
-  nombre_corte: string;
-  porcentaje_default: number;
-}
-
-export const createCorte = async (
-  payload: CreateCortePayload
-): Promise<corte> => {
-  const { data } = await api.post("/cortes", payload);
-  return mapCorte(data);
-};
-
-export const getCortesPorItem = async (itemId: string): Promise<corte[]> => {
-  const { data } = await api.get<unknown[]>(`/cortes/por-item/${itemId}`);
-  return (Array.isArray(data) ? data : []).map(mapCorte);
-};
-
-export const createTaller = async (
-  payload: CrearTallerPayload
-): Promise<TallerCreado> => {
-  const { data } = await api.post<unknown>("/talleres", payload);
-
-  return {
-    id: toStringOr((data as any)?.id, ""),
-    nombre_taller: toStringOr((data as any)?.nombre_taller, ""),
-    descripcion: (data as any)?.descripcion ?? null,
-    peso_inicial:
-      (data as any)?.peso_inicial != null
-        ? Number((data as any).peso_inicial)
-        : null,
-    peso_final:
-      (data as any)?.peso_final != null
-        ? Number((data as any).peso_final)
-        : null,
-    porcentaje_perdida:
-      (data as any)?.porcentaje_perdida != null
-        ? Number((data as any).porcentaje_perdida)
-        : null,
-  };
-};
-
-export const getTalleres = async (): Promise<TallerListItem[]> => {
-  const { data } = await api.get<unknown[]>("/talleres");
-  return (Array.isArray(data) ? data : []).map(mapTaller);
-};
-
-export const getTallerCalculo = async (
-  tallerId: string
-): Promise<TallerCalculoRow[]> => {
-  const { data } = await api.get<unknown[]>(`/talleres/${tallerId}/calculo`);
-  return (Array.isArray(data) ? data : []).map(mapCalculo);
-};
-
-export const getTallerActividad = async (params?: {
-  startDate?: string;
-  endDate?: string;
-}): Promise<TallerActividadUsuario[]> => {
-  const searchParams = new URLSearchParams();
-  if (params?.startDate) {
-    searchParams.set("start_date", params.startDate);
-  }
-  if (params?.endDate) {
-    searchParams.set("end_date", params.endDate);
-  }
-
-  const query = searchParams.toString();
-  const url = query ? `/talleres/actividad?${query}` : `/talleres/actividad`;
-  const { data } = await api.get<unknown[]>(url);
-  return (Array.isArray(data) ? data : []).map(mapActividadUsuario);
 };
 
 export interface AdminCreateUserPayload extends RegisterUserPayload {

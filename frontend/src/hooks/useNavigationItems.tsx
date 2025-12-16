@@ -13,13 +13,11 @@ export interface NavigationItem {
 
 interface UseNavigationItemsOptions {
   user: UserProfile | null;
-  displayName: string;
   currentPath?: string;
 }
 
 export const useNavigationItems = ({
   user,
-  displayName,
   currentPath,
 }: UseNavigationItemsOptions) => {
   const location = useLocation();
@@ -27,15 +25,6 @@ export const useNavigationItems = ({
 
   return useMemo<NavigationItem[]>(() => {
     const navigationConfig: NavigationItem[] = [
-      ...(user
-        ? [
-            { label: "Desposte", to: "/talleres/desposte" },
-            { label: "Informes", to: "/informes-historicos" },
-            ...(user.is_admin || user.is_gerente
-              ? [{ label: "Seguimiento", to: "/seguimiento-talleres" }]
-              : []),
-          ]
-        : []),
       { label: "Lista de precios", to: "/lista-precios" },
       ...(user?.is_admin
         ? [
@@ -63,5 +52,5 @@ export const useNavigationItems = ({
         : false;
       return { ...item, isActive };
     });
-  }, [displayName, pathToUse, user]);
+  }, [pathToUse, user]);
 };
