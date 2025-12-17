@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
-import { Tabs, Tab } from "@mui/material";
 
 interface NavItem {
   label: string;
@@ -164,58 +163,60 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   width: "100%",
                 }}
               >
-                <Tabs
-                  value={navItems.findIndex((i) => i.isActive)}
-                  variant="standard"
-                  sx={(theme) => ({
-                    minHeight: 36,
-                    width: "100%",
-                    overflow: "hidden",
-                    "& .MuiTabs-flexContainer": {
-                      justifyContent: "space-between",
-                    },
-                    "& .MuiTabs-indicator": {
-                      display: "none",
-                    },
-                    "& .MuiTab-root": {
-                      minHeight: 34,
-                      px: 1.4,
-                      py: 0.6,
-                      fontSize: "0.78rem",
+                {navItems.map((item) => (
+                  <Button
+                    key={item.to ?? item.label}
+                    {...(item.to ? { component: RouterLink, to: item.to } : {})}
+                    variant={item.isActive ? "contained" : "text"}
+                    color={item.isActive ? "secondary" : "inherit"}
+                    aria-current={item.isActive ? "page" : undefined}
+                    startIcon={item.icon}
+                    sx={(theme) => ({
                       fontWeight: 600,
                       textTransform: "none",
+                      gap: 0.75,
+                      px: 1.8,
+                      py: 1,
+                      minWidth: "auto",
+                      fontSize: "0.81rem",
+                      justifyContent: "center",
                       borderRadius: 999,
-                      color: alpha(theme.palette.common.white, 0.85),
-                      backgroundColor: alpha(theme.palette.common.white, 0.12),
+                      position: "relative",
+                      color: item.isActive
+                        ? theme.palette.primary.main
+                        : alpha(theme.palette.common.white, 0.9),
+                      backgroundImage: item.isActive
+                        ? "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72))"
+                        : "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
+                      backgroundColor: item.isActive
+                        ? alpha(theme.palette.common.white, 0.92)
+                        : alpha(theme.palette.common.white, 0.16),
                       border: `1px solid ${alpha(
                         theme.palette.common.white,
-                        0.22
+                        item.isActive ? 0.75 : 0.24
                       )}`,
-                      transition: "all .15s ease",
-                      whiteSpace: "nowrap",
-                      "&.Mui-selected": {
-                        color: theme.palette.primary.main,
-                        backgroundColor: alpha(
+                      boxShadow: item.isActive
+                        ? "0 18px 36px rgba(4,17,37,0.32), inset 0 1px 0 rgba(255,255,255,0.45)"
+                        : "0 12px 30px rgba(4,17,37,0.18), inset 0 1px 0 rgba(255,255,255,0.18)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        backgroundImage: item.isActive
+                          ? "linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.78))"
+                          : "linear-gradient(135deg, rgba(255,255,255,0.26), rgba(255,255,255,0.14))",
+                        boxShadow: item.isActive
+                          ? "0 20px 40px rgba(4,17,37,0.36), inset 0 1px 0 rgba(255,255,255,0.5)"
+                          : "0 16px 36px rgba(4,17,37,0.22), inset 0 1px 0 rgba(255,255,255,0.22)",
+                        borderColor: alpha(
                           theme.palette.common.white,
-                          0.95
+                          item.isActive ? 0.85 : 0.32
                         ),
-                        borderColor: alpha(theme.palette.common.white, 0.85),
-                        boxShadow:
-                          "0 12px 24px rgba(4,17,37,0.28), inset 0 1px 0 rgba(255,255,255,0.45)",
                       },
-                    },
-                  })}
-                >
-                  {navItems.map((item) => (
-                    <Tab
-                      key={item.to ?? item.label}
-                      label={item.label}
-                      component={item.to ? RouterLink : "div"}
-                      to={item.to}
-                      disableRipple
-                    />
-                  ))}
-                </Tabs>
+                    })}
+                    disabled={item.disabled}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
               </Stack>
             </Paper>
           </Toolbar>
