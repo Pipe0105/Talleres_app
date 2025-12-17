@@ -763,22 +763,6 @@ const SeguimientoTalleres = () => {
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <InsightsOutlinedIcon color="primary" />
           <Box sx={{ flexGrow: 1 }}>Tabla de seguimiento ampliada</Box>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={handleDownloadImage}
-            disabled={!displayedDates.length}
-          >
-            Descargar como imagen
-          </Button>
-          <Button
-            variant="text"
-            color="inherit"
-            startIcon={<CloseIcon />}
-            onClick={() => setIsModalOpen(false)}
-          >
-            Cerrar
-          </Button>
         </DialogTitle>
         <DialogContent dividers>
           <Box sx={{ overflow: "auto" }}>{renderTable("medium")}</Box>
