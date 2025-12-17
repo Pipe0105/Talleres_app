@@ -175,9 +175,9 @@ const ListaPrecios = () => {
     let latest: Date | null = null;
 
     items.forEach((item) => {
-      if (!item.fecha_vigencia) return;
+      if (!item.ingested_at) return;
 
-      const parsed = new Date(item.fecha_vigencia);
+      const parsed = new Date(item.ingested_at);
       if (Number.isNaN(parsed.getTime())) return;
 
       if (!latest || parsed.getTime() > latest.getTime()) {
