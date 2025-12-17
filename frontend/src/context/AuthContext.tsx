@@ -12,9 +12,9 @@ import {
   getAuthToken,
   getCurrentUser,
   logout as clearAuthToken,
+  refreshToken,
 } from "../api/talleresApi";
 import type { UserProfile } from "../types";
-import { getAutoHeightDuration } from "@mui/material/styles/createTransitions";
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -28,6 +28,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 interface AuthProviderProps {
   children: ReactNode;
 }
+const SESSION_REFRESH_INTERVAL_MS = 4 * 60 * 1000;
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -63,6 +64,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
+    const refreshSession = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        return;
+      }
+
+      try {
+        await refreshToken();
+      } catch (error) {
+        console.error("No se pudo renovar la sesión", error);
+        logout();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshSession();
+      }
+    };
+
+    const intervalId = window.setInterval(
+      refreshSession,
+      SESSION_REFRESH_INTERVAL_MS
+    );
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void refreshSession();
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [logout]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

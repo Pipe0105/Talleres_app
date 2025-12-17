@@ -54,6 +54,13 @@ def login_for_access_token(
     access_token = create_access_token(str(user.id))
     return Token(access_token=access_token, token_type="bearer")
 
+@router.post("/refresh", response_model=Token)
+def refresh_access_token(
+    current_user: models.User = Depends(get_current_active_user),
+) -> Token:
+    access_token = create_access_token(str(current_user.id))
+    return Token(access_token=access_token, token_type="bearer")
+
 @router.get("/me", response_model=UserOut)
 async def read_current_user(
     current_user: models.User = Depends(get_current_active_user),

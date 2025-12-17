@@ -272,6 +272,12 @@ export const login = async (
   return data;
 };
 
+export const refreshToken = async (): Promise<AuthToken> => {
+  const { data } = await api.post<AuthToken>("/auth/refresh");
+  setAuthToken(data.access_token);
+  return data;
+};
+
 export interface RegisterUserPayload {
   username: string;
   email?: string;
