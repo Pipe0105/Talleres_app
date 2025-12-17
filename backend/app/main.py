@@ -245,6 +245,12 @@ def _startup():
                 "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username)"
             )
         )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS sede TEXT"
+            )
+        )
 
     _ensure_default_admin()
     _ensure_default_operator()
