@@ -26,7 +26,7 @@ from .config import (
 )
 from .constants import BRANCH_LOCATIONS
 from .database import Base, SessionLocal, engine
-from .routers import auth, upload, items, users, talleres
+from .routers import auth, upload, items, users, talleres, inventario
 from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
@@ -265,3 +265,4 @@ app.include_router(upload.router, prefix=API_PREFIX)
 app.include_router(items.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(talleres.router, prefix=API_PREFIX)
+app.include_router(inventario.router, prefix=API_PREFIX)

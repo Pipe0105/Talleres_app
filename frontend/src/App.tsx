@@ -11,6 +11,7 @@ import CreateTaller from "./pages/talleres/CreateTaller";
 import SeguimientoTalleres from "./pages/talleres/SeguimientoTalleres";
 import HistorialTalleres from "./pages/talleres/HistorialTalleres";
 import InformesHistoricos from "./pages/InformesHistoricos";
+import Inventario from "./pages/Inventario";
 import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -54,6 +55,14 @@ const App = () => {
             <Route />
             <Route path="/" element={<Home />}></Route>
             <Route path="/lista-precios" element={<ListaPrecios />} />
+            <Route
+              path="/inventario"
+              element={
+                <ProtectedRoute>
+                  <Inventario />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/talleres"
               element={

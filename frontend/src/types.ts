@@ -116,3 +116,11 @@ export interface TallerCalculoRow {
   precio_venta: number;
   valor_estimado: number;
 }
+
+export interface InventarioItem {
+  codigo_producto: string;
+  descripcion: string;
+  total_peso: number;
+  sede: string | null;
+  especie: string | null;
+}

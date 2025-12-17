@@ -4,6 +4,7 @@ import {
   AuthToken,
   CrearTallerPayload,
   Item,
+  InventarioItem,
   TallerActividadUsuario,
   TallerAdminResponse,
   TallerCalculoRow,
@@ -176,6 +177,14 @@ const mapItem = (raw: any): Item => {
   };
 };
 
+const mapInventarioItem = (raw: any): InventarioItem => ({
+  codigo_producto: toStringOr(raw?.codigo_producto, ""),
+  descripcion: toStringOr(raw?.descripcion, ""),
+  total_peso: toNumber(raw?.total_peso, 0),
+  sede: raw?.sede ?? null,
+  especie: raw?.especie ?? null,
+});
+
 const mapUser = (raw: any): UserProfile => ({
   id: toStringOr(raw?.id, ""),
   username: toStringOr(raw?.username, ""),
@@ -320,6 +329,26 @@ export const createTaller = async (
 export const getItems = async (): Promise<Item[]> => {
   const { data } = await api.get<unknown[]>("/items");
   return (Array.isArray(data) ? data : []).map(mapItem);
+};
+
+export interface GetInventarioParams {
+  sede?: string;
+  search?: string;
+  especie?: string;
+}
+
+export const getInventario = async (
+  params: GetInventarioParams = {}
+): Promise<InventarioItem[]> => {
+  const { data } = await api.get<unknown[]>("/inventario", {
+    params: {
+      sede: params.sede || undefined,
+      search: params.search || undefined,
+      especie: params.especie || undefined,
+    },
+  });
+
+  return (Array.isArray(data) ? data : []).map(mapInventarioItem);
 };
 
 export interface AdminCreateUserPayload extends RegisterUserPayload {

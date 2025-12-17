@@ -251,3 +251,12 @@ class TallerCalculoRow(BaseModel):
     valor_estimado: Decimal
     
     model_config = ConfigDict(from_attributes=True)
+    
+class InventarioItem(BaseModel):
+    codigo_producto: str
+    descripcion: str
+    total_peso: Decimal
+    sede: str | None = None
+    especie: str | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
