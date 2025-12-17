@@ -228,17 +228,22 @@ const mapTallerActividadUsuario = (raw: any): TallerActividadUsuario => ({
     : [],
 });
 
-const mapTallerListItem = (raw: any): TallerListItem => ({
-  id: toNumber(raw?.id, 0),
-  nombre_taller: toStringOr(raw?.nombre_taller, ""),
-  descripcion: raw?.descripcion ?? null,
-  peso_inicial: toNumber(raw?.peso_inicial, 0),
-  peso_final: toNumber(raw?.peso_final, 0),
-  total_peso: toNumber(raw?.total_peso, 0),
-  especie: toStringOr(raw?.especie, ""),
-  codigo_principal: raw?.codigo_principal ?? null,
-  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
-});
+const mapTallerListItem = (raw: any): TallerListItem => {
+  const sede = typeof raw?.sede === "string" ? raw.sede.trim() || null : null;
+
+  return {
+    id: toNumber(raw?.id, 0),
+    nombre_taller: toStringOr(raw?.nombre_taller, ""),
+    descripcion: raw?.descripcion ?? null,
+    sede,
+    peso_inicial: toNumber(raw?.peso_inicial, 0),
+    peso_final: toNumber(raw?.peso_final, 0),
+    total_peso: toNumber(raw?.total_peso, 0),
+    especie: toStringOr(raw?.especie, ""),
+    codigo_principal: raw?.codigo_principal ?? null,
+    creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  };
+};
 
 const mapTallerCalculoRow = (raw: any): TallerCalculoRow => ({
   nombre_corte: toStringOr(raw?.nombre_corte, ""),

@@ -64,7 +64,7 @@ export interface TallerResponse {
   id: number;
   nombre_taller: string;
   descripcion?: string | null;
-  sede?: string;
+  sede?: string | null;
   peso_inicial: number;
   peso_final: number;
   porcentaje_perdida?: number | null;
@@ -92,7 +92,7 @@ export interface TallerListItem {
   id: number;
   nombre_taller: string;
   descripcion?: string | null;
-  sede?: string;
+  sede?: string | null;
   peso_inicial: number;
   peso_final: number;
   total_peso: number;

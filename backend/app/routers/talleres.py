@@ -33,6 +33,7 @@ def _serialize_taller(taller: models.Taller) -> schemas.TallerOut:
         id=taller.id,
         nombre_taller=taller.nombre_taller,
         descripcion=taller.descripcion,
+        sede=taller.sede,
         peso_inicial=taller.peso_inicial,
         peso_final=taller.peso_final,
         porcentaje_perdida=taller.porcentaje_perdida,
