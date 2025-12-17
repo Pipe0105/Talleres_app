@@ -16,7 +16,7 @@ def listar_items(db: Session = Depends(get_db)):
     registros = (
         db.query(ListaPrecios)
         .filter(ListaPrecios.activo == True)
-        .order_by(ListaPrecios.codigo_producto)
+        .order_by(ListaPrecios.referencia, ListaPrecios.lista_id)
         .all()
     )
 
@@ -35,12 +35,20 @@ def listar_items(db: Session = Depends(get_db)):
         items.append(
             ListaPreciosOut(
                 id=item.id,
-                codigo_producto=item.codigo_producto,
-                descripcion=item.descripcion,  # 👈 ESTO ES LO QUE USA EL FRONT
+                codigo_producto=item.referencia,
+                lista_id=item.lista_id,
+                referencia=item.referencia,
+                location=item.location,
+                sede=item.sede,
+                descripcion=item.descripcion,
                 precio=precio,
-                especie=item.especie.lower() if item.especie else None,
+                especie=None,
                 fecha_vigencia=item.fecha_vigencia,
-                fuente=item.fuente,
+                fecha_activacion=item.fecha_activacion,
+                unidad=item.unidad,
+                fuente=item.source_file,
+                file_hash=item.file_hash,
+                ingested_at=item.ingested_at,
                 activo=item.activo,
             )
         )

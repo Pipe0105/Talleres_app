@@ -144,17 +144,33 @@ const resolveItemNombre = (raw: any): string =>
 
 const mapItem = (raw: any): Item => {
   const nombre = resolveItemNombre(raw);
+  const precio = raw?.precio == null ? null : toNumber(raw?.precio, 0);
+  const referencia = raw?.referencia ?? raw?.codigo_producto ?? null;
+  const codigoProducto = toStringOr(referencia ?? "", "");
+  const especie = raw?.especie ? toStringOr(raw.especie, "") : null;
 
   return {
     id: toNumber(raw?.id, 0),
-    codigo_producto: toStringOr(raw?.codigo_producto, ""),
+    codigo_producto: codigoProducto,
+    referencia,
     descripcion: nombre,
     nombre,
     detalle: raw?.detalle ?? null,
-    precio: toNumber(raw?.precio, 0),
-    especie: toStringOr(raw?.especie, ""),
-    fecha_vigencia: toStringOr(raw?.fecha_vigencia, ""),
-    fuente: toStringOr(raw?.fuente, ""),
+    precio,
+    especie,
+    lista_id: raw?.lista_id ?? null,
+    location: raw?.location ?? null,
+    sede: raw?.sede ?? raw?.location ?? null,
+    unidad: raw?.unidad ?? null,
+    fecha_vigencia: raw?.fecha_vigencia
+      ? toStringOr(raw.fecha_vigencia, "")
+      : null,
+    fecha_activacion: raw?.fecha_activacion
+      ? toStringOr(raw.fecha_activacion, "")
+      : null,
+    fuente: raw?.fuente ?? raw?.source_file ?? null,
+    file_hash: raw?.file_hash ?? null,
+    ingested_at: raw?.ingested_at ? toStringOr(raw.ingested_at, "") : null,
     activo: toBoolean(raw?.activo, true),
   };
 };

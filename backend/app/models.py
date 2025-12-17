@@ -1,6 +1,8 @@
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -57,15 +59,21 @@ class User(Base):
     )
     
 class ListaPrecios(Base):
-    __tablename__ = "lista_precios"
+    __tablename__ = "precios_lista"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    codigo_producto = Column(Text, nullable=False)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    location = Column(Text, nullable=True)
+    sede = Column(Text, nullable=True)
+    lista_id = Column(Integer, nullable=True)
+    referencia = Column(Text, nullable=False)
     descripcion = Column(Text, nullable=False)
+    fecha_vigencia = Column(Date, nullable=True)
     precio = Column(Numeric(12, 2), nullable=True)
-    especie = Column(Text, nullable=True)
-    fecha_vigencia = Column(TIMESTAMP, nullable=True)
-    fuente = Column(Text, nullable=True)
+    unidad = Column(Text, nullable=True)
+    fecha_activacion = Column(Date, nullable=True)
+    source_file = Column(Text, nullable=True)
+    file_hash = Column(Text, nullable=True)
+    ingested_at = Column(TIMESTAMP(timezone=True), nullable=True)
     activo = Column(Boolean, nullable=True)
     
 

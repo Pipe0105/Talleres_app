@@ -82,8 +82,10 @@ const ListaPreciosTable = ({
         <TableHead>
           <TableRow>
             <TableCell width="20%">Codigo</TableCell>
-            <TableCell width="55%">Producto</TableCell>
-            <TableCell align="right" width="25%">
+            <TableCell width="35%">Producto</TableCell>
+            <TableCell width="10%">Lista</TableCell>
+            <TableCell width="15%">Sede</TableCell>
+            <TableCell align="right" width="20%">
               Precio unitario
             </TableCell>
           </TableRow>
@@ -97,7 +99,11 @@ const ListaPreciosTable = ({
               <TableCell>
                 <Typography variant="body2">{item.descripcion}</Typography>
               </TableCell>
-              <TableCell align="right">{formatCurrency(item.precio)}</TableCell>
+              <TableCell>{item.lista_id ?? "—"}</TableCell>
+              <TableCell>{item.sede ?? item.location ?? "—"}</TableCell>
+              <TableCell align="right">
+                {item.precio == null ? "N/D" : formatCurrency(item.precio)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -109,11 +109,19 @@ class TokenPayload(BaseModel):
 class ListaPreciosOut(BaseModel):
     id: int
     codigo_producto: str
+    lista_id: int | None = None
+    referencia: str | None = None
+    location: str | None = None
+    sede: str | None = None
     descripcion: str
     precio: float | None
     especie: str | None
-    fecha_vigencia: datetime | None
+    fecha_vigencia: date | None
+    fecha_activacion: date | None = None
+    unidad: str | None = None
     fuente: str | None
+    file_hash: str | None = None
+    ingested_at: datetime | None = None
     activo: bool | None
     
     model_config = ConfigDict(from_attributes=True)

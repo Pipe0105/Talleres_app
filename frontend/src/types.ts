@@ -3,11 +3,19 @@ export interface Item {
   nombre: string;
   detalle?: string | null;
   codigo_producto: string;
+  referencia?: string | null;
   descripcion: string;
-  precio: number;
-  especie: string;
-  fecha_vigencia: string;
-  fuente: string;
+  precio: number | null;
+  especie: string | null;
+  lista_id?: number | null;
+  location?: string | null;
+  sede?: string | null;
+  unidad?: string | null;
+  fecha_vigencia: string | null;
+  fecha_activacion?: string | null;
+  fuente: string | null;
+  file_hash?: string | null;
+  ingested_at?: string | null;
   activo: boolean;
 }
 

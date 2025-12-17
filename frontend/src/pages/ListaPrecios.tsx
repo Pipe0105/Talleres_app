@@ -47,6 +47,7 @@ const ListaPrecios = () => {
     "descripcion" | "precio-asc" | "precio-desc"
   >("descripcion");
   const [species, setSpecies] = useState<"todas" | "res" | "cerdo">("todas");
+  const [branch, setBranch] = useState<string>("todas");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const theme = useTheme();
@@ -87,39 +88,87 @@ const ListaPrecios = () => {
     safeStorage.setItem(STORAGE_KEYS.filter, filter);
   }, [filter]);
 
+  const availableBranches = useMemo(() => {
+    const branches = new Set<string>();
+
+    items.forEach((item) => {
+      const sede = item.sede ?? item.location;
+      if (sede) {
+        branches.add(sede);
+      }
+    });
+
+    return Array.from(branches).sort((a, b) =>
+      a.localeCompare(b, "es", { sensitivity: "base" })
+    );
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     const query = filter.trim().toLowerCase();
     const normalizedSpecies = species.toLowerCase();
 
+    const normalizePrice = (
+      value: number | null,
+      direction: "asc" | "desc"
+    ) => {
+      if (value == null) {
+        return direction === "asc"
+          ? Number.POSITIVE_INFINITY
+          : Number.NEGATIVE_INFINITY;
+      }
+
+      return Number(value);
+    };
+
     const matchesQuery = (item: Item) => {
       if (!query) return true;
-      const codigo = item.codigo_producto.toLowerCase();
-      const descripcion = item.descripcion.toLowerCase();
-      return codigo.includes(query) || descripcion.includes(query);
+      const codigo = (item.codigo_producto ?? "").toLowerCase();
+      const descripcion = (item.descripcion ?? "").toLowerCase();
+      const sede = (item.sede ?? item.location ?? "").toLowerCase();
+      return (
+        codigo.includes(query) ||
+        descripcion.includes(query) ||
+        sede.includes(query)
+      );
     };
 
     const matchesSpecies = (item: Item) => {
       if (normalizedSpecies === "todas") return true;
-      return item.especie.toLowerCase() === normalizedSpecies;
+      const itemSpecies = (item.especie ?? "").toLowerCase();
+      return itemSpecies === normalizedSpecies;
+    };
+
+    const matchesBranch = (item: Item) => {
+      if (branch === "todas") return true;
+
+      const itemBranch = (item.sede ?? item.location ?? "").toLowerCase();
+      return itemBranch === branch.toLowerCase();
     };
 
     const sortByOrder = (a: Item, b: Item) => {
       if (sortOrder === "precio-asc") {
-        return Number(a.precio) - Number(b.precio);
+        return (
+          normalizePrice(a.precio, "asc") - normalizePrice(b.precio, "asc")
+        );
       }
       if (sortOrder === "precio-desc") {
-        return Number(b.precio) - Number(a.precio);
+        return (
+          normalizePrice(b.precio, "desc") - normalizePrice(a.precio, "desc")
+        );
       }
 
-      return a.descripcion.localeCompare(b.descripcion, "es", {
+      return (a.descripcion ?? "").localeCompare(b.descripcion ?? "", "es", {
         sensitivity: "base",
       });
     };
 
     return [...items]
-      .filter((item) => matchesQuery(item) && matchesSpecies(item))
+      .filter(
+        (item) =>
+          matchesQuery(item) && matchesSpecies(item) && matchesBranch(item)
+      )
       .sort(sortByOrder);
-  }, [filter, items, sortOrder, species]);
+  }, [branch, filter, items, sortOrder, species]);
 
   // 👇 Aquí está el cambio clave: se especifica el tipo <Date | null>
   const lastUpdatedDate = useMemo<Date | null>(() => {
@@ -157,16 +206,28 @@ const ListaPrecios = () => {
   const handleDownload = () => {
     if (!filteredItems.length) return;
 
-    const escapeCsvValue = (value: string | number) =>
+    const escapeCsvValue = (value: string | number | null) =>
       `"${String(value ?? "").replace(/"/g, '""')}"`;
 
     const rows = [
-      ["Código", "Producto", "Precio (COP)", "Especie", "Fecha de vigencia"],
+      [
+        "Código",
+        "Producto",
+        "Lista",
+        "Sede",
+        "Especie",
+        "Precio (COP)",
+        "Fecha de vigencia",
+      ],
       ...filteredItems.map((item) => [
         item.codigo_producto,
         item.descripcion,
-        currencyFormatter.format(Number(item.precio)),
-        item.especie,
+        item.lista_id ?? "",
+        item.sede ?? item.location ?? "",
+        item.especie ?? "",
+        item.precio == null
+          ? ""
+          : currencyFormatter.format(Number(item.precio)),
         item.fecha_vigencia,
       ]),
     ];
@@ -174,13 +235,19 @@ const ListaPrecios = () => {
     const csvContent = rows
       .map((row) => row.map(escapeCsvValue).join(","))
       .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = url;
     link.download = `lista_precios_${new Date()
       .toISOString()
       .slice(0, 10)}.csv`;
+
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -273,6 +340,22 @@ const ListaPrecios = () => {
                 <MenuItem value="todas">Todas</MenuItem>
                 <MenuItem value="res">Res</MenuItem>
                 <MenuItem value="cerdo">Cerdo</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel id="branch-filter-label">Sede</InputLabel>
+              <Select
+                labelId="branch-filter-label"
+                value={branch}
+                label="Sede"
+                onChange={(event) => setBranch(event.target.value)}
+              >
+                <MenuItem value="todas">Todas</MenuItem>
+                {availableBranches.map((branchName) => (
+                  <MenuItem key={branchName} value={branchName}>
+                    {branchName}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Stack>
