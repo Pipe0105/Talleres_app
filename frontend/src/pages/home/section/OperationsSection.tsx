@@ -1,5 +1,7 @@
-import { Grid, LinearProgress, Paper, Stack, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { fadeUpDelayStyle } from "../../../utils/animations";
+import LandingSection from "../../../components/cards/LandingSection";
+import ProgressCard from "../../../components/cards/ProgressCard";
 const maturityIndicators = [
   {
     label: "Eficiencia de producción",
@@ -20,51 +22,27 @@ const maturityIndicators = [
 
 const OperationsSection = () => {
   return (
-    <Stack spacing={3}>
-      <Typography variant="h4" component="h2" color="primary">
-        Indicadores de madurez operativa
-      </Typography>
+    <LandingSection
+      title={
+        <Typography variant="h4" component="h2" color="primary">
+          Indicadores de madurez operativa
+        </Typography>
+      }
+    >
       <Grid container spacing={3}>
         {maturityIndicators.map((indicator, index) => (
           <Grid item xs={12} md={4} key={indicator.label}>
-            <Paper
+            <ProgressCard
+              title={indicator.label}
+              value={indicator.progress}
+              helper={indicator.helper}
               className="animate-fade-up"
               style={fadeUpDelayStyle(index * 140)}
-              sx={(theme) => ({
-                p: 3,
-                height: "100%",
-                boxShadow: "0px 14px 36px rgba(15,41,69,0.08)",
-                border: `1px solid ${theme.palette.divider}`,
-                backgroundColor: theme.palette.common.white,
-              })}
-            >
-              {" "}
-              <Stack spacing={1.5}>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="baseline"
-                >
-                  <Typography variant="subtitle1">{indicator.label}</Typography>
-                  <Typography variant="body2" color="secondary">
-                    {indicator.progress}%
-                  </Typography>
-                </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={indicator.progress}
-                  sx={{ borderRadius: 999, height: 8 }}
-                  color="primary"
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {indicator.helper}
-                </Typography>
-              </Stack>
-            </Paper>
+            />
           </Grid>
         ))}
       </Grid>
-    </Stack>
+    </LandingSection>
   );
 };
 
