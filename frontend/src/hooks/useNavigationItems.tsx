@@ -25,10 +25,10 @@ export const useNavigationItems = ({
 
   return useMemo<NavigationItem[]>(() => {
     const navigationConfig: NavigationItem[] = [
-      { label: "Lista de precios", to: "/lista-precios" },
       { label: "Talleres", to: "/talleres" },
       { label: "Seguimiento", to: "/talleres/seguimiento" },
       { label: "Informes", to: "/informes-historicos" },
+      { label: "Lista de precios", to: "/lista-precios" },
       ...(user?.is_admin
         ? [
             {
@@ -47,12 +47,26 @@ export const useNavigationItems = ({
         : [{ label: "Iniciar sesión", to: "/login" }]),
     ];
 
+    const activeRoute = navigationConfig.reduce<string | null>(
+      (current, item) => {
+        if (!item.to) return current;
+
+        const isMatch =
+          item.to === "/"
+            ? pathToUse === "/"
+            : pathToUse === item.to || pathToUse.startsWith(`${item.to}/`);
+
+        if (!isMatch) return current;
+
+        if (!current) return item.to;
+
+        return item.to.length > current.length ? item.to : current;
+      },
+      null
+    );
+
     return navigationConfig.map((item) => {
-      const isActive = item.to
-        ? item.to === "/"
-          ? pathToUse === "/"
-          : pathToUse.startsWith(item.to)
-        : false;
+      const isActive = activeRoute ? item.to === activeRoute : false;
       return { ...item, isActive };
     });
   }, [pathToUse, user]);
