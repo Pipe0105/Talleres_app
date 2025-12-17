@@ -608,14 +608,17 @@ const SeguimientoTalleres = () => {
               />
             )}
             renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip
-                  {...getTagProps({ index })}
-                  key={option}
-                  label={option}
-                  size="small"
-                />
-              ))
+              value.map((option, index) => {
+                const { key, ...tagProps } = getTagProps({ index });
+                return (
+                  <Chip
+                    key={key ?? option}
+                    label={option}
+                    size="small"
+                    {...tagProps}
+                  />
+                );
+              })
             }
             sx={{ maxWidth: 520, mb: 2 }}
             clearText="Limpiar"

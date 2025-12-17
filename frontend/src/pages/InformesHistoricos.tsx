@@ -744,13 +744,17 @@ const InformesHistoricos = () => {
                 options={availableSedes}
                 onChange={(_, values) => setSelectedSedes(values)}
                 renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option}
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
+                  value.map((option, index) => {
+                    const { key, ...tagProps } = getTagProps({ index });
+                    return (
+                      <Chip
+                        key={key ?? option}
+                        label={option}
+                        size="small"
+                        {...tagProps}
+                      />
+                    );
+                  })
                 }
                 renderInput={(params) => (
                   <TextField
@@ -866,9 +870,9 @@ const InformesHistoricos = () => {
               <Divider sx={{ my: 2 }} />
 
               <Stack spacing={1.5}>
-                {filteredCalculo.map((row) => (
+                {filteredCalculo.map((row, index) => (
                   <Stack
-                    key={`${row.item_code}-${row.nombre_corte}-${row.peso}`}
+                    key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
                     direction={{ xs: "column", sm: "row" }}
                     spacing={1.5}
                     justifyContent="space-between"
