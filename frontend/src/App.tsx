@@ -9,6 +9,7 @@ import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
 import CreateTaller from "./pages/talleres/CreateTaller";
 import SeguimientoTalleres from "./pages/talleres/SeguimientoTalleres";
+import HistorialTalleres from "./pages/talleres/HistorialTalleres";
 import InformesHistoricos from "./pages/InformesHistoricos";
 import { useAuth } from "./context/AuthContext";
 import LoadingScreen from "./components/LoadingScreen";
@@ -66,6 +67,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <SeguimientoTalleres />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/talleres/historial"
+              element={
+                <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+                  <HistorialTalleres />
                 </ProtectedRoute>
               }
             />

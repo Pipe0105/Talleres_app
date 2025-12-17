@@ -3,12 +3,12 @@ from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas
 from ..constants import BRANCH_LOCATIONS
-from ..dependencies import get_current_active_user
+from ..dependencies import get_current_active_user, get_current_admin_user
 from ..database import get_db
 
 
@@ -28,25 +28,54 @@ def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
     )
     return item.id if item else None
 
-def _serialize_taller(taller: models.Taller) -> schemas.TallerOut:
-    return schemas.TallerOut(
-        id=taller.id,
-        nombre_taller=taller.nombre_taller,
-        descripcion=taller.descripcion,
-        sede=taller.sede,
-        peso_inicial=taller.peso_inicial,
-        peso_final=taller.peso_final,
-        porcentaje_perdida=taller.porcentaje_perdida,
-        especie=taller.especie,
-        codigo_principal=taller.codigo_principal,
-        item_principal_id=taller.item_principal_id,
-        creado_en=taller.creado_en,
-        subcortes=[
+def _serialize_taller_data(taller: models.Taller) -> dict:
+    return {
+        "id": taller.id,
+        "nombre_taller": taller.nombre_taller,
+        "descripcion": taller.descripcion,
+        "sede": taller.sede,
+        "peso_inicial": taller.peso_inicial,
+        "peso_final": taller.peso_final,
+        "porcentaje_perdida": taller.porcentaje_perdida,
+        "especie": taller.especie,
+        "codigo_principal": taller.codigo_principal,
+        "item_principal_id": taller.item_principal_id,
+        "creado_en": taller.creado_en,
+        "subcortes": [
             schemas.TallerDetalleOut.model_validate(det)
             for det in taller.detalles
         ],
-    )
+            }
 
+
+def _serialize_taller(taller: models.Taller) -> schemas.TallerOut:
+    return schemas.TallerOut(**_serialize_taller_data(taller))
+
+
+def _serialize_taller_with_creator(
+    taller: models.Taller, creador: Optional[str]
+) -> schemas.TallerWithCreatorOut:
+    return schemas.TallerWithCreatorOut(
+        **_serialize_taller_data(taller), creado_por=creador
+    )
+def _map_creadores(
+    db: Session, talleres: list[models.Taller]
+) -> dict[int, str]:
+    creador_ids = {
+        taller.creado_por_id for taller in talleres if taller.creado_por_id
+    }
+    if not creador_ids:
+        return {}
+
+    usuarios = (
+        db.query(models.User)
+        .filter(models.User.id.in_(creador_ids))
+        .all()
+    )
+    return {
+        usuario.id: (usuario.full_name or usuario.username or "").strip()
+        for usuario in usuarios
+    }
 
 
 @router.post("", response_model=schemas.TallerOut, status_code=status.HTTP_201_CREATED)
@@ -131,6 +160,87 @@ def crear_taller(
             for det in taller.detalles
         ],
     )
+    
+@router.get("/historial", response_model=list[schemas.TallerWithCreatorOut])
+def listar_historial_talleres(
+    *,
+    search: Optional[str] = None,
+    sede: Optional[str] = None,
+    especie: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    codigo_item: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_admin_user),
+):
+    if start_date and end_date and end_date < start_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El rango de fechas es inválido",
+        )
+
+    query = (
+        db.query(models.Taller)
+        .outerjoin(models.TallerDetalle)
+    )
+
+    if sede:
+        query = query.filter(
+            func.lower(models.Taller.sede) == sede.strip().lower()
+        )
+
+    if especie:
+        query = query.filter(
+            func.lower(models.Taller.especie) == especie.strip().lower()
+        )
+
+    if codigo_item:
+        pattern = f"%{codigo_item.strip().lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(models.Taller.codigo_principal).like(pattern),
+                func.lower(models.TallerDetalle.codigo_producto).like(pattern),
+            )
+        )
+
+    if search:
+        pattern = f"%{search.strip().lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(models.Taller.nombre_taller).like(pattern),
+                func.lower(models.Taller.descripcion).like(pattern),
+                func.lower(models.Taller.codigo_principal).like(pattern),
+                func.lower(models.TallerDetalle.nombre_subcorte).like(pattern),
+                func.lower(models.TallerDetalle.codigo_producto).like(pattern),
+            )
+        )
+
+    start_dt = (
+        datetime.combine(start_date, datetime.min.time()) if start_date else None
+    )
+    end_dt = (
+        datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+        if end_date
+        else None
+    )
+
+    if start_dt:
+        query = query.filter(models.Taller.creado_en >= start_dt)
+    if end_dt:
+        query = query.filter(models.Taller.creado_en < end_dt)
+
+    talleres = (
+        query.options(selectinload(models.Taller.detalles))
+        .order_by(models.Taller.creado_en.desc())
+        .distinct()
+        .all()
+    )
+
+    creador_map = _map_creadores(db, talleres)
+    return [
+        _serialize_taller_with_creator(taller, creador_map.get(taller.creado_por_id))
+        for taller in talleres
+    ]
     
 @router.get("", response_model=list[schemas.TallerListItem])
 def listar_talleres(
@@ -324,3 +434,118 @@ def obtener_actividad_talleres(
         )
 
     return list(actividad.values())
+
+
+@router.get("/{taller_id}", response_model=schemas.TallerWithCreatorOut)
+def obtener_taller_por_id(
+    taller_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_admin_user),
+):
+    taller = db.get(models.Taller, taller_id)
+    if taller is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller solicitado no existe",
+        )
+
+    creador = None
+    if taller.creado_por_id:
+        creador_usuario = db.get(models.User, taller.creado_por_id)
+        if creador_usuario:
+            creador = (creador_usuario.full_name or creador_usuario.username or "").strip()
+
+    return _serialize_taller_with_creator(taller, creador)
+
+
+@router.put("/{taller_id}", response_model=schemas.TallerWithCreatorOut)
+def actualizar_taller(
+    taller_id: int,
+    payload: schemas.TallerUpdate,
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(get_current_admin_user),
+):
+    del current_admin  # solo se usa para validar permisos
+
+    taller = db.get(models.Taller, taller_id)
+    if taller is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller solicitado no existe",
+        )
+
+    peso_inicial = Decimal(payload.peso_inicial)
+    peso_final = Decimal(payload.peso_final)
+    total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
+    total_procesado = peso_final + total_subcortes
+    perdida = peso_inicial - total_procesado
+    porcentaje_perdida = (
+        (perdida / peso_inicial * Decimal("100")) if peso_inicial > 0 else None
+    )
+
+    item_principal_id = payload.item_principal_id or _find_item_id_by_code(
+        db, payload.codigo_principal
+    )
+
+    taller.nombre_taller = payload.nombre_taller
+    taller.descripcion = payload.descripcion
+    taller.sede = payload.sede or taller.sede
+    taller.peso_inicial = peso_inicial
+    taller.peso_final = peso_final
+    taller.porcentaje_perdida = porcentaje_perdida
+    taller.especie = payload.especie.lower()
+    taller.item_principal_id = item_principal_id
+    taller.codigo_principal = payload.codigo_principal
+
+    nuevos_detalles: list[models.TallerDetalle] = []
+    for det in payload.subcortes:
+        detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
+        detalle = models.TallerDetalle(
+            codigo_producto=det.codigo_producto,
+            nombre_subcorte=det.nombre_subcorte,
+            peso=Decimal(det.peso),
+            item_id=detalle_item_id,
+        )
+        nuevos_detalles.append(detalle)
+
+    try:
+        taller.detalles = nuevos_detalles
+        db.add(taller)
+        db.commit()
+        db.refresh(taller)
+    except Exception as exc:  # pragma: no cover - defensive rollback
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo actualizar el taller",
+        ) from exc
+
+    creador_map = _map_creadores(db, [taller])
+    creador = creador_map.get(taller.creado_por_id)
+    return _serialize_taller_with_creator(taller, creador)
+
+
+@router.delete("/{taller_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_taller(
+    taller_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_admin_user),
+):
+    taller = db.get(models.Taller, taller_id)
+    if taller is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller solicitado no existe",
+        )
+
+    try:
+        db.delete(taller)
+        db.commit()
+    except Exception as exc:  # pragma: no cover - defensive rollback
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo eliminar el taller",
+        ) from exc
+
+    return None

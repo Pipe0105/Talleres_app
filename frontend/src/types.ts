@@ -75,6 +75,10 @@ export interface TallerResponse {
   subcortes: TallerDetalleResponse[];
 }
 
+export interface TallerAdminResponse extends TallerResponse {
+  creado_por?: string | null;
+}
+
 export interface TallerActividadDia {
   fecha: string;
   cantidad: number;

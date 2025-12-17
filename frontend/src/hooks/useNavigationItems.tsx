@@ -32,6 +32,10 @@ export const useNavigationItems = ({
       ...(user?.is_admin
         ? [
             {
+              label: "Historial",
+              to: "/talleres/historial",
+            },
+            {
               label: "Usuarios",
               to: "/usuarios",
             },

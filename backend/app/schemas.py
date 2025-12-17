@@ -179,7 +179,9 @@ class TallerCreate(BaseModel):
             raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
 
         return normalized
-
+    
+class TallerUpdate(TallerCreate):
+    """Payload para actualizar un taller existente."""
 
 class TallerDetalleOut(BaseModel):
     id: int
@@ -206,6 +208,10 @@ class TallerOut(BaseModel):
     subcortes: list[TallerDetalleOut]
 
     model_config = ConfigDict(from_attributes=True)
+    
+    
+class TallerWithCreatorOut(TallerOut):
+    creado_por: str | None = None
     
 class TallerActividadDia(BaseModel):
     fecha: date

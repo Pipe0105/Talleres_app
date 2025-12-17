@@ -5,6 +5,7 @@ import {
   CrearTallerPayload,
   Item,
   TallerActividadUsuario,
+  TallerAdminResponse,
   TallerCalculoRow,
   TallerListItem,
   TallerResponse,
@@ -213,6 +214,16 @@ const mapTaller = (raw: any): TallerResponse => ({
     : [],
 });
 
+const mapTallerAdmin = (raw: any): TallerAdminResponse => ({
+  ...mapTaller(raw),
+  creado_por:
+    raw?.creado_por ??
+    raw?.creadoPor ??
+    raw?.creador ??
+    raw?.creado_por_nombre ??
+    null,
+});
+
 const mapTallerActividadUsuario = (raw: any): TallerActividadUsuario => ({
   user_id: toNumber(raw?.user_id, 0),
   username: toStringOr(raw?.username, ""),
@@ -351,6 +362,53 @@ export const adminUpdateUser = async (
 
 export const adminDeleteUser = async (userId: string): Promise<void> => {
   await api.delete(`/users/${userId}`);
+};
+
+export interface GetTallerHistorialParams {
+  search?: string;
+  sede?: string;
+  especie?: string;
+  startDate?: string;
+  endDate?: string;
+  codigoItem?: string;
+}
+
+export const adminGetTallerHistorial = async (
+  params: GetTallerHistorialParams = {}
+): Promise<TallerAdminResponse[]> => {
+  const { data } = await api.get<unknown[]>("/talleres/historial", {
+    params: {
+      search: params.search || undefined,
+      sede: params.sede || undefined,
+      especie: params.especie || undefined,
+      start_date: params.startDate || undefined,
+      end_date: params.endDate || undefined,
+      codigo_item: params.codigoItem || undefined,
+    },
+  });
+
+  return (Array.isArray(data) ? data : []).map(mapTallerAdmin);
+};
+
+export const adminGetTaller = async (
+  tallerId: string | number
+): Promise<TallerAdminResponse> => {
+  const { data } = await api.get<unknown>(`/talleres/${tallerId}`);
+  return mapTallerAdmin(data);
+};
+
+export const adminUpdateTaller = async (
+  tallerId: string | number,
+  payload: CrearTallerPayload
+): Promise<TallerAdminResponse> => {
+  const { data } = await api.put<unknown>(`/talleres/${tallerId}`, payload);
+  return mapTallerAdmin(data);
+};
+
+export const adminDeleteTaller = async (
+  tallerId: string | number
+): Promise<void> => {
+  await api.delete(`/talleres/${tallerId}`);
 };
 
 export interface GetTallerActividadParams {
