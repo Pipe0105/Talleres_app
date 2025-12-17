@@ -12,8 +12,8 @@ body {
     sans-serif;
   background-color: #f3f6fb;
   color: #0f172a;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
   text-rendering: optimizeLegibility;
 }
 
@@ -44,7 +44,6 @@ a {
   animation: fade-up var(--fade-up-duration, 650ms)
     var(--fade-up-easing, cubic-bezier(0.16, 1, 0.3, 1))
     var(--fade-up-delay, 0ms) forwards;
-  will-change: opacity, transform;
 }
 
 .animate-fade-up.skeleton-placeholder {
@@ -81,11 +80,9 @@ a {
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
