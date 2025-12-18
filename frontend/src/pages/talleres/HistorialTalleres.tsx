@@ -22,6 +22,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Checkbox,
   TextField,
   Tooltip,
   Typography,
@@ -118,11 +119,10 @@ const HistorialTalleres = () => {
   const [editForm, setEditForm] = useState<EditFormState | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<TallerAdminResponse | null>(
-    null
-  );
+  const [deleteQueue, setDeleteQueue] = useState<TallerAdminResponse[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const materialSeleccionado = useMemo(() => {
     if (!editForm) return null;
@@ -153,6 +153,9 @@ const HistorialTalleres = () => {
         codigoItem: filters.codigoItem || undefined,
       });
       setTalleres(data);
+      setSelectedIds((prev) =>
+        prev.filter((id) => data.some((taller) => taller.id === id))
+      );
       setSelected((prev) => {
         if (!data.length) return null;
         if (prev) {
@@ -303,20 +306,32 @@ const HistorialTalleres = () => {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteQueue.length) return;
+    const idsToDelete = deleteQueue.map((item) => item.id);
     setSaving(true);
     setDeleteError(null);
     try {
-      await adminDeleteTaller(deleteTarget.id);
-      setSuccessMessage("Taller eliminado correctamente.");
-      if (selected?.id === deleteTarget.id) {
+      for (const target of deleteQueue) {
+        await adminDeleteTaller(target.id);
+      }
+      setSuccessMessage(
+        deleteQueue.length > 1
+          ? "Talleres eliminados correctamente."
+          : "Taller eliminado correctamente."
+      );
+      if (selected && idsToDelete.includes(selected.id)) {
         setSelected(null);
       }
+      setSelectedIds((prev) => prev.filter((id) => !idsToDelete.includes(id)));
       await loadHistorial();
-      setDeleteTarget(null);
+      setDeleteQueue([]);
     } catch (err) {
       console.error(err);
-      setDeleteError("No se pudo eliminar el taller. Intenta nuevamente.");
+      setDeleteError(
+        deleteQueue.length > 1
+          ? "No se pudieron eliminar los talleres. Intenta nuevamente."
+          : "No se pudo eliminar el taller. Intenta nuevamente."
+      );
     } finally {
       setSaving(false);
     }
@@ -488,6 +503,23 @@ const HistorialTalleres = () => {
         <CardHeader
           title="Talleres registrados"
           subheader="Visualiza la lista completa y administra cada registro"
+          action={
+            <Button
+              color="error"
+              startIcon={<DeleteIcon />}
+              variant="outlined"
+              disabled={!selectedIds.length}
+              onClick={() => {
+                const selectedTalleres = talleres.filter((taller) =>
+                  selectedIds.includes(taller.id)
+                );
+                setDeleteError(null);
+                setDeleteQueue(selectedTalleres);
+              }}
+            >
+              Eliminar seleccionados
+            </Button>
+          }
         />
         <Divider />
         <CardContent>
@@ -509,6 +541,26 @@ const HistorialTalleres = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={
+                        selectedIds.length > 0 &&
+                        selectedIds.length < talleres.length
+                      }
+                      checked={
+                        !!talleres.length &&
+                        selectedIds.length === talleres.length
+                      }
+                      onChange={(event) => {
+                        event.stopPropagation();
+                        if (selectedIds.length === talleres.length) {
+                          setSelectedIds([]);
+                        } else {
+                          setSelectedIds(talleres.map((taller) => taller.id));
+                        }
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>Fecha</TableCell>
                   <TableCell>Nombre</TableCell>
                   <TableCell>Sede</TableCell>
@@ -528,6 +580,19 @@ const HistorialTalleres = () => {
                     onClick={() => setSelected(taller)}
                     sx={{ cursor: "pointer" }}
                   >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedIds.includes(taller.id)}
+                        onChange={(event) => {
+                          event.stopPropagation();
+                          setSelectedIds((prev) =>
+                            prev.includes(taller.id)
+                              ? prev.filter((id) => id !== taller.id)
+                              : [...prev, taller.id]
+                          );
+                        }}
+                      />
+                    </TableCell>
                     <TableCell>{formatDateTime(taller.creado_en)}</TableCell>
                     <TableCell>{taller.nombre_taller}</TableCell>
                     <TableCell>{taller.sede || "—"}</TableCell>
@@ -577,7 +642,7 @@ const HistorialTalleres = () => {
                             size="small"
                             onClick={(event) => {
                               event.stopPropagation();
-                              setDeleteTarget(taller);
+                              setDeleteQueue([taller]);
                               setDeleteError(null);
                             }}
                           >
@@ -590,7 +655,7 @@ const HistorialTalleres = () => {
                 ))}
                 {!talleres.length && !loading && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography color="text.secondary">
                         No hay talleres con los filtros aplicados.
                       </Typography>
@@ -959,21 +1024,33 @@ const HistorialTalleres = () => {
       </Dialog>
 
       <Dialog
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
+        open={Boolean(deleteQueue.length)}
+        onClose={() => setDeleteQueue([])}
       >
-        <DialogTitle>Eliminar taller</DialogTitle>
+        <DialogTitle>
+          Eliminar taller{deleteQueue.length > 1 ? "es" : ""}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={1}>
             <Typography>
-              ¿Seguro que deseas eliminar el taller "
-              {deleteTarget?.nombre_taller}"?
+              {deleteQueue.length > 1
+                ? "¿Seguro que deseas eliminar los talleres seleccionados?"
+                : `¿Seguro que deseas eliminar el taller "${deleteQueue[0]?.nombre_taller}"?`}
             </Typography>
+            {deleteQueue.length > 1 && (
+              <Stack spacing={0.5}>
+                {deleteQueue.map((taller) => (
+                  <Typography key={taller.id} variant="body2">
+                    • {taller.nombre_taller || "Taller sin nombre"}
+                  </Typography>
+                ))}
+              </Stack>
+            )}
             {deleteError && <Alert severity="error">{deleteError}</Alert>}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+          <Button onClick={() => setDeleteQueue([])}>Cancelar</Button>
           <Button
             color="error"
             startIcon={<DeleteIcon />}
