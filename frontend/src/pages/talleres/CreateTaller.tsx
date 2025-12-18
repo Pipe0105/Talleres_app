@@ -6,7 +6,9 @@ import {
   Card,
   CardContent,
   Chip,
+  Checkbox,
   Divider,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -49,6 +51,11 @@ const CreateTaller = () => {
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pesoInicialGuardado, setPesoInicialGuardado] = useState(false);
+  const [subcortesSeleccionados, setSubcortesSeleccionados] = useState<
+    string[]
+  >([]);
+  const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] =
+    useState(false);
   const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>(
     {}
   );
@@ -78,12 +85,19 @@ const CreateTaller = () => {
     [materialSeleccionado]
   );
 
+  const subcortesActivos = useMemo<SubcorteDefinition[]>(
+    () =>
+      subcortes.filter((subcorte) =>
+        subcortesSeleccionados.includes(subcorte.codigo)
+      ),
+    [subcortes, subcortesSeleccionados]
+  );
+
   const pesoInicialNumero = toNumber(pesoInicial);
   const pesoFinalNumero = toNumber(pesoFinal);
-  const totalSubcortes = subcortes.reduce(
-    (acc, sc) => acc + toNumber(subcortesPesos[sc.codigo] ?? "0"),
-    0
-  );
+  const totalSubcortes = subcortesActivos.reduce((acc, sc) => {
+    return acc + toNumber(subcortesPesos[sc.codigo] ?? "0");
+  }, 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
   const perdida =
     pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
@@ -94,6 +108,11 @@ const CreateTaller = () => {
     pesoInicialGuardado &&
     Boolean(materialSeleccionado) &&
     pesoInicialNumero > 0;
+
+  const readyToSubmit =
+    readyForSubcortes &&
+    seleccionSubcortesGuardada &&
+    subcortesActivos.length > 0;
 
   const handleGuardarPesoInicial = () => {
     if (!materialSeleccionado || pesoInicialNumero <= 0) {
@@ -107,11 +126,50 @@ const CreateTaller = () => {
     setPesoInicialGuardado(true);
   };
 
+  const handleToggleSubcorte = (codigo: string) => {
+    setSeleccionSubcortesGuardada(false);
+    setSubcortesSeleccionados((prev) =>
+      prev.includes(codigo)
+        ? prev.filter((item) => item !== codigo)
+        : [...prev, codigo]
+    );
+  };
+
+  const handleGuardarSubcortes = () => {
+    if (!subcortesSeleccionados.length) {
+      setMensaje({
+        tipo: "error",
+        texto: "Selecciona al menos un subcorte para continuar.",
+      });
+      return;
+    }
+
+    setMensaje(null);
+    setSeleccionSubcortesGuardada(true);
+    setSubcortesPesos((prev) => {
+      const updated: Record<string, string> = {};
+      subcortesSeleccionados.forEach((codigo) => {
+        if (prev[codigo]) {
+          updated[codigo] = prev[codigo];
+        }
+      });
+      return updated;
+    });
+  };
+
   const handleSubmit = async () => {
     if (!materialSeleccionado || !especie) {
       setMensaje({
         tipo: "error",
         texto: "Selecciona especie y material para continuar.",
+      });
+      return;
+    }
+
+    if (!seleccionSubcortesGuardada || !subcortesActivos.length) {
+      setMensaje({
+        tipo: "error",
+        texto: "Selecciona y guarda al menos un subcorte para registrar.",
       });
       return;
     }
@@ -129,7 +187,7 @@ const CreateTaller = () => {
         peso_final: pesoFinalNumero,
         especie,
         codigo_principal: materialSeleccionado.codigo,
-        subcortes: subcortes.map((sc) => ({
+        subcortes: subcortesActivos.map((sc) => ({
           codigo_producto: sc.codigo,
           nombre_subcorte: sc.nombre,
           peso: toNumber(subcortesPesos[sc.codigo] ?? "0"),
@@ -142,6 +200,8 @@ const CreateTaller = () => {
       });
       setPesoInicialGuardado(false);
       setSubcortesPesos({});
+      setSubcortesSeleccionados([]);
+      setSeleccionSubcortesGuardada(false);
       setPesoInicial("");
       setPesoFinal("");
       setNombreTaller("");
@@ -268,6 +328,9 @@ const CreateTaller = () => {
                       setEspecie(e.target.value as Especie);
                       setCodigoMaterial("");
                       setPesoInicialGuardado(false);
+                      setSubcortesPesos({});
+                      setSubcortesSeleccionados([]);
+                      setSeleccionSubcortesGuardada(false);
                     }}
                   >
                     <MenuItem value="res">Res (vacuno)</MenuItem>
@@ -284,6 +347,9 @@ const CreateTaller = () => {
                     onChange={(e) => {
                       setCodigoMaterial(e.target.value);
                       setPesoInicialGuardado(false);
+                      setSubcortesPesos({});
+                      setSubcortesSeleccionados([]);
+                      setSeleccionSubcortesGuardada(false);
                     }}
                   >
                     {materiales.map((material) => (
@@ -448,58 +514,153 @@ const CreateTaller = () => {
                       Subcortes ({materialSeleccionado?.nombre})
                     </Typography>
                     <Typography color="text.secondary">
-                      Ingresa el peso obtenido para cada subcorte
-                      preestablecido.
+                      Selecciona los subcortes disponibles, guarda tu selección
+                      y luego registra los pesos obtenidos.
                     </Typography>
                   </Box>
 
-                  <Grid container spacing={2}>
-                    {subcortes.map((subcorte) => (
-                      <Grid item xs={12} md={6} key={subcorte.codigo}>
-                        <TextField
-                          fullWidth
-                          type="number"
-                          inputProps={{ min: 0, step: "0.01" }}
-                          label={`${subcorte.nombre} (${subcorte.codigo})`}
-                          value={subcortesPesos[subcorte.codigo] ?? ""}
-                          onChange={(e) =>
-                            setSubcortesPesos((prev) => ({
-                              ...prev,
-                              [subcorte.codigo]: e.target.value,
-                            }))
-                          }
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        inputProps={{ min: 0, step: "0.01" }}
-                        label="Peso final del corte (kg)"
-                        value={pesoFinal}
-                        onChange={(e) => setPesoFinal(e.target.value)}
-                      />
+                  <Stack spacing={2}>
+                    <Grid container spacing={2}>
+                      {subcortes.map((subcorte) => (
+                        <Grid item xs={12} md={6} lg={4} key={subcorte.codigo}>
+                          <Card
+                            variant="outlined"
+                            sx={{
+                              height: "100%",
+                              borderRadius: 2,
+                              borderColor: subcortesSeleccionados.includes(
+                                subcorte.codigo
+                              )
+                                ? "success.light"
+                                : "rgba(0,0,0,0.06)",
+                              bgcolor: subcortesSeleccionados.includes(
+                                subcorte.codigo
+                              )
+                                ? "rgba(16, 185, 129, 0.06)"
+                                : "background.paper",
+                            }}
+                          >
+                            <CardContent sx={{ py: 1.5 }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={subcortesSeleccionados.includes(
+                                      subcorte.codigo
+                                    )}
+                                    onChange={() =>
+                                      handleToggleSubcorte(subcorte.codigo)
+                                    }
+                                  />
+                                }
+                                label={
+                                  <Stack spacing={0.5}>
+                                    <Typography fontWeight={700}>
+                                      {subcorte.nombre}
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                    >
+                                      {subcorte.codigo}
+                                    </Typography>
+                                  </Stack>
+                                }
+                              />
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
                     </Grid>
-                  </Grid>
-
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color="error"
+                    <Stack
+                      direction={{ xs: "column", md: "row" }}
+                      spacing={2}
+                      alignItems={{ xs: "stretch", md: "center" }}
                     >
-                      Pérdida: {formatKg(perdida)} kg (
-                      {porcentajePerdida.toFixed(2)}%)
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Total subcortes: {formatKg(totalSubcortes)} kg · Peso
-                      final: {formatKg(pesoFinalNumero)} kg
-                    </Typography>
-                  </Box>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography fontWeight={700}>
+                          {subcortesSeleccionados.length} subcorte(s)
+                          seleccionado(s)
+                        </Typography>
+                        {seleccionSubcortesGuardada && (
+                          <Chip
+                            label="Selección guardada"
+                            color="success"
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Stack>
+
+                      <Box flexGrow={1} />
+
+                      <Button
+                        variant="contained"
+                        color="success"
+                        startIcon={<CheckCircle />}
+                        onClick={handleGuardarSubcortes}
+                        disabled={!subcortesSeleccionados.length}
+                      >
+                        Guardar selección
+                      </Button>
+                    </Stack>
+                  </Stack>
+
+                  {seleccionSubcortesGuardada ? (
+                    <Stack spacing={2}>
+                      <Grid container spacing={2}>
+                        {subcortesActivos.map((subcorte) => (
+                          <Grid item xs={12} md={6} key={subcorte.codigo}>
+                            <TextField
+                              fullWidth
+                              type="number"
+                              inputProps={{ min: 0, step: "0.01" }}
+                              label={`${subcorte.nombre} (${subcorte.codigo})`}
+                              value={subcortesPesos[subcorte.codigo] ?? ""}
+                              onChange={(e) =>
+                                setSubcortesPesos((prev) => ({
+                                  ...prev,
+                                  [subcorte.codigo]: e.target.value,
+                                }))
+                              }
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
+                            type="number"
+                            inputProps={{ min: 0, step: "0.01" }}
+                            label="Peso final del corte (kg)"
+                            value={pesoFinal}
+                            onChange={(e) => setPesoFinal(e.target.value)}
+                          />
+                        </Grid>
+                      </Grid>
+
+                      <Box>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight={700}
+                          color="error"
+                        >
+                          Pérdida: {formatKg(perdida)} kg (
+                          {porcentajePerdida.toFixed(2)}%)
+                        </Typography>
+                        <Typography color="text.secondary">
+                          Total subcortes: {formatKg(totalSubcortes)} kg · Peso
+                          final: {formatKg(pesoFinalNumero)} kg
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ) : (
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      Selecciona y guarda los subcortes para habilitar los
+                      campos de registro de peso.
+                    </Alert>
+                  )}
                 </Stack>
               )}
 
@@ -507,7 +668,7 @@ const CreateTaller = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  disabled={!readyForSubcortes || submitting}
+                  disabled={!readyToSubmit || submitting}
                   startIcon={<SaveRounded />}
                   onClick={handleSubmit}
                 >
