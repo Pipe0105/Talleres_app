@@ -213,10 +213,11 @@ const createSimplePdf = (
   };
 
   const addSeparator = () => {
-    currentLines.push(`${margin} ${currentY + 6} m`);
-    currentLines.push(`${pageWidth - margin} ${currentY + 6} l`);
+    const separatorY = currentY - 2;
+    currentLines.push(`${margin} ${separatorY} m`);
+    currentLines.push(`${pageWidth - margin} ${separatorY} l`);
     currentLines.push("S");
-    currentY -= 10;
+    currentY = separatorY - 8;
   };
 
   const startPage = (isFirstPage: boolean) => {
@@ -225,15 +226,15 @@ const createSimplePdf = (
     }
     currentLines = [];
     currentY = pageHeight - margin;
-    addTextLine(
+    addWrappedText(
       isFirstPage ? title : `${title} (continuación)`,
       isFirstPage ? 18 : 16
     );
     if (metadata.subtitle) {
-      addTextLine(metadata.subtitle, 12);
+      addWrappedText(metadata.subtitle, 12);
     }
     if (metadata.gemeratedAt) {
-      addTextLine(`Generado: ${metadata.gemeratedAt}`, 10);
+      addWrappedText(`Generado: ${metadata.gemeratedAt}`, 10);
     }
     addSeparator();
   };
@@ -266,20 +267,23 @@ const createSimplePdf = (
     );
     const maxLines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
     const rowHeight = maxLines * (fontSize + 4);
-    ensureSpace(rowHeight + 8);
+    ensureSpace(rowHeight + 12);
 
+    const rowTopY = currentY;
     wrappedCells.forEach((cellLines, columnIndex) => {
       const x = margin + columnIndex * columnWidth;
       cellLines.forEach((line, lineIndex) => {
-        const y = currentY - lineIndex * (fontSize + 4);
+        const y = rowTopY - lineIndex * (fontSize + 4);
         addTextLine(line, fontSize, x, y);
       });
     });
 
-    currentY -= rowHeight + 6;
-    currentLines.push(`${margin} ${currentY + 4} m`);
-    currentLines.push(`${pageWidth - margin} ${currentY + 4} l`);
+    const rowBottomY = rowTopY - rowHeight;
+    const separatorY = rowBottomY - 2;
+    currentLines.push(`${margin} ${separatorY} m`);
+    currentLines.push(`${pageWidth - margin} ${separatorY} l`);
     currentLines.push("S");
+    currentY = separatorY - 4;
   };
 
   startPage(true);
