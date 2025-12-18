@@ -155,9 +155,17 @@ const createSimplePdf = (
   const encoder = new TextEncoder();
   const pageWidth = 595;
   const pageHeight = 842;
-  const margin = 4;
+  const margin = 40;
   const contentWidth = pageWidth - margin * 2;
-  const approxCharWidth = 0.53;
+  const approxCharWidth = 0.48;
+  const headerBandHeight = 60;
+  const color = {
+    primary: "0.11 0.36 0.63",
+    primaryDark: "0.08 0.26 0.48",
+    neutral: "0.96 0.97 0.99",
+    neutralDarker: "0.88 0.90 0.94",
+    textMuted: "0.35 0.35 0.40",
+  } as const;
   const pages: string[][] = [];
   let currentLines: string[] = [];
   let currentY = pageHeight - margin;
@@ -199,25 +207,57 @@ const createSimplePdf = (
     text: string,
     fontSize: number,
     x: number = margin,
-    yOverride?: number
+    yOverride?: number,
+    font: "F1" | "F2" = "F1",
+    colorValue = "0 0 0"
   ) => {
     const targetY = typeof yOverride === "number" ? yOverride : currentY;
+    currentLines.push(`${colorValue} rg`);
     currentLines.push("BT");
-    currentLines.push(`/F1 ${fontSize} Tf`);
+    currentLines.push(`/${font} ${fontSize} Tf`);
     currentLines.push(`${x} ${targetY} Td`);
     currentLines.push(`(${escapePdfText(text)}) Tj`);
     currentLines.push("ET");
+    currentLines.push("0 0 0 rg");
     if (typeof yOverride !== "number") {
       currentY -= fontSize + 2;
     }
   };
 
-  const addSeparator = () => {
-    const separatorY = currentY - 2;
+  const addSeparator = (offset = 6) => {
+    const separatorY = currentY - offset;
+    currentLines.push(`${color.textMuted} RG`);
     currentLines.push(`${margin} ${separatorY} m`);
     currentLines.push(`${pageWidth - margin} ${separatorY} l`);
     currentLines.push("S");
-    currentY = separatorY - 8;
+    currentLines.push("0 0 0 RG");
+    currentY = separatorY - 10;
+  };
+
+  const addRoundedRect = (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fillColor?: string,
+    strokeColor?: string
+  ) => {
+    if (fillColor) {
+      currentLines.push(`${fillColor} rg`);
+    }
+    if (strokeColor) {
+      currentLines.push(`${strokeColor} RG`);
+    }
+    currentLines.push(`${x} ${y} ${width} ${height} re`);
+    if (fillColor && strokeColor) {
+      currentLines.push("B");
+    } else if (fillColor) {
+      currentLines.push("f");
+    } else if (strokeColor) {
+      currentLines.push("S");
+    }
+    currentLines.push("0 0 0 rg");
+    currentLines.push("0 0 0 RG");
   };
 
   const startPage = (isFirstPage: boolean) => {
@@ -226,15 +266,47 @@ const createSimplePdf = (
     }
     currentLines = [];
     currentY = pageHeight - margin;
-    addWrappedText(
-      isFirstPage ? title : `${title} (continuación)`,
-      isFirstPage ? 18 : 16
+
+    const headerBottomY = currentY - headerBandHeight;
+    addRoundedRect(
+      margin,
+      headerBottomY,
+      contentWidth,
+      headerBandHeight,
+      color.primary,
+      color.primaryDark
     );
-    if (metadata.subtitle) {
-      addWrappedText(metadata.subtitle, 12);
-    }
+
+    addTextLine(
+      isFirstPage ? title : `${title} (continuación)`,
+      isFirstPage ? 18 : 16,
+      margin + 12,
+      currentY - 22,
+      "F2",
+      "1 1 1"
+    );
+
+    addTextLine(
+      metadata.subtitle ?? "Informe consolidado de operaciones",
+      11,
+      margin + 12,
+      currentY - 38,
+      "F1",
+      "0.92 0.95 1"
+    );
+
+    currentY = headerBottomY - 18;
+
     if (metadata.gemeratedAt) {
-      addWrappedText(`Generado: ${metadata.gemeratedAt}`, 10);
+      addTextLine(
+        `Generado: ${metadata.gemeratedAt}`,
+        10,
+        margin,
+        undefined,
+        "F1",
+        color.textMuted
+      );
+      currentY -= 4;
     }
     addSeparator();
   };
@@ -249,65 +321,147 @@ const createSimplePdf = (
     text: string,
     fontSize: number,
     x: number = margin,
-    maxWidth: number = contentWidth
+    maxWidth: number = contentWidth,
+    font: "F1" | "F2" = "F1",
+    colorValue = "0 0 0"
   ) => {
     const lines = wrapText(text, fontSize, maxWidth);
     ensureSpace(lines.length * (fontSize + 2));
     lines.forEach((line, index) => {
       const y = currentY - index * (fontSize + 2);
-      addTextLine(line, fontSize, x, y);
+      addTextLine(line, fontSize, x, y, font, colorValue);
     });
     currentY -= lines.length * (fontSize + 2) + 2;
   };
 
-  const addTableRow = (cells: string[], fontSize: number) => {
+  const addTableRow = (
+    cells: string[],
+    fontSize: number,
+    rowIndex: number,
+    isHeader = false
+  ) => {
     const columnWidth = contentWidth / header.length;
     const wrappedCells = cells.map((cell) =>
       wrapText(cell, fontSize, columnWidth - 4)
     );
     const maxLines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
     const rowHeight = maxLines * (fontSize + 4);
-    ensureSpace(rowHeight + 12);
+    ensureSpace(rowHeight + 16);
 
     const rowTopY = currentY;
+
+    const backgroundColor = isHeader
+      ? color.neutralDarker
+      : rowIndex % 2 === 0
+      ? color.neutral
+      : undefined;
+
+    if (backgroundColor) {
+      addRoundedRect(
+        margin,
+        rowTopY - rowHeight,
+        contentWidth,
+        rowHeight,
+        backgroundColor
+      );
+    }
+
     wrappedCells.forEach((cellLines, columnIndex) => {
       const x = margin + columnIndex * columnWidth;
       cellLines.forEach((line, lineIndex) => {
         const y = rowTopY - lineIndex * (fontSize + 4);
-        addTextLine(line, fontSize, x, y);
+        addTextLine(
+          line,
+          fontSize,
+          x + 2,
+          y,
+          isHeader ? "F2" : "F1",
+          isHeader ? color.primaryDark : "0 0 0"
+        );
       });
     });
 
     const rowBottomY = rowTopY - rowHeight;
-    const separatorY = rowBottomY - 2;
+    const separatorY = rowBottomY - 4;
+    currentLines.push(`${color.neutralDarker} RG`);
     currentLines.push(`${margin} ${separatorY} m`);
     currentLines.push(`${pageWidth - margin} ${separatorY} l`);
     currentLines.push("S");
+    currentLines.push("0 0 0 RG");
     currentY = separatorY - 4;
   };
 
   startPage(true);
 
   if (metadata.filters?.length) {
-    addTextLine("Filtros aplicados", 12);
+    addTextLine(
+      "Filtros aplicados",
+      12,
+      margin,
+      undefined,
+      "F2",
+      color.primaryDark
+    );
     metadata.filters.forEach((filter) =>
-      addWrappedText(`• ${filter}`, 10, margin + 6)
+      addWrappedText(
+        `• ${filter}`,
+        10,
+        margin + 8,
+        contentWidth,
+        "F1",
+        color.textMuted
+      )
     );
     addSeparator();
   }
 
   if (metadata.highlights?.length) {
-    addTextLine("Resumen ejecutivo", 12);
-    metadata.highlights.forEach((item) =>
-      addWrappedText(`${item.label}: ${item.value}`, 11)
+    addTextLine(
+      "Resumen ejecutivo",
+      12,
+      margin,
+      undefined,
+      "F2",
+      color.primaryDark
     );
+    metadata.highlights.forEach((item) => {
+      ensureSpace(28);
+      addRoundedRect(margin, currentY - 22, contentWidth, 20, color.neutral);
+      addTextLine(
+        `${item.label}`,
+        10,
+        margin + 8,
+        currentY - 18,
+        "F2",
+        color.textMuted
+      );
+      addTextLine(`${item.value}`, 11, margin + 200, currentY - 18, "F1");
+      currentY -= 26;
+    });
     addSeparator();
   }
 
-  addTextLine("Detalle", 12);
+  addTextLine("Detalle", 12, margin, undefined, "F2", color.primaryDark);
   addSeparator();
-  addTableRow(header, 11);
-  rows.forEach((row) => addTableRow(row, 10));
+
+  addTableRow(header, 11, 0, true);
+  rows.forEach((row, index) => {
+    if (currentY < margin + 60) {
+      addSeparator();
+      startPage(false);
+      addTextLine(
+        "Detalle (continúa)",
+        12,
+        margin,
+        undefined,
+        "F2",
+        color.primaryDark
+      );
+      addSeparator();
+      addTableRow(header, 11, 0, true);
+    }
+    addTableRow(row, 10, index + 1);
+  });
 
   if (currentLines.length) {
     pages.push(currentLines);
@@ -318,7 +472,7 @@ const createSimplePdf = (
     encoder.encode(content)
   );
 
-  const fontObjectId = 3 + pages.length * 2;
+  const fontObjectIdStart = 3 + pages.length * 2;
   const pageObjectIds = pages.map((_, index) => 3 + index * 2);
   const contentObjectIds = pages.map((_, index) => 4 + index * 2);
 
@@ -341,7 +495,9 @@ const createSimplePdf = (
       return [
         {
           id: `${pageId} 0 obj`,
-          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontObjectId} 0 R >> >> >>`,
+          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontObjectIdStart} 0 R /F2 ${
+            fontObjectIdStart + 1
+          } 0 R >> >> >>`,
         },
         {
           id: `${contentId} 0 obj`,
@@ -353,8 +509,12 @@ endstream`,
       ];
     }),
     {
-      id: `${fontObjectId} 0 obj`,
+      id: `${fontObjectIdStart} 0 obj`,
       body: "<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica >>",
+    },
+    {
+      id: `${fontObjectIdStart + 1} 0 obj`,
+      body: "<< /Type /Font /Subtype /Type1 /Name /F2 /BaseFont /Helvetica-Bold >>",
     },
   ];
 
