@@ -519,58 +519,7 @@ const CreateTaller = () => {
                     </Typography>
                   </Box>
 
-                  <Stack spacing={2}>
-                    <Grid container spacing={2}>
-                      {subcortes.map((subcorte) => (
-                        <Grid item xs={12} md={6} lg={4} key={subcorte.codigo}>
-                          <Card
-                            variant="outlined"
-                            sx={{
-                              height: "100%",
-                              borderRadius: 2,
-                              borderColor: subcortesSeleccionados.includes(
-                                subcorte.codigo
-                              )
-                                ? "success.light"
-                                : "rgba(0,0,0,0.06)",
-                              bgcolor: subcortesSeleccionados.includes(
-                                subcorte.codigo
-                              )
-                                ? "rgba(16, 185, 129, 0.06)"
-                                : "background.paper",
-                            }}
-                          >
-                            <CardContent sx={{ py: 1.5 }}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    checked={subcortesSeleccionados.includes(
-                                      subcorte.codigo
-                                    )}
-                                    onChange={() =>
-                                      handleToggleSubcorte(subcorte.codigo)
-                                    }
-                                  />
-                                }
-                                label={
-                                  <Stack spacing={0.5}>
-                                    <Typography fontWeight={700}>
-                                      {subcorte.nombre}
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      color="text.secondary"
-                                    >
-                                      {subcorte.codigo}
-                                    </Typography>
-                                  </Stack>
-                                }
-                              />
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
+                  {seleccionSubcortesGuardada ? (
                     <Stack
                       direction={{ xs: "column", md: "row" }}
                       spacing={2}
@@ -578,32 +527,120 @@ const CreateTaller = () => {
                     >
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Typography fontWeight={700}>
-                          {subcortesSeleccionados.length} subcorte(s)
-                          seleccionado(s)
+                          Selección guardada ({subcortesSeleccionados.length}{" "}
+                          subcorte(s))
                         </Typography>
-                        {seleccionSubcortesGuardada && (
-                          <Chip
-                            label="Selección guardada"
-                            color="success"
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
+                        <Chip
+                          label="Checklist listo"
+                          color="success"
+                          size="small"
+                          variant="outlined"
+                        />
                       </Stack>
 
                       <Box flexGrow={1} />
 
                       <Button
-                        variant="contained"
-                        color="success"
-                        startIcon={<CheckCircle />}
-                        onClick={handleGuardarSubcortes}
-                        disabled={!subcortesSeleccionados.length}
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => setSeleccionSubcortesGuardada(false)}
                       >
-                        Guardar selección
+                        Editar selección
                       </Button>
                     </Stack>
-                  </Stack>
+                  ) : (
+                    <Stack spacing={2}>
+                      <Grid container spacing={2}>
+                        {subcortes.map((subcorte) => (
+                          <Grid
+                            item
+                            xs={12}
+                            md={6}
+                            lg={4}
+                            key={subcorte.codigo}
+                          >
+                            <Card
+                              variant="outlined"
+                              sx={{
+                                height: "100%",
+                                borderRadius: 2,
+                                borderColor: subcortesSeleccionados.includes(
+                                  subcorte.codigo
+                                )
+                                  ? "success.light"
+                                  : "rgba(0,0,0,0.06)",
+                                bgcolor: subcortesSeleccionados.includes(
+                                  subcorte.codigo
+                                )
+                                  ? "rgba(16, 185, 129, 0.06)"
+                                  : "background.paper",
+                              }}
+                            >
+                              <CardContent sx={{ py: 1.5 }}>
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={subcortesSeleccionados.includes(
+                                        subcorte.codigo
+                                      )}
+                                      onChange={() =>
+                                        handleToggleSubcorte(subcorte.codigo)
+                                      }
+                                    />
+                                  }
+                                  label={
+                                    <Stack spacing={0.5}>
+                                      <Typography fontWeight={700}>
+                                        {subcorte.nombre}
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        {subcorte.codigo}
+                                      </Typography>
+                                    </Stack>
+                                  }
+                                />
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                      <Stack
+                        direction={{ xs: "column", md: "row" }}
+                        spacing={2}
+                        alignItems={{ xs: "stretch", md: "center" }}
+                      >
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography fontWeight={700}>
+                            {subcortesSeleccionados.length} subcorte(s)
+                            seleccionado(s)
+                          </Typography>
+                          {seleccionSubcortesGuardada && (
+                            <Chip
+                              label="Selección guardada"
+                              color="success"
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Stack>
+
+                        <Box flexGrow={1} />
+
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<CheckCircle />}
+                          onClick={handleGuardarSubcortes}
+                          disabled={!subcortesSeleccionados.length}
+                        >
+                          Guardar selección
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  )}
 
                   {seleccionSubcortesGuardada ? (
                     <Stack spacing={2}>
