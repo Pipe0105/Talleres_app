@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   Checkbox,
@@ -576,33 +577,43 @@ const CreateTaller = () => {
                                   : "background.paper",
                               }}
                             >
-                              <CardContent sx={{ py: 1.5 }}>
-                                <FormControlLabel
-                                  control={
-                                    <Checkbox
-                                      checked={subcortesSeleccionados.includes(
-                                        subcorte.codigo
-                                      )}
-                                      onChange={() =>
-                                        handleToggleSubcorte(subcorte.codigo)
-                                      }
-                                    />
-                                  }
-                                  label={
-                                    <Stack spacing={0.5}>
-                                      <Typography fontWeight={700}>
-                                        {subcorte.nombre}
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                      >
-                                        {subcorte.codigo}
-                                      </Typography>
-                                    </Stack>
-                                  }
-                                />
-                              </CardContent>
+                              <CardActionArea
+                                sx={{ height: 1 }}
+                                onClick={() =>
+                                  handleToggleSubcorte(subcorte.codigo)
+                                }
+                              >
+                                <CardContent sx={{ py: 1.5 }}>
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={subcortesSeleccionados.includes(
+                                          subcorte.codigo
+                                        )}
+                                        onClick={(event) =>
+                                          event.stopPropagation()
+                                        }
+                                        onChange={() =>
+                                          handleToggleSubcorte(subcorte.codigo)
+                                        }
+                                      />
+                                    }
+                                    label={
+                                      <Stack spacing={0.5}>
+                                        <Typography fontWeight={700}>
+                                          {subcorte.nombre}
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          color="text.secondary"
+                                        >
+                                          {subcorte.codigo}
+                                        </Typography>
+                                      </Stack>
+                                    }
+                                  />
+                                </CardContent>
+                              </CardActionArea>
                             </Card>
                           </Grid>
                         ))}
