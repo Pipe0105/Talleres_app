@@ -45,23 +45,21 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           boxShadow: "0px 12px 32px rgba(4, 17, 37, 0.35)",
         })}
       >
-        <Container
-          maxWidth={false}
-          sx={(theme) => ({
-            position: "relative",
-            maxWidth: theme.layout.contentMaxWidth,
-            px: { xs: 2, md: 4 },
-          })}
-        >
+        <Box sx={{ width: "100%" }}>
           {" "}
           <Toolbar
             disableGutters
-            sx={{
+            sx={(theme) => ({
               py: { xs: 2.5, md: 3 },
               gap: { xs: 2, md: 3 },
               alignItems: { xs: "flex-start", md: "center" },
               flexDirection: { xs: "column", md: "row" },
-            }}
+
+              // 🔥 CLAVE VISUAL
+              px: { xs: 2, md: 6 },
+              maxWidth: theme.layout.contentMaxWidth,
+              margin: "0 auto",
+            })}
           >
             <Stack
               direction="row"
@@ -156,11 +154,11 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 spacing={0.75}
                 alignItems="center"
                 sx={{
-                  flexWrap: "wrap",
-                  whiteSpace: "normal",
-                  rowGap: 1,
-                  justifyContent: { xs: "center", md: "flex-start" },
+                  flexWrap: "nowrap",
+                  whiteSpace: "nowrap",
+                  justifyContent: "flex-start",
                   width: "100%",
+                  minWidth: 0,
                 }}
               >
                 {navItems.map((item) => (
@@ -182,6 +180,8 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       justifyContent: "center",
                       borderRadius: 999,
                       position: "relative",
+                      flexShrink: 0,
+                      whiteSpace: "nowrap",
                       color: item.isActive
                         ? theme.palette.primary.main
                         : alpha(theme.palette.common.white, 0.9),
@@ -220,7 +220,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
               </Stack>
             </Paper>
           </Toolbar>
-        </Container>
+        </Box>
       </AppBar>
 
       <Box
