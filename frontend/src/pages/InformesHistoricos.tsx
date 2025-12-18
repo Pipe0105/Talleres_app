@@ -128,6 +128,15 @@ const escapePdfText = (value: string) =>
     .replace(/\(/g, "\\(")
     .replace(/\)/g, "\\)");
 
+type PdfHighlight = { label: string; value: string };
+
+type PdfReportMetadata = {
+  subtitle?: string;
+  gemeratedAt?: string;
+  filters?: string[];
+  highlights?: PdfHighlight[];
+};
+
 const slugify = (value: string) =>
   normalizeWhitespace(value)
     .normalize("NFD")
@@ -137,20 +146,77 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-const createSimplePdf = (title: string, header: string[], rows: string[][]) => {
+const createSimplePdf = (
+  title: string,
+  header: string[],
+  rows: string[][],
+  metadata: PdfReportMetadata = {}
+) => {
   const encoder = new TextEncoder();
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const margin = 4;
+  const contentWidth = pageWidth - margin * 2;
+  const approxCharWidth = 0.53;
   const pages: string[][] = [];
   let currentLines: string[] = [];
-  let currentY = 800;
-  const lineHeight = 14;
+  let currentY = pageHeight - margin;
 
-  const addLine = (text: string, fontSize: number) => {
+  const wrapText = (
+    text: string,
+    fontSize: number,
+    maxWidth: number = contentWidth
+  ) => {
+    const normalized = normalizeWhitespace(text);
+    const maxChars = Math.max(
+      8,
+      Math.floor(maxWidth / (fontSize * approxCharWidth))
+    );
+    const words = normalized.split(" ");
+    const lines: string[] = [];
+    let currentLine = "";
+
+    words.forEach((word) => {
+      const nextLine = currentLine ? `${currentLine} ${word}` : word;
+      if (nextLine.length <= maxChars) {
+        currentLine = nextLine;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+        currentLine = word;
+      }
+    });
+
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  };
+
+  const addTextLine = (
+    text: string,
+    fontSize: number,
+    x: number = margin,
+    yOverride?: number
+  ) => {
+    const targetY = typeof yOverride === "number" ? yOverride : currentY;
     currentLines.push("BT");
     currentLines.push(`/F1 ${fontSize} Tf`);
-    currentLines.push(`50 ${currentY} Td`);
+    currentLines.push(`${x} ${targetY} Td`);
     currentLines.push(`(${escapePdfText(text)}) Tj`);
     currentLines.push("ET");
-    currentY -= lineHeight;
+    if (typeof yOverride !== "number") {
+      currentY -= fontSize + 2;
+    }
+  };
+
+  const addSeparator = () => {
+    currentLines.push(`${margin} ${currentY + 6} m`);
+    currentLines.push(`${pageWidth - margin} ${currentY + 6} l`);
+    currentLines.push("S");
+    currentY -= 10;
   };
 
   const startPage = (isFirstPage: boolean) => {
@@ -158,24 +224,86 @@ const createSimplePdf = (title: string, header: string[], rows: string[][]) => {
       pages.push(currentLines);
     }
     currentLines = [];
-    currentY = 800;
-    addLine(
+    currentY = pageHeight - margin;
+    addTextLine(
       isFirstPage ? title : `${title} (continuación)`,
-      isFirstPage ? 16 : 14
+      isFirstPage ? 18 : 16
     );
-    currentY -= 6;
-    addLine(header.join(" | "), 12);
-    currentY -= 4;
+    if (metadata.subtitle) {
+      addTextLine(metadata.subtitle, 12);
+    }
+    if (metadata.gemeratedAt) {
+      addTextLine(`Generado: ${metadata.gemeratedAt}`, 10);
+    }
+    addSeparator();
+  };
+
+  const ensureSpace = (spaceNeeded: number) => {
+    if (currentY - spaceNeeded < margin) {
+      startPage(false);
+    }
+  };
+
+  const addWrappedText = (
+    text: string,
+    fontSize: number,
+    x: number = margin,
+    maxWidth: number = contentWidth
+  ) => {
+    const lines = wrapText(text, fontSize, maxWidth);
+    ensureSpace(lines.length * (fontSize + 2));
+    lines.forEach((line, index) => {
+      const y = currentY - index * (fontSize + 2);
+      addTextLine(line, fontSize, x, y);
+    });
+    currentY -= lines.length * (fontSize + 2) + 2;
+  };
+
+  const addTableRow = (cells: string[], fontSize: number) => {
+    const columnWidth = contentWidth / header.length;
+    const wrappedCells = cells.map((cell) =>
+      wrapText(cell, fontSize, columnWidth - 4)
+    );
+    const maxLines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
+    const rowHeight = maxLines * (fontSize + 4);
+    ensureSpace(rowHeight + 8);
+
+    wrappedCells.forEach((cellLines, columnIndex) => {
+      const x = margin + columnIndex * columnWidth;
+      cellLines.forEach((line, lineIndex) => {
+        const y = currentY - lineIndex * (fontSize + 4);
+        addTextLine(line, fontSize, x, y);
+      });
+    });
+
+    currentY -= rowHeight + 6;
+    currentLines.push(`${margin} ${currentY + 4} m`);
+    currentLines.push(`${pageWidth - margin} ${currentY + 4} l`);
+    currentLines.push("S");
   };
 
   startPage(true);
 
-  rows.forEach((row) => {
-    if (currentY < 60) {
-      startPage(false);
-    }
-    addLine(row.join(" | "), 11);
-  });
+  if (metadata.filters?.length) {
+    addTextLine("Filtros aplicados", 12);
+    metadata.filters.forEach((filter) =>
+      addWrappedText(`• ${filter}`, 10, margin + 6)
+    );
+    addSeparator();
+  }
+
+  if (metadata.highlights?.length) {
+    addTextLine("Resumen ejecutivo", 12);
+    metadata.highlights.forEach((item) =>
+      addWrappedText(`${item.label}: ${item.value}`, 11)
+    );
+    addSeparator();
+  }
+
+  addTextLine("Detalle", 12);
+  addSeparator();
+  addTableRow(header, 11);
+  rows.forEach((row) => addTableRow(row, 10));
 
   if (currentLines.length) {
     pages.push(currentLines);
@@ -630,12 +758,59 @@ const InformesHistoricos = () => {
       return;
     }
 
+    const sedesSeleccionadas =
+      scope === "sede"
+        ? selectedSedes.length
+          ? selectedSedes
+          : availableSedes
+        : selectedSedes;
+
+    const scopeDescription =
+      scope === "taller" && selectedTaller
+        ? `Alcance: Taller ${selectedTaller.label}`
+        : scope === "sede"
+        ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
+        : scope === "material" && selectedMaterial
+        ? `Alcance: Material ${selectedMaterial}`
+        : "Alcance: selección personalizada";
+
+    const filtersSummary = [
+      scopeDescription,
+      sedesSeleccionadas.length
+        ? `Sedes: ${sedesSeleccionadas.join(", ")}`
+        : null,
+      scope === "material" && selectedMaterial
+        ? `Material: ${selectedMaterial}`
+        : null,
+      `Columnas incluidas: ${headers.join(", ")}`,
+      `Registros filtrados: ${formattedRows.length}`,
+    ].filter(Boolean) as string[];
+
     const pdfTitle =
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
         : "Detalle de los talleres seleccionados";
 
-    const pdfBlob = createSimplePdf(pdfTitle, headers, formattedRows);
+    const pdfBlob = createSimplePdf(pdfTitle, headers, formattedRows, {
+      subtitle: "Informe gerencial consolidado",
+      gemeratedAt: new Intl.DateTimeFormat("es-CO", {
+        dateStyle: "full",
+        timeStyle: "short",
+      }).format(new Date()),
+      filters: filtersSummary,
+      highlights: [
+        { label: "Talleres incluidos", value: resumen.talleres.toString() },
+        { label: "Total cortes", value: resumen.cortes.toString() },
+        {
+          label: "Peso filtrado",
+          value: `${pesoFormatter.format(resumen.totalPeso)} kg`,
+        },
+        {
+          label: "Valor estimado",
+          value: currencyFormatter.format(resumen.totalValor),
+        },
+      ],
+    });
 
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
   };
