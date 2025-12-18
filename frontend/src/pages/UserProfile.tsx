@@ -9,9 +9,11 @@ import {
   Typography,
 } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import { alpha } from "@mui/material/styles";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 const maskedPassword = "*********";
 
@@ -171,6 +173,79 @@ const UserProfile = () => {
           </Stack>
         </Stack>
       </Paper>
+
+      {user.is_admin && (
+        <Paper
+          sx={(theme) => ({
+            p: { xs: 3, md: 4 },
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: alpha(theme.palette.primary.main, 0.18),
+            background: `linear-gradient(135deg, ${alpha(
+              theme.palette.primary.light,
+              0.08
+            )} 0%, ${alpha(theme.palette.primary.dark, 0.08)} 100%)`,
+            boxShadow: "0 14px 40px rgba(16, 24, 40, 0.12)",
+          })}
+        >
+          <Stack spacing={2.5}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              spacing={1}
+            >
+              <Stack spacing={0.5}>
+                <Typography variant="h6" component="h2">
+                  Acceso de administrador
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Atajos rapidos para las secciones
+                </Typography>
+              </Stack>
+              <Chip
+                label="Solo administradores"
+                color="secondary"
+                variant="outlined"
+                sx={{ fontWeight: 700 }}
+              />
+            </Stack>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              flexWrap="wrap"
+              useFlexGap
+            >
+              <Button
+                component={RouterLink}
+                to="/talleres/historial"
+                variant="contained"
+                color="primary"
+                startIcon={<HistoryEduOutlinedIcon />}
+                sx={{
+                  flex: { xs: "1 1 100%", sm: "0 1 auto" },
+                  borderRadius: 2,
+                }}
+              >
+                Historial de talleres
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/usuarios"
+                variant="outlined"
+                color="primary"
+                startIcon={<GroupsOutlinedIcon />}
+                sx={{
+                  flex: { xs: "1 1 100%", sm: "0 1 auto" },
+                  borderRadius: 2,
+                }}
+              >
+                Gestión de usuarios
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
 
       <Paper
         sx={{

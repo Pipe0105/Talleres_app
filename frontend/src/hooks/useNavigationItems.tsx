@@ -1,4 +1,3 @@
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import { ReactNode, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { UserProfile } from "../types";
@@ -30,18 +29,6 @@ export const useNavigationItems = ({
       { label: "Informes", to: "/informes-historicos" },
       { label: "Inventario", to: "/inventario" },
       { label: "Lista de precios", to: "/lista-precios" },
-      ...(user?.is_admin
-        ? [
-            {
-              label: "Historial",
-              to: "/talleres/historial",
-            },
-            {
-              label: "Usuarios",
-              to: "/usuarios",
-            },
-          ]
-        : []),
       ...(user
         ? [
             {
