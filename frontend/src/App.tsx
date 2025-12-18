@@ -8,6 +8,7 @@ import Logout from "./pages/Logout";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import UserProfile from "./pages/UserProfile";
 import CreateTaller from "./pages/talleres/CreateTaller";
+import TalleresPlus from "./pages/talleres/TalleresPlus";
 import SeguimientoTalleres from "./pages/talleres/SeguimientoTalleres";
 import HistorialTalleres from "./pages/talleres/HistorialTalleres";
 import InformesHistoricos from "./pages/InformesHistoricos";
@@ -68,6 +69,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <CreateTaller />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/talleres-plus"
+              element={
+                <ProtectedRoute>
+                  <TalleresPlus />
                 </ProtectedRoute>
               }
             />

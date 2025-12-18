@@ -364,14 +364,19 @@ def obtener_actividad_talleres(
             detail="El rango de fechas es invalido",
         )
         
+    def _normalizar_sede(value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+
+        normalized = value.strip()
+        return normalized or None
+        
     start_dt = datetime.combine(startDate, datetime.min.time())
     end_dt = datetime.combine(endDate + timedelta(days=1), datetime.min.time())
     
     usuarios_activos = (
         db.query(models.User)
         .filter(models.User.is_active.is_(True))
-        .filter(models.User.sede.isnot(None))
-        .filter(models.User.sede != "")
         .order_by(models.User.sede, models.User.username)
         .all()
     )
@@ -380,19 +385,26 @@ def obtener_actividad_talleres(
     user_map = {user.id: user for user in usuarios_activos}
 
     for user in usuarios_activos:
-        sede_usuario = user.sede
-        actividad[(user.id, sede_usuario)] = {
-            "user_id": user.id,
-            "username": user.username,
-            "full_name": user.full_name,
-            "sede": sede_usuario,
-            "dias": [],
-        }
+        sede_usuario = _normalizar_sede(user.sede)
+        if sede_usuario:
+            actividad[(user.id, sede_usuario)] = {
+                "user_id": user.id,
+                "username": user.username,
+                "full_name": user.full_name,
+                "sede": sede_usuario,
+                "dias": [],
+            }
+
+    sede_resuelta = func.coalesce(
+        func.nullif(func.trim(models.Taller.sede), ""),
+        func.nullif(func.trim(models.User.sede), ""),
+    )
+
         
     rows = (
         db.query(
             models.User.id.label("user_id"),
-            models.User.sede.label("sede"),
+            sede_resuelta.label("sede"),
             func.date(models.Taller.creado_en).label("fecha"),
             func.count(models.Taller.id).label("cantidad"),
         )
@@ -400,15 +412,14 @@ def obtener_actividad_talleres(
         .filter(models.Taller.creado_en >= start_dt)
         .filter(models.Taller.creado_en < end_dt)
         .filter(models.User.is_active.is_(True))
-        .filter(models.User.sede.isnot(None))
-        .filter(models.User.sede != "")
+        .filter(sede_resuelta.isnot(None))
         .group_by(
             models.User.id,
-            models.User.sede,
+            sede_resuelta,
             func.date(models.Taller.creado_en),
         )
         .order_by(
-            models.User.sede,
+            sede_resuelta,
             models.User.username,
             func.date(models.Taller.creado_en),
         )
@@ -419,13 +430,17 @@ def obtener_actividad_talleres(
         if user is None:
             continue
 
-        key = (row.user_id, row.sede)
+        sede_row = _normalizar_sede(row.sede)
+        if sede_row is None:
+            continue
+
+        key = (row.user_id, sede_row)
         if key not in actividad:
             actividad[key] = {
                 "user_id": row.user_id,
                 "username": user.username,
                 "full_name": user.full_name,
-                "sede": row.sede,
+                "sede": sede_row,
                 "dias": [],
             }
 

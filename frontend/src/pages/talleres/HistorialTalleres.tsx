@@ -16,6 +16,7 @@ import {
   Grid,
   IconButton,
   Stack,
+  Autocomplete,
   Table,
   TableBody,
   TableCell,
@@ -42,6 +43,7 @@ import {
   adminUpdateTaller,
 } from "../../api/talleresApi";
 import { CrearTallerPayload, TallerAdminResponse } from "../../types";
+import { TALLER_MATERIALES } from "../../data/talleres";
 
 interface EditableSubcorte {
   id?: number;
@@ -121,6 +123,22 @@ const HistorialTalleres = () => {
   );
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const materialSeleccionado = useMemo(() => {
+    if (!editForm) return null;
+    return (
+      TALLER_MATERIALES.find(
+        (material) =>
+          material.codigo === editForm.codigo_principal.trim() &&
+          material.especie === editForm.especie
+      ) ?? null
+    );
+  }, [editForm?.codigo_principal, editForm?.especie]);
+
+  const subcortesDisponibles = useMemo(
+    () => materialSeleccionado?.subcortes ?? [],
+    [materialSeleccionado]
+  );
 
   const loadHistorial = async () => {
     setLoading(true);
@@ -397,6 +415,7 @@ const HistorialTalleres = () => {
                   setFilters((prev) => ({ ...prev, sede: event.target.value }))
                 }
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
               >
                 <option value="">Todas</option>
                 {BRANCH_LOCATIONS.map((branch) => (
@@ -419,6 +438,7 @@ const HistorialTalleres = () => {
                   }))
                 }
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
               >
                 <option value="">Todas</option>
                 <option value="res">Res</option>
@@ -821,22 +841,63 @@ const HistorialTalleres = () => {
                   Agregar
                 </Button>
               </Stack>
+              <Typography variant="body2" color="text.secondary">
+                {materialSeleccionado
+                  ? `Opciones basadas en ${materialSeleccionado.nombre} (${materialSeleccionado.codigo}).`
+                  : "Ingresa un código principal válido para ver subcortes sugeridos o escribe el nombre manualmente."}
+              </Typography>
 
               <Grid container spacing={2}>
                 {editForm.subcortes.map((subcorte, index) => (
                   <Grid item xs={12} key={subcorte.id ?? index}>
                     <Stack spacing={1} direction={{ xs: "column", md: "row" }}>
-                      <TextField
-                        label="Nombre"
-                        value={subcorte.nombre_subcorte}
-                        onChange={(event) =>
+                      <Autocomplete
+                        freeSolo
+                        fullWidth
+                        options={subcortesDisponibles.map(
+                          (opcion) => opcion.nombre
+                        )}
+                        value={subcorte.nombre_subcorte || ""}
+                        onInputChange={(_, inputValue) =>
                           handleChangeSubcorte(
                             index,
                             "nombre_subcorte",
-                            event.target.value
+                            inputValue
                           )
                         }
-                        fullWidth
+                        onChange={(_, newValue) => {
+                          const nombreSeleccionado = newValue ?? "";
+                          handleChangeSubcorte(
+                            index,
+                            "nombre_subcorte",
+                            nombreSeleccionado
+                          );
+
+                          const coincidencia = subcortesDisponibles.find(
+                            (opcion) => opcion.nombre === newValue
+                          );
+                          if (!nombreSeleccionado) {
+                            handleChangeSubcorte(index, "codigo_producto", "");
+                          } else if (coincidencia) {
+                            handleChangeSubcorte(
+                              index,
+                              "codigo_producto",
+                              coincidencia.codigo
+                            );
+                          }
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Nombre"
+                            placeholder={
+                              subcortesDisponibles.length
+                                ? "Selecciona un subcorte"
+                                : "Nombre del subcorte"
+                            }
+                            fullWidth
+                          />
+                        )}
                       />
                       <TextField
                         label="Código"
