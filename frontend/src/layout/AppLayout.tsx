@@ -66,8 +66,8 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
               spacing={2}
               alignItems="center"
               sx={{
-                flexGrow: 1,
-                width: "100%",
+                flexShrink: 0,
+                width: { xs: "100%", md: "auto" },
               }}
             >
               <Box
@@ -142,7 +142,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 alignItems: "center",
                 justifyContent: "center",
                 maxWidth: "100%",
-                width: "100%",
+                width: { xs: "100%", md: "auto" },
+                flexGrow: 1,
+                minWidth: 0,
                 overflowX: "auto",
                 scrollbarWidth: "none",
                 "&::-webkit-scrollbar": { display: "none" },
