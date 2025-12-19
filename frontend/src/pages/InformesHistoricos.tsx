@@ -287,7 +287,7 @@ const createSimplePdf = (
     );
 
     addTextLine(
-      metadata.subtitle ?? "Informe consolidado de operaciones",
+      metadata.subtitle ?? "Informe consolidado",
       11,
       margin + 12,
       currentY - 38,
@@ -438,14 +438,7 @@ const createSimplePdf = (
   startPage(true);
 
   if (metadata.filters?.length) {
-    addTextLine(
-      "Filtros aplicados",
-      12,
-      margin,
-      undefined,
-      "F2",
-      color.primaryDark
-    );
+    addTextLine("Filtros", 12, margin, undefined, "F2", color.primaryDark);
     metadata.filters.forEach((filter) =>
       addWrappedText(
         `• ${filter}`,
@@ -460,14 +453,7 @@ const createSimplePdf = (
   }
 
   if (metadata.highlights?.length) {
-    addTextLine(
-      "Resumen ejecutivo",
-      12,
-      margin,
-      undefined,
-      "F2",
-      color.primaryDark
-    );
+    addTextLine("Resumen", 12, margin, undefined, "F2", color.primaryDark);
     metadata.highlights.forEach((item) => {
       ensureSpace(28);
       addRoundedRect(margin, currentY - 22, contentWidth, 20, color.neutral);
@@ -485,7 +471,14 @@ const createSimplePdf = (
     addSeparator();
   }
 
-  addTextLine("Detalle", 12, margin, undefined, "F2", color.primaryDark);
+  addTextLine(
+    "Detalle de registros",
+    12,
+    margin,
+    undefined,
+    "F2",
+    color.primaryDark
+  );
   addSeparator();
 
   addTableRow(header, 11, 0, true);
@@ -494,7 +487,7 @@ const createSimplePdf = (
       addSeparator();
       startPage(false);
       addTextLine(
-        "Detalle (continúa)",
+        "Detalle (continuación)",
         12,
         margin,
         undefined,
@@ -980,7 +973,7 @@ const InformesHistoricos = () => {
         ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
         : scope === "material" && selectedMaterial
         ? `Alcance: Material ${selectedMaterial}`
-        : "Alcance: seleccion personalizada";
+        : "Alcance: selección personalizada";
 
     const filtersSummary = [
       scopeDescription,
@@ -997,10 +990,10 @@ const InformesHistoricos = () => {
     const pdfTitle =
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
-        : "Detalle de los talleres seleccionados";
+        : "Detalle consolidado";
 
     const pdfBlob = createSimplePdf(pdfTitle, headers, formattedRows, {
-      subtitle: "Informe gerencial consolidado",
+      subtitle: "Informe consolidado",
       gemeratedAt: new Intl.DateTimeFormat("es-CO", {
         dateStyle: "full",
         timeStyle: "short",
