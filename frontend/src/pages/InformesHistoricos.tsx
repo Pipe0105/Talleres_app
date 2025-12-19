@@ -77,12 +77,12 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
   },
   {
     key: "descripcion",
-    label: "Descripción",
+    label: "Descripcion",
     getValue: (row) => row.descripcion,
   },
   {
     key: "item_code",
-    label: "Código de ítem",
+    label: "Codigo de ítem",
     getValue: (row) => row.item_code,
   },
   {
@@ -153,12 +153,12 @@ const createSimplePdf = (
   metadata: PdfReportMetadata = {}
 ) => {
   const encoder = new TextEncoder();
-  const pageWidth = 595;
-  const pageHeight = 842;
+  const pageWidth = 842;
+  const pageHeight = 595;
   const margin = 40;
   const contentWidth = pageWidth - margin * 2;
   const approxCharWidth = 0.48;
-  const headerBandHeight = 60;
+  const headerBandHeight = 54;
   const color = {
     primary: "0.11 0.36 0.63",
     primaryDark: "0.08 0.26 0.48",
@@ -278,7 +278,7 @@ const createSimplePdf = (
     );
 
     addTextLine(
-      isFirstPage ? title : `${title} (continuación)`,
+      isFirstPage ? title : `${title} (continuacion)`,
       isFirstPage ? 18 : 16,
       margin + 12,
       currentY - 22,
@@ -334,21 +334,65 @@ const createSimplePdf = (
     currentY -= lines.length * (fontSize + 2) + 2;
   };
 
+  const getColumnWeights = (columns: string[]) =>
+    columns.map((column) => {
+      const normalized = column.toLowerCase();
+      if (normalized.includes("descrip")) {
+        return 2.1;
+      }
+      if (normalized.includes("valor")) {
+        return 1.5;
+      }
+      if (normalized.includes("precio")) {
+        return 1.4;
+      }
+      if (normalized.includes("código")) {
+        return 1.3;
+      }
+      if (normalized.includes("taller")) {
+        return 1.2;
+      }
+      if (normalized.includes("sede")) {
+        return 1.15;
+      }
+      if (normalized.includes("material")) {
+        return 1.15;
+      }
+      if (normalized.includes("peso")) {
+        return 1.1;
+      }
+      if (normalized.includes("%")) {
+        return 0.95;
+      }
+      return 1.05;
+    });
+
+  const columnWeights = getColumnWeights(header);
+  const totalWeight = columnWeights.reduce((acc, weight) => acc + weight, 0);
+  const columnWidths = columnWeights.map(
+    (weight) => (weight / totalWeight) * contentWidth
+  );
+  const columnOffsets = columnWidths.reduce<number[]>((acc, width) => {
+    const last = acc[acc.length - 1] ?? 0;
+    acc.push(last + width);
+    return acc;
+  }, []);
+
   const addTableRow = (
     cells: string[],
     fontSize: number,
     rowIndex: number,
     isHeader = false
   ) => {
-    const columnWidth = contentWidth / header.length;
-    const wrappedCells = cells.map((cell) =>
-      wrapText(cell, fontSize, columnWidth - 4)
+    const cellPadding = 4;
+    const wrappedCells = cells.map((cell, columnIndex) =>
+      wrapText(cell, fontSize, columnWidths[columnIndex] - cellPadding * 2)
     );
     const maxLines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
-    const rowHeight = maxLines * (fontSize + 4);
-    ensureSpace(rowHeight + 16);
+    const rowHeight = maxLines * (fontSize + 3) + cellPadding * 2;
+    ensureSpace(rowHeight + 12);
 
-    const rowTopY = currentY;
+    const rowTopY = currentY - cellPadding;
 
     const backgroundColor = isHeader
       ? color.neutralDarker
@@ -367,13 +411,13 @@ const createSimplePdf = (
     }
 
     wrappedCells.forEach((cellLines, columnIndex) => {
-      const x = margin + columnIndex * columnWidth;
+      const x = margin + (columnOffsets[columnIndex - 1] ?? 0);
       cellLines.forEach((line, lineIndex) => {
-        const y = rowTopY - lineIndex * (fontSize + 4);
+        const y = rowTopY - fontSize - lineIndex * (fontSize + 3);
         addTextLine(
           line,
           fontSize,
-          x + 2,
+          x + cellPadding,
           y,
           isHeader ? "F2" : "F1",
           isHeader ? color.primaryDark : "0 0 0"
@@ -382,13 +426,13 @@ const createSimplePdf = (
     });
 
     const rowBottomY = rowTopY - rowHeight;
-    const separatorY = rowBottomY - 4;
+    const separatorY = rowBottomY - 6;
     currentLines.push(`${color.neutralDarker} RG`);
     currentLines.push(`${margin} ${separatorY} m`);
     currentLines.push(`${pageWidth - margin} ${separatorY} l`);
     currentLines.push("S");
     currentLines.push("0 0 0 RG");
-    currentY = separatorY - 4;
+    currentY = separatorY - 6;
   };
 
   startPage(true);
@@ -460,7 +504,7 @@ const createSimplePdf = (
       addSeparator();
       addTableRow(header, 11, 0, true);
     }
-    addTableRow(row, 10, index + 1);
+    addTableRow(row, 10, index);
   });
 
   if (currentLines.length) {
@@ -495,7 +539,7 @@ const createSimplePdf = (
       return [
         {
           id: `${pageId} 0 obj`,
-          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontObjectIdStart} 0 R /F2 ${
+          body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontObjectIdStart} 0 R /F2 ${
             fontObjectIdStart + 1
           } 0 R >> >> >>`,
         },
@@ -745,7 +789,7 @@ const InformesHistoricos = () => {
 
         if (hasFailures) {
           setError(
-            "Algunos talleres no pudieron cargarse. Verifica la conexión e inténtalo de nuevo."
+            "Algunos talleres no pudieron cargarse. Verifica la conexion e inténtalo de nuevo."
           );
         } else {
           setError(null);
@@ -936,7 +980,7 @@ const InformesHistoricos = () => {
         ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
         : scope === "material" && selectedMaterial
         ? `Alcance: Material ${selectedMaterial}`
-        : "Alcance: selección personalizada";
+        : "Alcance: seleccion personalizada";
 
     const filtersSummary = [
       scopeDescription,
@@ -1001,14 +1045,14 @@ const InformesHistoricos = () => {
       <PageSection
         title={
           <PageHeader
-            title="Informes históricos de talleres"
-            description="Consulta la información registrada de talleres anteriores. El detalle proviene de la vista consolidada en la base de datos y refleja los porcentajes reales de cada corte."
+            title="Informes historicos de talleres"
+            description="Consulta la informacion registrada de talleres anteriores. El detalle proviene de la vista consolidada en la base de datos y refleja los porcentajes reales de cada corte."
           />
         }
         description={null}
       >
         <Typography variant="body2" color="text.secondary">
-          Usa las tarjetas de filtros y exportación para trabajar con los datos
+          Usa las tarjetas de filtros y exportacion para trabajar con los datos
           que más importan a tu equipo.
         </Typography>
       </PageSection>
@@ -1065,7 +1109,7 @@ const InformesHistoricos = () => {
                     <TextField
                       {...params}
                       label="Material principal"
-                      placeholder="Ej: código del ítem"
+                      placeholder="Ej: codigo del ítem"
                       helperText="Elige el material que deseas comparar entre sedes."
                     />
                   )}
@@ -1103,7 +1147,7 @@ const InformesHistoricos = () => {
                     helperText={
                       scope === "sede"
                         ? "Si no eliges sedes se incluirán todas."
-                        : "Usa sedes para acotar la comparación del material."
+                        : "Usa sedes para acotar la comparacion del material."
                     }
                   />
                 )}
@@ -1231,7 +1275,7 @@ const InformesHistoricos = () => {
                         {row.descripcion}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Código: {row.item_code || "N/A"}
+                        Codigo: {row.item_code || "N/A"}
                       </Typography>
                     </Stack>
                     <Stack
@@ -1249,7 +1293,7 @@ const InformesHistoricos = () => {
                       </Stack>
                       <Stack spacing={0.25}>
                         <Typography variant="overline" color="text.secondary">
-                          % Real / Objetivo
+                          % Real
                         </Typography>
                         <Typography variant="body1" fontWeight={600}>
                           {porcentajeFormatter.format(row.porcentaje_real)}% /{" "}
