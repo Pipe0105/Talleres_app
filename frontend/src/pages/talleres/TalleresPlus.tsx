@@ -4,12 +4,9 @@ import {
   Box,
   Button,
   Card,
-  CardActionArea,
   CardContent,
-  Checkbox,
   Chip,
   Divider,
-  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -18,8 +15,6 @@ import {
 } from "@mui/material";
 import {
   AddCircleOutline,
-  Assessment,
-  CheckCircle,
   PlaylistAdd,
   SaveRounded,
 } from "@mui/icons-material";
@@ -34,16 +29,9 @@ import {
 } from "../../data/talleres";
 import { useAuth } from "../../context/AuthContext";
 
-const toNumber = (value: string): number => {
-  const parsed = Number(value.replace(/,/g, "."));
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const formatKg = (value: number) =>
-  new Intl.NumberFormat("es-CO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+import SelectableSubcorteCard from "../../components/taller/SelectableSubcorteCard";
+import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
+import { formatKg, parseWeightInput } from "../../utils/weights";
 
 interface TallerPlusMaterial {
   id: string;
@@ -130,10 +118,10 @@ const TalleresPlus = () => {
     [subcortes, subcortesSeleccionados]
   );
 
-  const pesoInicialNumero = toNumber(pesoInicial);
-  const pesoFinalNumero = toNumber(pesoFinal);
+  const pesoInicialNumero = parseWeightInput(pesoInicial);
+  const pesoFinalNumero = parseWeightInput(pesoFinal);
   const totalSubcortes = subcortesActivos.reduce((acc, sc) => {
-    return acc + toNumber(subcortesPesos[sc.codigo] ?? "0");
+    return acc + parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
   }, 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
   const perdida =
@@ -538,103 +526,13 @@ const TalleresPlus = () => {
                     </Grid>
                   </Grid>
 
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          height: "100%",
-                          borderRadius: 3,
-                          bgcolor: "rgba(16, 185, 129, 0.05)",
-                          borderColor: "rgba(16, 185, 129, 0.18)",
-                        }}
-                      >
-                        <CardContent>
-                          <Stack spacing={1}>
-                            <Typography color="success.main" fontWeight={700}>
-                              Peso inicial
-                            </Typography>
-                            <Typography variant="h5" fontWeight={800}>
-                              {pesoInicial
-                                ? `${formatKg(pesoInicialNumero)} kg`
-                                : "—"}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Guarda este valor para habilitar los subcortes.
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          height: "100%",
-                          borderRadius: 3,
-                          bgcolor: "rgba(59, 130, 246, 0.05)",
-                          borderColor: "rgba(59, 130, 246, 0.18)",
-                        }}
-                      >
-                        <CardContent>
-                          <Stack spacing={1}>
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                            >
-                              <Assessment fontSize="small" color="primary" />
-                              <Typography color="primary" fontWeight={700}>
-                                Proceso actual
-                              </Typography>
-                            </Stack>
-                            <Typography variant="h5" fontWeight={800}>
-                              {formatKg(totalProcesado)} kg
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Subcortes + corte final registrados.
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          height: "100%",
-                          borderRadius: 3,
-                          bgcolor: "rgba(239, 68, 68, 0.05)",
-                          borderColor: "rgba(239, 68, 68, 0.18)",
-                        }}
-                      >
-                        <CardContent>
-                          <Stack spacing={1}>
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                            >
-                              <CheckCircle fontSize="small" color="error" />
-                              <Typography color="error" fontWeight={700}>
-                                Pérdida estimada
-                              </Typography>
-                            </Stack>
-                            <Typography
-                              variant="h5"
-                              fontWeight={800}
-                              color="error"
-                            >
-                              {formatKg(perdida)} kg
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {porcentajePerdida.toFixed(2)}% del peso inicial.
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
+                  <WeightSummaryCards
+                    hasPesoInicial={Boolean(pesoInicial)}
+                    pesoInicial={pesoInicialNumero}
+                    totalProcesado={totalProcesado}
+                    perdida={perdida}
+                    porcentajePerdida={porcentajePerdida}
+                  />
 
                   {readyForSubcortes && (
                     <Stack spacing={3}>
@@ -692,64 +590,13 @@ const TalleresPlus = () => {
                                 lg={4}
                                 key={subcorte.codigo}
                               >
-                                <Card
-                                  variant="outlined"
-                                  sx={{
-                                    height: "100%",
-                                    borderRadius: 2,
-                                    borderColor:
-                                      subcortesSeleccionados.includes(
-                                        subcorte.codigo
-                                      )
-                                        ? "success.light"
-                                        : "rgba(0,0,0,0.06)",
-                                    bgcolor: subcortesSeleccionados.includes(
-                                      subcorte.codigo
-                                    )
-                                      ? "rgba(16, 185, 129, 0.06)"
-                                      : "background.paper",
-                                  }}
-                                >
-                                  <CardActionArea
-                                    sx={{ height: 1 }}
-                                    onClick={() =>
-                                      handleToggleSubcorte(subcorte.codigo)
-                                    }
-                                  >
-                                    <CardContent sx={{ py: 1.5 }}>
-                                      <FormControlLabel
-                                        control={
-                                          <Checkbox
-                                            checked={subcortesSeleccionados.includes(
-                                              subcorte.codigo
-                                            )}
-                                            onClick={(event) =>
-                                              event.stopPropagation()
-                                            }
-                                            onChange={() =>
-                                              handleToggleSubcorte(
-                                                subcorte.codigo
-                                              )
-                                            }
-                                          />
-                                        }
-                                        label={
-                                          <Stack spacing={0.5}>
-                                            <Typography fontWeight={700}>
-                                              {subcorte.nombre}
-                                            </Typography>
-                                            <Typography
-                                              variant="body2"
-                                              color="text.secondary"
-                                            >
-                                              {subcorte.codigo}
-                                            </Typography>
-                                          </Stack>
-                                        }
-                                      />
-                                    </CardContent>
-                                  </CardActionArea>
-                                </Card>
+                                <SelectableSubcorteCard
+                                  subcorte={subcorte}
+                                  checked={subcortesSeleccionados.includes(
+                                    subcorte.codigo
+                                  )}
+                                  onToggle={handleToggleSubcorte}
+                                />
                               </Grid>
                             ))}
                           </Grid>
