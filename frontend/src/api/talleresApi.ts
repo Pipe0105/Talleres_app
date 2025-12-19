@@ -186,6 +186,10 @@ const mapInventarioItem = (raw: any): InventarioItem => ({
   total_peso: toNumber(raw?.total_peso, 0),
   sede: raw?.sede ?? null,
   especie: raw?.especie ?? null,
+  entradas: toNumber(raw?.entradas, 0),
+  salidas_pendientes: toNumber(raw?.salidas_pendientes, 0),
+  umbral_minimo:
+    raw?.umbral_minimo == null ? undefined : toNumber(raw?.umbral_minimo, 0),
 });
 
 const mapUser = (raw: any): UserProfile => ({
@@ -306,62 +310,6 @@ export const refreshToken = async (): Promise<AuthToken> => {
   return data;
 };
 
-const queueTokenRefresh = async (): Promise<AuthToken> => {
-  if (!refreshPromise) {
-    refreshPromise = refreshToken()
-      .catch((error) => {
-        setAuthToken(null);
-        throw error;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-};
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalConfig = error.config as RetriableRequestConfig | undefined;
-    const status = error.response?.status;
-    const isAuthEndpoint =
-      typeof originalConfig?.url === "string" &&
-      (originalConfig.url.includes("/auth/token") ||
-        originalConfig.url.includes("/auth/refresh"));
-
-    if (
-      status === 401 &&
-      originalConfig &&
-      !originalConfig._retry &&
-      !isAuthEndpoint
-    ) {
-      originalConfig._retry = true;
-      try {
-        const tokenResponse = await queueTokenRefresh();
-        const headers = originalConfig.headers ?? {};
-        if (typeof (headers as any).set === "function") {
-          (headers as any).set(
-            "Authorization",
-            `Bearer ${tokenResponse.access_token}`
-          );
-        } else {
-          (
-            headers as Record<string, unknown>
-          ).Authorization = `Bearer ${tokenResponse.access_token}`;
-        }
-        originalConfig.headers = headers;
-        return api(originalConfig);
-      } catch (refreshError) {
-        logout();
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
 
 export interface RegisterUserPayload {
   username: string;
@@ -410,6 +358,7 @@ export const getInventario = async (
 
   return (Array.isArray(data) ? data : []).map(mapInventarioItem);
 };
+
 
 export interface AdminCreateUserPayload extends RegisterUserPayload {
   is_admin?: boolean;

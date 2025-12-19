@@ -21,7 +21,9 @@ import {
   TableRow,
   TextField,
   Typography,
+  Tooltip,
 } from "@mui/material";
+import type { ChipProps } from "@mui/material";
 
 import { getInventario } from "../api/talleresApi";
 import PageHeader from "../components/PageHeader";

@@ -123,4 +123,46 @@ export interface InventarioItem {
   total_peso: number;
   sede: string | null;
   especie: string | null;
+  entradas?: number;
+  salidas_pendientes?: number;
+  umbral_minimo?: number;
+}
+
+export interface InventarioMovimiento {
+  id: number;
+  sku: string;
+  lote: string | null;
+  tipo: string;
+  cantidad: number;
+  sede: string | null;
+  descripcion: string | null;
+  creado_en: string;
+  creado_por_id: number | null;
+  creado_por: string | null;
+}
+
+export interface InventarioMovimientoList {
+  total: number;
+  page: number;
+  page_size: number;
+  items: InventarioMovimiento[];
+}
+export interface InventarioMovimiento {
+  id: number;
+  sku: string;
+  lote: string | null;
+  tipo: string;
+  cantidad: number;
+  sede: string | null;
+  descripcion: string | null;
+  creado_en: string;
+  creado_por_id: number | null;
+  creado_por: string | null;
+}
+
+export interface InventarioMovimientoList {
+  total: number;
+  page: number;
+  page_size: number;
+  items: InventarioMovimiento[];
 }

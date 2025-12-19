@@ -1,3 +1,4 @@
+from __future__ import annotations
 from decimal import Decimal
 from typing import Optional
 
@@ -44,7 +45,8 @@ def obtener_inventario_por_sede(
     _: models.User = Depends(get_current_active_user),
 ):
     sede_normalizada = _normalize_branch(sede)
-    especie_normalizada = especie.strip().lower() if especie else None
+    especie_normalizada = especie.strip().lower() if especie and especie.strip() else None
+    search_normalizado = search.strip().lower() if search and search.strip() else None
 
     codigo_expr = func.coalesce(
         models.TallerDetalle.codigo_producto,
@@ -74,8 +76,8 @@ def obtener_inventario_por_sede(
     if sede_normalizada:
         query = query.filter(func.lower(models.Taller.sede) == sede_normalizada.lower())
 
-    if search:
-        pattern = f"%{search.strip().lower()}%"
+    if search_normalizado:
+        pattern = f"%{search_normalizado}%"
         query = query.filter(
             or_(
                 func.lower(codigo_expr).like(pattern),

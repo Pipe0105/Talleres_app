@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 
+
 MAX_CODE_LENGTH = 120
 MAX_NAME_LENGTH = 120
 MAX_DESCRIPTION_LENGTH = 2000
@@ -397,6 +398,7 @@ class TallerCalculoRow(BaseModel):
     valor_estimado: Decimal
     
     model_config = ConfigDict(from_attributes=True)
+    
     
 class InventarioItem(BaseModel):
     codigo_producto: str
