@@ -50,6 +50,8 @@ export const api = axios.create({
   baseURL: resolveBaseUrl(),
 });
 
+type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : fallback;
@@ -102,6 +104,7 @@ const toStringOr = (value: unknown, fallback: string): string => {
 };
 
 let inMemoryToken: string | null = safeStorage.getItem(TOKEN_STORAGE_KEY);
+let refreshPromise: Promise<AuthToken> | null = null;
 
 export const setAuthToken = (token: string | null) => {
   inMemoryToken = token;
@@ -302,6 +305,63 @@ export const refreshToken = async (): Promise<AuthToken> => {
   setAuthToken(data.access_token);
   return data;
 };
+
+const queueTokenRefresh = async (): Promise<AuthToken> => {
+  if (!refreshPromise) {
+    refreshPromise = refreshToken()
+      .catch((error) => {
+        setAuthToken(null);
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalConfig = error.config as RetriableRequestConfig | undefined;
+    const status = error.response?.status;
+    const isAuthEndpoint =
+      typeof originalConfig?.url === "string" &&
+      (originalConfig.url.includes("/auth/token") ||
+        originalConfig.url.includes("/auth/refresh"));
+
+    if (
+      status === 401 &&
+      originalConfig &&
+      !originalConfig._retry &&
+      !isAuthEndpoint
+    ) {
+      originalConfig._retry = true;
+      try {
+        const tokenResponse = await queueTokenRefresh();
+        const headers = originalConfig.headers ?? {};
+        if (typeof (headers as any).set === "function") {
+          (headers as any).set(
+            "Authorization",
+            `Bearer ${tokenResponse.access_token}`
+          );
+        } else {
+          (
+            headers as Record<string, unknown>
+          ).Authorization = `Bearer ${tokenResponse.access_token}`;
+        }
+        originalConfig.headers = headers;
+        return api(originalConfig);
+      } catch (refreshError) {
+        logout();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export interface RegisterUserPayload {
   username: string;

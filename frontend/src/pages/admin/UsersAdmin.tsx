@@ -421,7 +421,6 @@ const UsersAdmin = () => {
                   <TableCell>Usuario</TableCell>
                   <TableCell>Correo</TableCell>
                   <TableCell>Nombre</TableCell>
-                  <TableCell>Contraseña</TableCell>
                   <TableCell>Sede</TableCell>
                   <TableCell>Rol</TableCell>
                   <TableCell>Estado</TableCell>
@@ -435,7 +434,6 @@ const UsersAdmin = () => {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
-                    <TableCell></TableCell>
                     <TableCell>{user.sede || "—"}</TableCell>
                     <TableCell>
                       <Chip
@@ -501,7 +499,7 @@ const UsersAdmin = () => {
                               : "Conceder permisos de administrador"
                           }
                         >
-                          <span hidden>
+                          <span>
                             <Button
                               variant="outlined"
                               size="small"
@@ -524,7 +522,7 @@ const UsersAdmin = () => {
                               : "Conceder rol de gerente"
                           }
                         >
-                          <span hidden>
+                          <span>
                             <Button
                               variant="outlined"
                               size="small"
@@ -583,7 +581,7 @@ const UsersAdmin = () => {
                 ))}
                 {!loading && users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
                       </Typography>
@@ -592,7 +590,7 @@ const UsersAdmin = () => {
                 )}
                 {!loading && users.length > 0 && filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Typography variant="body2" color="text.secondary">
                         No hay usuarios que coincidan con los filtros.
                       </Typography>
@@ -601,7 +599,7 @@ const UsersAdmin = () => {
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={8} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Cargando usuarios…
                       </Typography>

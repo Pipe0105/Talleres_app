@@ -19,6 +19,7 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -34,11 +35,13 @@ const Login = () => {
       if (mode === "register") {
         await register({
           username,
+          email: email.trim() || undefined,
           password,
           full_name: fullName || undefined,
         });
         setSuccess("Cuenta creada correctamente. Ahora puedes iniciar sesión.");
         setMode("login");
+        setEmail("");
         return;
       }
 
@@ -125,6 +128,16 @@ const Login = () => {
             />
             {mode === "register" && (
               <TextField
+                label="Correo electrónico (opcional)"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                fullWidth
+              />
+            )}
+            {mode === "register" && (
+              <TextField
                 label="Nombre completo"
                 name="full_name"
                 value={fullName}
@@ -164,19 +177,12 @@ const Login = () => {
                 setMode((prev) => (prev === "login" ? "register" : "login"));
                 setError(null);
                 setSuccess(null);
+                setEmail("");
               }}
               underline="hover"
               sx={{ fontWeight: 700 }}
             >
               {mode === "login" ? "Crear cuenta" : "Iniciar sesión"}
-            </Link>
-            <Link
-              component="button"
-              type="button"
-              onClick={() => navigate("/")}
-              underline="hover"
-            >
-              Volver al panel como invitado
             </Link>
           </Stack>
         </Stack>

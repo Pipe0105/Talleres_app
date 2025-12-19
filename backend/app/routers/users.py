@@ -79,13 +79,14 @@ def update_user(
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El correo ya esta registrado",
+                detail="El nombre de usuario ya está registrado",
             )
             
     hashed_password = get_password_hash(payload.password) if payload.password else None
     updated_user = crud.update_user(
         db,
         user,
+        username=payload.username,
         email = payload.email,
         full_name=payload.full_name,
         hashed_password=hashed_password,

@@ -37,6 +37,7 @@ ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "Admin") or os.getenv("ADMIN_EMAIL"
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "administrador")
 ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Administrador")
+PROMOTE_ADMIN_EMAIL = os.getenv("PROMOTE_ADMIN_EMAIL")
 DEFAULT_USER_USERNAME = os.getenv("DEFAULT_USER_USERNAME")
 DEFAULT_USER_EMAIL = os.getenv("DEFAULT_USER_MAIL")
 DEFAULT_USER_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")

@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import uuid
@@ -9,14 +10,14 @@ from .. import crud, models
 from ..database import get_db
 from ..dependencies import get_current_admin_user
 from ..services.etl_precios import leer_y_limpiar_precios
-from .. import models
-from .. import crud
 
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
     dependencies=[Depends(get_current_admin_user)],
 )
+
+logger = logging.getLogger(__name__)
 @router.post("/precios")
 def cargar_precios(file: UploadFile = File(...), db: Session = Depends(get_db)):
     tmpname = f"/tmp/{uuid.uuid4()}_{file.filename}"
@@ -32,3 +33,7 @@ def cargar_precios(file: UploadFile = File(...), db: Session = Depends(get_db)):
     finally:
         try: os.remove(tmpname)
         except: pass
+        try:
+            os.remove(tmpname)
+        except OSError as exc:  # pragma: no cover - cleanup best effort
+            logger.warning("No se pudo eliminar el archivo temporal %s: %s", tmpname, exc)

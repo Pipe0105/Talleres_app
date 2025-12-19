@@ -8,7 +8,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover - defensive guard for loc
 import logging
 
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from . import crud
@@ -23,23 +22,17 @@ from .config import (
     DEFAULT_USER_PASSWORD,
     DEFAULT_USER_USERNAME,
     FRONTEND_ORIGINS,
+    PROMOTE_ADMIN_EMAIL,
 )
 from .constants import BRANCH_LOCATIONS
 from .database import Base, SessionLocal, engine
+from .db_migrations import apply_startup_migrations
 from .routers import auth, upload, items, users, talleres, inventario
 from .security import get_password_hash
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MercaMorfosis Backend")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=FRONTEND_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,8 +60,8 @@ def _ensure_default_admin() -> None:
             existing_admin = crud.get_user_by_email(db, ADMIN_EMAIL)
 
         try:
+            updated = False
             if existing_admin:
-                updated = False
                 if not existing_admin.is_admin:
                     existing_admin.is_admin = True
                     updated = True
@@ -118,9 +111,7 @@ def _promote_user_to_admin(email: str) -> None:
     with SessionLocal() as db:
         user = crud.get_user_by_email(db, email)
         if not user:
-            logger.info(
-                "No se encontro", email
-            )
+            logger.info("No se encontró el usuario con email %s", email)
             return
         if user.is_admin:
             return
@@ -129,12 +120,10 @@ def _promote_user_to_admin(email: str) -> None:
             user.is_admin = True
             db.add(user)
             db.commit()
-            logger.info("Usuario promovido", email)
+            logger.info("Usuario promovido a admin: %s", email)
         except SQLAlchemyError:
             db.rollback()
-            logger.exception(
-                "Fallo al intentar promover", email
-            )
+            logger.exception("Fallo al intentar promover a admin el usuario %s", email)
 
 def _ensure_default_operator() -> None:
     if not DEFAULT_USER_USERNAME or not DEFAULT_USER_PASSWORD:
@@ -211,50 +200,11 @@ def _ensure_branch_operators() -> None:
 def _startup():
     # Crear tablas
     Base.metadata.create_all(bind=engine)
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS users "
-                "ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS users "
-                "ADD COLUMN IF NOT EXISTS username TEXT"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS users "
-                "ADD COLUMN IF NOT EXISTS is_gerente BOOLEAN NOT NULL DEFAULT FALSE"
-            )
-        )
-        conn.execute(
-            text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS sede TEXT")
-        )
-        conn.execute(
-            text("ALTER TABLE IF EXISTS users ALTER COLUMN email DROP NOT NULL")
-        )
-        conn.execute(text("UPDATE users SET username = email WHERE username IS NULL"))
-        conn.execute(
-            text("ALTER TABLE IF EXISTS users ALTER COLUMN username SET NOT NULL")
-        )
-        conn.execute(
-            text(
-                "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users(username)"
-            )
-        )
-        conn.execute(
-            text(
-                "ALTER TABLE IF EXISTS talleres "
-                "ADD COLUMN IF NOT EXISTS sede TEXT"
-            )
-        )
+    apply_startup_migrations(engine)
 
     _ensure_default_admin()
     _ensure_default_operator()
-    _promote_user_to_admin("pipe@gmail.com")
+    _promote_user_to_admin(PROMOTE_ADMIN_EMAIL)
     _ensure_branch_operators()
 
 

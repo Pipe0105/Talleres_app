@@ -380,7 +380,6 @@ class TallerListItem(BaseModel):
     peso_final: Decimal
     total_peso: Decimal
     especie: str
-    sede: Optional[str] = None
     codigo_principal: Optional[str] = None
     creado_en: datetime
     

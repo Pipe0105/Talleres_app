@@ -47,6 +47,9 @@ const Inventario = () => {
   const { user } = useAuth();
 
   const [selectedBranch, setSelectedBranch] = useState<string>("todas");
+  const [selectedSpecies, setSelectedSpecies] = useState<
+    "todas" | "res" | "cerdo"
+  >("todas");
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [inventario, setInventario] = useState<InventarioItem[]>([]);
@@ -79,6 +82,7 @@ const Inventario = () => {
         const data = await getInventario({
           sede: selectedBranch === "todas" ? undefined : selectedBranch,
           search: debouncedSearch || undefined,
+          especie: selectedSpecies === "todas" ? undefined : selectedSpecies,
         });
 
         if (isMounted) {
@@ -103,7 +107,7 @@ const Inventario = () => {
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch, selectedBranch]);
+  }, [debouncedSearch, selectedBranch, selectedSpecies]);
 
   const totalKg = useMemo(
     () =>
@@ -122,6 +126,14 @@ const Inventario = () => {
 
   const selectedLabel =
     selectedBranch === "todas" ? "todas las sedes" : selectedBranch;
+  const selectedSpeciesLabel =
+    selectedSpecies === "todas" ? "todas las especies" : selectedSpecies;
+
+  const clearFilters = () => {
+    setSelectedBranch("todas");
+    setSelectedSpecies("todas");
+    setSearch("");
+  };
 
   return (
     <Stack spacing={3} className="animate-fade-up">
@@ -156,6 +168,23 @@ const Inventario = () => {
                     {branch}
                   </MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel id="species-filter-label">Especie</InputLabel>
+              <Select
+                labelId="species-filter-label"
+                value={selectedSpecies}
+                label="Especie"
+                onChange={(event) =>
+                  setSelectedSpecies(
+                    event.target.value as typeof selectedSpecies
+                  )
+                }
+              >
+                <MenuItem value="todas">Todas las especies</MenuItem>
+                <MenuItem value="res">Res</MenuItem>
+                <MenuItem value="cerdo">Cerdo</MenuItem>
               </Select>
             </FormControl>
 
@@ -193,6 +222,51 @@ const Inventario = () => {
           </Stack>
 
           <Divider />
+
+          <Stack
+            direction="row"
+            spacing={1}
+            flexWrap="wrap"
+            alignItems="center"
+          >
+            <Typography variant="body2" color="text.secondary">
+              Filtros activos:
+            </Typography>
+            <Chip
+              color="primary"
+              label={`Sede: ${selectedLabel}`}
+              onDelete={
+                selectedBranch !== "todas"
+                  ? () => setSelectedBranch("todas")
+                  : undefined
+              }
+              variant={selectedBranch === "todas" ? "outlined" : "filled"}
+            />
+            <Chip
+              color="secondary"
+              label={`Especie: ${selectedSpeciesLabel}`}
+              onDelete={
+                selectedSpecies !== "todas"
+                  ? () => setSelectedSpecies("todas")
+                  : undefined
+              }
+              variant={selectedSpecies === "todas" ? "outlined" : "filled"}
+            />
+            {debouncedSearch && (
+              <Chip
+                color="default"
+                label={`Búsqueda: ${debouncedSearch}`}
+                onDelete={() => setSearch("")}
+                variant="filled"
+              />
+            )}
+            <Chip
+              label="Limpiar filtros"
+              onClick={clearFilters}
+              variant="outlined"
+              sx={{ ml: { xs: 0, md: "auto" } }}
+            />
+          </Stack>
 
           {error ? (
             <Alert severity="error">{error}</Alert>

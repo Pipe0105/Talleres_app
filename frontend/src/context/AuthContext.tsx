@@ -120,7 +120,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("");
+    throw new Error(
+      "useAuth debe utilizarse dentro de un AuthProvider para acceder al contexto de sesión."
+    );
   }
   return context;
 };

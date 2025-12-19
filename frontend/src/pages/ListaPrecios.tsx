@@ -34,6 +34,9 @@ const currencyFormatter = new Intl.NumberFormat("es-CO", {
 
 const STORAGE_KEYS = {
   filter: "listaPrecios.filter",
+  sort: "listaPrecios.sort",
+  species: "listaPrecios.species",
+  branch: "listaPrecios.branch",
 } as const;
 
 const ListaPrecios = () => {
@@ -45,9 +48,23 @@ const ListaPrecios = () => {
   );
   const [sortOrder, setSortOrder] = useState<
     "descripcion" | "precio-asc" | "precio-desc"
-  >("descripcion");
-  const [species, setSpecies] = useState<"todas" | "res" | "cerdo">("todas");
-  const [branch, setBranch] = useState<string>("todas");
+  >(
+    (safeStorage.getItem(STORAGE_KEYS.sort) as
+      | "descripcion"
+      | "precio-asc"
+      | "precio-desc"
+      | null) ?? "descripcion"
+  );
+  const [species, setSpecies] = useState<"todas" | "res" | "cerdo">(
+    (safeStorage.getItem(STORAGE_KEYS.species) as
+      | "todas"
+      | "res"
+      | "cerdo"
+      | null) ?? "todas"
+  );
+  const [branch, setBranch] = useState<string>(
+    safeStorage.getItem(STORAGE_KEYS.branch) ?? "todas"
+  );
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const theme = useTheme();
@@ -87,6 +104,16 @@ const ListaPrecios = () => {
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEYS.filter, filter);
   }, [filter]);
+
+  useEffect(() => {
+    safeStorage.setItem(STORAGE_KEYS.sort, sortOrder);
+  }, [sortOrder]);
+  useEffect(() => {
+    safeStorage.setItem(STORAGE_KEYS.species, species);
+  }, [species]);
+  useEffect(() => {
+    safeStorage.setItem(STORAGE_KEYS.branch, branch);
+  }, [branch]);
 
   const availableBranches = useMemo(() => {
     const branches = new Set<string>();

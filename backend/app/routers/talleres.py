@@ -251,6 +251,7 @@ def listar_talleres(
 
     talleres = (
         db.query(models.Taller)
+        .options(selectinload(models.Taller.detalles))
         .order_by(models.Taller.creado_en.desc())
         .all()
     )

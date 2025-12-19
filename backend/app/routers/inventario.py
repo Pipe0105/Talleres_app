@@ -39,10 +39,12 @@ def _normalize_branch(raw: Optional[str]) -> Optional[str]:
 def obtener_inventario_por_sede(
     sede: Optional[str] = None,
     search: Optional[str] = None,
+    especie: Optional[str] = None,
     db: Session = Depends(get_db),
     _: models.User = Depends(get_current_active_user),
 ):
     sede_normalizada = _normalize_branch(sede)
+    especie_normalizada = especie.strip().lower() if especie else None
 
     codigo_expr = func.coalesce(
         models.TallerDetalle.codigo_producto,
@@ -80,6 +82,8 @@ def obtener_inventario_por_sede(
                 func.lower(descripcion_expr).like(pattern),
             )
         )
+    if especie_normalizada:
+        query = query.filter(func.lower(models.Taller.especie) == especie_normalizada)
 
     rows = (
         query.group_by(
