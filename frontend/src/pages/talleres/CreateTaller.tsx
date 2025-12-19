@@ -13,7 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { SaveRounded } from "@mui/icons-material";
+import { CheckCircle, SaveRounded } from "@mui/icons-material";
 
 import { createTaller } from "../../api/talleresApi";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
@@ -181,7 +181,7 @@ const CreateTaller = () => {
         subcortes: subcortesActivos.map((sc) => ({
           codigo_producto: sc.codigo,
           nombre_subcorte: sc.nombre,
-          peso: toNumber(subcortesPesos[sc.codigo] ?? "0"),
+          peso: parseWeightInput(subcortesPesos[sc.codigo] ?? "0"),
         })),
       });
 

@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import {
   AddCircleOutline,
+  CheckCircle,
   PlaylistAdd,
   SaveRounded,
 } from "@mui/icons-material";
@@ -228,7 +229,7 @@ const TalleresPlus = () => {
       subcortes: subcortesActivos.map((sc) => ({
         codigo: sc.codigo,
         nombre: sc.nombre,
-        peso: toNumber(subcortesPesos[sc.codigo] ?? "0"),
+        peso: parseWeightInput(subcortesPesos[sc.codigo] ?? "0"),
       })),
       perdida,
       porcentajePerdida,
