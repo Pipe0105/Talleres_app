@@ -1296,8 +1296,7 @@ const InformesHistoricos = () => {
                           % Real
                         </Typography>
                         <Typography variant="body1" fontWeight={600}>
-                          {porcentajeFormatter.format(row.porcentaje_real)}% /{" "}
-                          {porcentajeFormatter.format(row.porcentaje_default)}%
+                          {porcentajeFormatter.format(row.porcentaje_real)}%
                         </Typography>
                       </Stack>
                       <Stack spacing={0.25}>
