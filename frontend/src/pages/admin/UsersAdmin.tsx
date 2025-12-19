@@ -93,6 +93,11 @@ const UsersAdmin = () => {
   const [deleteTarget, setDeleteTarget] = useState<UserProfile | null>(null);
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
+  const [filters, setFilters] = useState({
+    name: "",
+    sede: "",
+    role: "",
+  });
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -269,6 +274,30 @@ const UsersAdmin = () => {
     return BRANCH_LOCATIONS;
   }, [editForm?.sede]);
 
+  const filteredUsers = useMemo(() => {
+    const normalizedName = filters.name.trim().toLowerCase();
+
+    return users.filter((user) => {
+      const matchesName =
+        !normalizedName ||
+        user.username.toLowerCase().includes(normalizedName) ||
+        (user.full_name ?? "").toLowerCase().includes(normalizedName);
+      const matchesSede = !filters.sede || user.sede === filters.sede;
+      const role = user.is_admin
+        ? "admin"
+        : user.is_gerente
+        ? "gerente"
+        : "operador";
+      const matchesRole = !filters.role || role === filters.role;
+
+      return matchesName && matchesSede && matchesRole;
+    });
+  }, [filters.name, filters.role, filters.sede, users]);
+
+  const handleResetFilters = () => {
+    setFilters({ name: "", sede: "", role: "" });
+  };
+
   const openCreateDialog = () => {
     setFormError(null);
     setFormSuccess(null);
@@ -331,6 +360,61 @@ const UsersAdmin = () => {
           />
           <CardContent>
             {listError && <Alert severity="error">{listError}</Alert>}
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              alignItems={{ md: "center" }}
+              mb={2}
+            >
+              <TextField
+                label="Filtrar por nombre"
+                value={filters.name}
+                onChange={(event) =>
+                  setFilters((prev) => ({ ...prev, name: event.target.value }))
+                }
+                size="small"
+                fullWidth
+              />
+              <TextField
+                select
+                label="Sede"
+                value={filters.sede}
+                onChange={(event) =>
+                  setFilters((prev) => ({ ...prev, sede: event.target.value }))
+                }
+                size="small"
+                fullWidth
+              >
+                <MenuItem value="">Todas las sedes</MenuItem>
+                {BRANCH_LOCATIONS.map((branch) => (
+                  <MenuItem key={branch} value={branch}>
+                    {branch}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Rol"
+                value={filters.role}
+                onChange={(event) =>
+                  setFilters((prev) => ({ ...prev, role: event.target.value }))
+                }
+                size="small"
+                fullWidth
+              >
+                <MenuItem value="">Todos los roles</MenuItem>
+                <MenuItem value="admin">Administrador</MenuItem>
+                <MenuItem value="gerente">Gerente</MenuItem>
+                <MenuItem value="operador">Operador</MenuItem>
+              </TextField>
+              <Button
+                variant="outlined"
+                onClick={handleResetFilters}
+                sx={{ flexShrink: 0 }}
+              >
+                Limpiar filtros
+              </Button>
+            </Stack>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -346,7 +430,7 @@ const UsersAdmin = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id} hover>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
@@ -502,6 +586,15 @@ const UsersAdmin = () => {
                     <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loading && users.length > 0 && filteredUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      <Typography variant="body2" color="text.secondary">
+                        No hay usuarios que coincidan con los filtros.
                       </Typography>
                     </TableCell>
                   </TableRow>
