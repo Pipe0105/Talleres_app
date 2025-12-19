@@ -4,12 +4,68 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 
+MAX_CODE_LENGTH = 120
+MAX_NAME_LENGTH = 120
+MAX_DESCRIPTION_LENGTH = 2000
+MAX_PASSWORD_LENGTH = 128
+MIN_PASSWORD_LENGTH = 8
+
+
+def _validate_printable_text(value: str, field_name: str, max_length: int) -> str:
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError(f"{field_name} es obligatorio")
+    if len(normalized) > max_length:
+        raise ValueError(f"{field_name} supera el máximo permitido")
+    if not normalized.isprintable():
+        raise ValueError(f"{field_name} contiene caracteres no válidos")
+    return normalized
+
+
+def _validate_optional_text(value: Optional[str], field_name: str, max_length: int) -> Optional[str]:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    if len(normalized) > max_length:
+        raise ValueError(f"{field_name} supera el máximo permitido")
+    if not normalized.isprintable():
+        raise ValueError(f"{field_name} contiene caracteres no válidos")
+    return normalized
+
+
+def _validate_password_strength(value: str) -> str:
+    if len(value) < MIN_PASSWORD_LENGTH:
+        raise ValueError("La contraseña es demasiado corta")
+    if len(value) > MAX_PASSWORD_LENGTH:
+        raise ValueError("La contraseña supera el máximo permitido")
+    if any(ch.isspace() for ch in value):
+        raise ValueError("La contraseña no debe contener espacios")
+    if not any(ch.islower() for ch in value):
+        raise ValueError("La contraseña debe incluir minúsculas")
+    if not any(ch.isupper() for ch in value):
+        raise ValueError("La contraseña debe incluir mayúsculas")
+    if not any(ch.isdigit() for ch in value):
+        raise ValueError("La contraseña debe incluir números")
+    return value
 
 class ItemIn(BaseModel):
     item_code: str
     descripcion: str
     precio_venta: condecimal(ge=0, max_digits=14, decimal_places=4)  # type: ignore
 
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("item_code")
+    @classmethod
+    def _validate_item_code(cls, value: str) -> str:
+        return _validate_printable_text(value, "El código del ítem", MAX_CODE_LENGTH)
+
+    @field_validator("descripcion")
+    @classmethod
+    def _validate_descripcion(cls, value: str) -> str:
+        return _validate_printable_text(value, "La descripción", MAX_DESCRIPTION_LENGTH)
 
 class ItemOut(BaseModel):
     id: int
@@ -27,13 +83,17 @@ class UserBase(BaseModel):
     
     sede: Optional[str] = None
     
+    model_config = ConfigDict(extra="forbid")
+    
     @field_validator("username")
     @classmethod
     def _validate_username(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("el nombre de usuario es obligatorio")
-        return normalized
+        return _validate_printable_text(value, "El nombre de usuario", MAX_NAME_LENGTH)
+
+    @field_validator("full_name")
+    @classmethod
+    def _validate_full_name(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_text(value, "El nombre completo", MAX_NAME_LENGTH)
 
     @field_validator("sede")
     @classmethod
@@ -55,6 +115,11 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    
+    @field_validator("password")
+    @classmethod
+    def _validate_password(cls, value: str) -> str:
+        return _validate_password_strength(value)
 
 
 class UserOut(UserBase):
@@ -76,6 +141,23 @@ class AdminUserOut(UserOut):
 class UserLogin(BaseModel):
     username: str
     password: str
+    
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("username")
+    @classmethod
+    def _validate_username(cls, value: str) -> str:
+        return _validate_printable_text(value, "El nombre de usuario", MAX_NAME_LENGTH)
+
+    @field_validator("password")
+    @classmethod
+    def _validate_password(cls, value: str) -> str:
+        if not value:
+            raise ValueError("La contraseña es obligatoria")
+        if len(value) > MAX_PASSWORD_LENGTH:
+            raise ValueError("La contraseña supera el máximo permitido")
+        return value
+
 
 
 class UserAdminCreate(UserCreate):
@@ -93,6 +175,42 @@ class UserUpdate(BaseModel):
     is_admin: Optional[bool] = None
     is_gerente: Optional[bool] = None
     sede: Optional[str] = None
+    
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("username")
+    @classmethod
+    def _validate_username(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_text(value, "El nombre de usuario", MAX_NAME_LENGTH)
+
+    @field_validator("full_name")
+    @classmethod
+    def _validate_full_name(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_text(value, "El nombre completo", MAX_NAME_LENGTH)
+
+    @field_validator("password")
+    @classmethod
+    def _validate_password(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return _validate_password_strength(value)
+
+    @field_validator("sede")
+    @classmethod
+    def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
+        from .constants import BRANCH_LOCATIONS
+
+        if value is None:
+            return value
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        if normalized not in BRANCH_LOCATIONS:
+            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+
+        return normalized
 
 
 class Token(BaseModel):
@@ -135,6 +253,18 @@ class TallerDetalleCreate(BaseModel):
     condecimal(ge=0, max_digits=14, decimal_places=4)
 ]
     item_id: Optional[int] = None
+    
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("codigo_producto")
+    @classmethod
+    def _validate_codigo_producto(cls, value: str) -> str:
+        return _validate_printable_text(value, "El código del producto", MAX_CODE_LENGTH)
+
+    @field_validator("nombre_subcorte")
+    @classmethod
+    def _validate_nombre_subcorte(cls, value: str) -> str:
+        return _validate_printable_text(value, "El nombre del subcorte", MAX_NAME_LENGTH)
 
 
 class TallerCreate(BaseModel):
@@ -154,6 +284,23 @@ class TallerCreate(BaseModel):
     item_principal_id: Optional[int] = None
     codigo_principal: str
     subcortes: list[TallerDetalleCreate]
+    
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("nombre_taller")
+    @classmethod
+    def _validate_nombre_taller(cls, value: str) -> str:
+        return _validate_printable_text(value, "El nombre del taller", MAX_NAME_LENGTH)
+
+    @field_validator("descripcion")
+    @classmethod
+    def _validate_descripcion(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_text(value, "La descripción", MAX_DESCRIPTION_LENGTH)
+
+    @field_validator("codigo_principal")
+    @classmethod
+    def _validate_codigo_principal(cls, value: str) -> str:
+        return _validate_printable_text(value, "El código principal", MAX_CODE_LENGTH)
 
     @field_validator("especie")
     @classmethod
