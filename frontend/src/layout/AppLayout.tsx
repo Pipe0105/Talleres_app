@@ -2,9 +2,8 @@ import { ReactNode, useMemo } from "react";
 import {
   AppBar,
   Avatar,
-  Badge,
-  Box,
   Button,
+  Box,
   Container,
   IconButton,
   InputBase,
@@ -21,8 +20,6 @@ import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -188,22 +185,6 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           </Paper>
 
           <Stack direction="row" spacing={2} alignItems="center">
-            <Button
-              variant="contained"
-              color="primary"
-              size="medium"
-              component={RouterLink}
-              to="/talleres"
-              startIcon={<AddCircleRoundedIcon />}
-              sx={{ borderRadius: 999, px: 2.5, fontWeight: 700 }}
-            >
-              Nuevo Taller
-            </Button>
-            <IconButton size="large" component={RouterLink} to="/talleres/seguimiento">
-              <Badge color="secondary" variant="dot">
-                <NotificationsNoneRoundedIcon />
-              </Badge>
-            </IconButton>
             <Paper
               sx={(theme) => ({
                 display: "flex",
