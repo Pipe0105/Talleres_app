@@ -1,12 +1,12 @@
-import { ReactNode, useMemo } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import {
   AppBar,
   Avatar,
   Button,
   Box,
   Container,
+  Drawer,
   IconButton,
-  InputBase,
   List,
   ListItemButton,
   ListItemIcon,
@@ -19,7 +19,6 @@ import {
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -48,6 +47,7 @@ interface AppLayoutProps {
 export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
   const drawerWidth = 260;
   const { user } = useAuth();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const navigationSections = useMemo(
     () => [
@@ -94,6 +94,89 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
 
   const displayName = user?.full_name?.trim() || user?.email || "Invitado";
 
+  const navigationContent = (
+    <Stack spacing={4} height="100%">
+      {navigationSections.map(
+        (section) =>
+          section.items.length > 0 && (
+            <Box key={section.title}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontWeight: 700, letterSpacing: 0.5, mb: 1.5 }}
+                display="block"
+              >
+                {section.title}
+              </Typography>
+              <List disablePadding>
+                {section.items.map((item) => (
+                  <ListItemButton
+                    key={item.to ?? item.label}
+                    {...(item.to ? { component: RouterLink, to: item.to } : {})}
+                    selected={item.isActive}
+                    onClick={() => setIsMobileNavOpen(false)}
+                    sx={(theme) => ({
+                      mb: 1,
+                      borderRadius: 12,
+                      "&.Mui-selected": {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                        color: theme.palette.primary.main,
+                        boxShadow: "0px 12px 30px rgba(0,178,144,0.14)",
+                      },
+                    })}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: item.isActive ? "primary.main" : "inherit",
+                      }}
+                    >
+                      {item.icon ?? getIconForLabel(item.label)}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
+                      primaryTypographyProps={{ fontWeight: 700 }}
+                    />
+                    <ChevronRightRoundedIcon fontSize="small" sx={{ opacity: 0.4 }} />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Box>
+          )
+      )}
+
+      <Box mt="auto">
+        <Paper
+          sx={(theme) => ({
+            p: 2,
+            borderRadius: 14,
+            backgroundImage: theme.gradients.callout,
+            boxShadow: theme.customShadows.surface,
+            textAlign: "center",
+          })}
+        >
+          <Typography variant="subtitle2" fontWeight={800} mb={1}>
+            ¿Necesitas ayuda?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Consulta la guía de usuario para conocer las nuevas mejoras.
+          </Typography>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            size="small"
+            component={RouterLink}
+            to="/informes-historicos"
+            onClick={() => setIsMobileNavOpen(false)}
+          >
+            Ver guía
+          </Button>
+        </Paper>
+      </Box>
+    </Stack>
+  );
+
   return (
     <Box
       sx={(theme) => ({
@@ -122,7 +205,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
-            <IconButton color="inherit" edge="start" component={RouterLink} to="/">
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={() => setIsMobileNavOpen(true)}
+              sx={{ display: { xs: "inline-flex", md: "none" } }}
+            >
               <MenuRoundedIcon />
             </IconButton>
             <Stack
@@ -160,29 +248,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             </Stack>
           </Stack>
 
-          <Paper
-            sx={(theme) => ({
-              px: 2.5,
-              py: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              width: { xs: "45%", md: "50%" },
-              maxWidth: 620,
-              borderRadius: 999,
-              border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
-              backgroundColor: alpha(theme.palette.background.paper, 0.9),
-              boxShadow: "0px 12px 32px rgba(15,23,42,0.08)",
-            })}
-            variant="outlined"
-          >
-            <SearchRoundedIcon color="disabled" />
-            <InputBase
-              fullWidth
-              placeholder="Buscar talleres, reportes, precios..."
-              sx={{ fontWeight: 600 }}
-            />
-          </Paper>
+          <Box sx={{ flex: 1 }} />
 
           <Stack direction="row" spacing={2} alignItems="center">
             <Paper
@@ -243,85 +309,27 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             display: { xs: "none", md: "block" },
           })}
         >
-          <Stack spacing={4} height="100%">
-            {navigationSections.map(
-              (section) =>
-                section.items.length > 0 && (
-                  <Box key={section.title}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 700, letterSpacing: 0.5, mb: 1.5 }}
-                      display="block"
-                    >
-                      {section.title}
-                    </Typography>
-                    <List disablePadding>
-                      {section.items.map((item) => (
-                        <ListItemButton
-                          key={item.to ?? item.label}
-                          {...(item.to ? { component: RouterLink, to: item.to } : {})}
-                          selected={item.isActive}
-                          sx={(theme) => ({
-                            mb: 1,
-                            borderRadius: 12,
-                            "&.Mui-selected": {
-                              backgroundColor: alpha(theme.palette.primary.main, 0.12),
-                              color: theme.palette.primary.main,
-                              boxShadow: "0px 12px 30px rgba(0,178,144,0.14)",
-                            },
-                          })}
-                        >
-                          <ListItemIcon
-                            sx={{
-                              minWidth: 32,
-                              color: item.isActive ? "primary.main" : "inherit",
-                            }}
-                          >
-                            {item.icon ?? getIconForLabel(item.label)}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={item.label}
-                            primaryTypographyProps={{ fontWeight: 700 }}
-                          />
-                          <ChevronRightRoundedIcon fontSize="small" sx={{ opacity: 0.4 }} />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                )
-            )}
-
-            <Box mt="auto">
-              <Paper
-                sx={(theme) => ({
-                  p: 2,
-                  borderRadius: 14,
-                  backgroundImage: theme.gradients.callout,
-                  boxShadow: theme.customShadows.surface,
-                  textAlign: "center",
-                })}
-              >
-                <Typography variant="subtitle2" fontWeight={800} mb={1}>
-                  ¿Necesitas ayuda?
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  Consulta la guía de usuario para conocer las nuevas mejoras.
-                </Typography>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  component={RouterLink}
-                  to="/informes-historicos"
-                >
-                  Ver guía
-                </Button>
-              </Paper>
-            </Box>
-          </Stack>
+          {navigationContent}
         </Box>
+
+        <Drawer
+          anchor="left"
+          open={isMobileNavOpen}
+          onClose={() => setIsMobileNavOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={(theme) => ({
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              top: 80,
+              backgroundColor: alpha(theme.palette.background.paper, 0.96),
+              borderRight: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+              padding: 0,
+            },
+          })}
+        >
+          <Box sx={{ px: 2.5, py: 3, height: "100%", overflowY: "auto" }}>{navigationContent}</Box>
+        </Drawer>
 
         <Box
           component="main"
