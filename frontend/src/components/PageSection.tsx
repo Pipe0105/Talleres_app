@@ -37,7 +37,7 @@ const PageSection = ({
       sx={[
         (theme: Theme) => ({
           p: paddingByVariant[padding],
-          borderRadius: theme.shape.borderRadius,
+          borderRadius: 1,
           boxShadow: theme.customShadows.surface,
           backgroundImage: theme.gradients.subtle,
           backgroundSize: "cover",
