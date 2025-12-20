@@ -145,36 +145,6 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             </Box>
           )
       )}
-
-      <Box mt="auto">
-        <Paper
-          sx={(theme) => ({
-            p: 2,
-            borderRadius: 14,
-            backgroundImage: theme.gradients.callout,
-            boxShadow: theme.customShadows.surface,
-            textAlign: "center",
-          })}
-        >
-          <Typography variant="subtitle2" fontWeight={800} mb={1}>
-            ¿Necesitas ayuda?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Consulta la guía de usuario para conocer las nuevas mejoras.
-          </Typography>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            size="small"
-            component={RouterLink}
-            to="/informes-historicos"
-            onClick={() => setIsMobileNavOpen(false)}
-          >
-            Ver guía
-          </Button>
-        </Paper>
-      </Box>
     </Stack>
   );
 
