@@ -104,7 +104,6 @@ const parseNumber = (value: string): number => {
 };
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const DEFAULT_UNIT = "kg";
 const DEFAULT_CATEGORY = "corte";
 
 const HistorialTalleres = () => {
@@ -314,8 +313,6 @@ const HistorialTalleres = () => {
         peso: pesoDetalle,
         item_id: detalle.item_id ?? undefined,
         categoria: DEFAULT_CATEGORY,
-        unidad_medida: DEFAULT_UNIT,
-        factor_conversion: 1,
       });
     }
 

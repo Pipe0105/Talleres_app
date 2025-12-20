@@ -7,7 +7,6 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas
-from ..schemas import normalize_to_base_quantity, resolve_conversion_factor
 from ..constants import BRANCH_LOCATIONS
 from ..dependencies import get_current_active_user, get_current_admin_user
 from ..database import get_db
@@ -33,25 +32,13 @@ def _build_detalle(
     db: Session, det: schemas.TallerDetalleCreate
 ) -> models.TallerDetalle:
     detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
-    try:
-        factor_conversion = resolve_conversion_factor(
-            det.unidad_medida, det.factor_conversion
-        )
-        peso_normalizado = normalize_to_base_quantity(
-            det.peso, det.unidad_medida, factor_conversion
-        )
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
-        ) from exc
+    peso = Decimal(det.peso)
 
     return models.TallerDetalle(
         codigo_producto=det.codigo_producto,
         nombre_subcorte=det.nombre_subcorte,
-        peso=Decimal(det.peso),
-        peso_normalizado=peso_normalizado,
-        unidad_medida=det.unidad_medida,
-        factor_conversion=factor_conversion,
+        peso=peso,
+        peso_normalizado=peso,
         categoria=det.categoria,
         item_id=detalle_item_id,
     )
@@ -116,7 +103,7 @@ def crear_taller(
     peso_final = Decimal(payload.peso_final)
 
     total_subcortes = sum(
-        normalize_to_base_quantity(det.peso, det.unidad_medida, det.factor_conversion)
+        Decimal(det.peso or 0)
         for det in payload.subcortes
     )
     total_procesado = peso_final + total_subcortes
@@ -517,10 +504,7 @@ def actualizar_taller(
 
     peso_inicial = Decimal(payload.peso_inicial)
     peso_final = Decimal(payload.peso_final)
-    total_subcortes = sum(
-        normalize_to_base_quantity(det.peso, det.unidad_medida, det.factor_conversion)
-        for det in payload.subcortes
-    )
+    total_subcortes = sum(Decimal(det.peso or 0) for det in payload.subcortes)
     total_procesado = peso_final + total_subcortes
     perdida = peso_inicial - total_procesado
     porcentaje_perdida = (

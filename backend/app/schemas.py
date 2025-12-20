@@ -20,12 +20,6 @@ MAX_PASSWORD_LENGTH = 128
 MIN_PASSWORD_LENGTH = 8
 SKU_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9_.-]*$", re.IGNORECASE)
 ALLOWED_CATEGORIES = {"corte", "subproducto", "merma", "otro"}
-UNIT_MULTIPLIERS: dict[str, Decimal] = {
-    "kg": Decimal("1"),
-    "g": Decimal("0.001"),
-    "lb": Decimal("0.45359237"),
-}
-UNITS_REQUIRING_FACTOR = {"caja", "unidad"}
 
 
 def _validate_printable_text(value: str, field_name: str, max_length: int) -> str:
@@ -88,29 +82,6 @@ def _validate_category(value: str) -> str:
             f"La categoría no es válida. Usa una de: {', '.join(sorted(ALLOWED_CATEGORIES))}."
         )
     return normalized
-
-def resolve_conversion_factor(unidad_medida: str, factor: Optional[Decimal]) -> Decimal:
-    unidad = unidad_medida.strip().lower()
-    if unidad in UNIT_MULTIPLIERS:
-        return UNIT_MULTIPLIERS[unidad]
-
-    if unidad in UNITS_REQUIRING_FACTOR:
-        if factor is None:
-            raise ValueError(
-                "Debes indicar cuántos kg representa cada unidad/paquete para normalizar el stock."
-            )
-        if factor <= 0:
-            raise ValueError("El factor de conversión debe ser mayor que cero.")
-        return factor
-
-    raise ValueError("La unidad de medida no es válida.")
-
-def normalize_to_base_quantity(
-    cantidad: Decimal, unidad_medida: str, factor_conversion: Optional[Decimal]
-) -> Decimal:
-    factor = resolve_conversion_factor(unidad_medida, factor_conversion)
-    return (cantidad * factor).quantize(Decimal("0.0001"))
-
 
 class ItemIn(BaseModel):
     item_code: str
@@ -316,8 +287,6 @@ class TallerDetalleCreate(BaseModel):
 ]
     item_id: Optional[int] = None
     categoria: str
-    unidad_medida: str = "kg"
-    factor_conversion: Optional[Decimal] = None
     
     model_config = ConfigDict(extra="forbid")
 
@@ -334,41 +303,6 @@ class TallerDetalleCreate(BaseModel):
     @classmethod
     def _validate_categoria(cls, value: str) -> str:
         return _validate_category(value)
-
-    @field_validator("unidad_medida")
-    @classmethod
-    def _validate_unidad_medida(cls, value: str) -> str:
-        unidad = value.strip().lower()
-        if unidad in UNIT_MULTIPLIERS or unidad in UNITS_REQUIRING_FACTOR:
-            return unidad
-        raise ValueError(
-            "La unidad de medida no es válida. Usa kg, g, lb, unidad o caja."
-        )
-
-    @field_validator("factor_conversion")
-    @classmethod
-    def _validate_factor_conversion(
-        cls, value: Optional[Decimal], values: dict[str, object]
-    ) -> Optional[Decimal]:
-        unidad = (values.get("unidad_medida") or "").strip().lower()
-        if unidad in UNITS_REQUIRING_FACTOR:
-            if value is None:
-                raise ValueError(
-                    "Indica cuánto equivale cada unidad/paquete para normalizar el stock."
-                )
-            if value <= 0:
-                raise ValueError("El factor de conversión debe ser mayor que cero.")
-        elif value is not None and value <= 0:
-            raise ValueError("El factor de conversión debe ser mayor que cero.")
-        return value
-
-    @model_validator(mode="after")
-    def _default_factor(self) -> "TallerDetalleCreate":
-        if self.factor_conversion is None and self.unidad_medida in UNIT_MULTIPLIERS:
-            self.factor_conversion = UNIT_MULTIPLIERS[self.unidad_medida]
-        return self
-
-
 
 class TallerCreate(BaseModel):
     nombre_taller: str
@@ -455,8 +389,6 @@ class TallerDetalleOut(BaseModel):
     peso: Decimal
     item_id: Optional[int] = None
     categoria: str
-    unidad_medida: str
-    factor_conversion: Decimal | None = None
     peso_normalizado: Decimal
 
     model_config = ConfigDict(from_attributes=True)

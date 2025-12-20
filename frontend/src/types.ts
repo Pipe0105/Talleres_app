@@ -43,8 +43,6 @@ export interface TallerDetallePayload {
   peso: number;
   item_id?: number | null;
   categoria: string;
-  unidad_medida: string;
-  factor_conversion?: number | null;
   peso_normalizado?: number;
 }
 

@@ -111,8 +111,6 @@ class TallerDetalle(Base):
     nombre_subcorte = Column(Text)
     peso = Column(Numeric(14, 4))
     peso_normalizado = Column(Numeric(14, 4))
-    unidad_medida = Column(Text, default="kg")
-    factor_conversion = Column(Numeric(14, 4), default=1)
     categoria = Column(Text, default="sin_categoria")
     creado_en = Column(DateTime, default=datetime.utcnow)
 

@@ -111,18 +111,6 @@ def apply_startup_migrations(engine: Engine) -> None:
             conn.execute(
                 text(
                     "ALTER TABLE IF EXISTS talleres_detalle "
-                    "ADD COLUMN IF NOT EXISTS unidad_medida TEXT DEFAULT 'kg'"
-                )
-            )
-            conn.execute(
-                text(
-                    "ALTER TABLE IF EXISTS talleres_detalle "
-                    "ADD COLUMN IF NOT EXISTS factor_conversion NUMERIC(14,4) DEFAULT 1"
-                )
-            )
-            conn.execute(
-                text(
-                    "ALTER TABLE IF EXISTS talleres_detalle "
                     "ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT 'sin_categoria'"
                 )
             )

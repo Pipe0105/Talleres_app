@@ -32,10 +32,7 @@ const resolveBaseUrl = (): string => {
   }
 
   const envBackendOrigin = import.meta.env.VITE_BACKEND_ORIGIN;
-  if (
-    typeof envBackendOrigin === "string" &&
-    envBackendOrigin.trim().length > 0
-  ) {
+  if (typeof envBackendOrigin === "string" && envBackendOrigin.trim().length > 0) {
     return ensureApiPrefix(envBackendOrigin.trim());
   }
 
@@ -142,31 +139,15 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 const resolveItemNombre = (raw: any): string =>
-  toStringOr(
-    raw?.nombre ?? raw?.detalle ?? raw?.descripcion ?? raw?.descripcion_item,
-    ""
-  );
+  toStringOr(raw?.nombre ?? raw?.detalle ?? raw?.descripcion ?? raw?.descripcion_item, "");
 
-const DEFAULT_UNIT = "kg";
 const DEFAULT_CATEGORY = "corte";
 const ALLOWED_CATEGORIES = ["corte", "subproducto", "merma", "otro"];
-const VALID_UNITS = ["kg", "g", "lb", "unidad", "caja"];
-
-const normalizeUnit = (raw: any): string => {
-  const unit = toStringOr(raw, DEFAULT_UNIT).toLowerCase();
-  return VALID_UNITS.includes(unit) ? unit : DEFAULT_UNIT;
-};
 
 const normalizeCategory = (raw: any): string => {
   const category = toStringOr(raw, DEFAULT_CATEGORY).toLowerCase().trim();
   return ALLOWED_CATEGORIES.includes(category) ? category : DEFAULT_CATEGORY;
 };
-
-const normalizeFactor = (raw: any): number | null => {
-  const value = toNumber(raw, NaN);
-  return Number.isFinite(value) && value > 0 ? value : null;
-};
-
 
 const mapItem = (raw: any): Item => {
   const nombre = resolveItemNombre(raw);
@@ -188,12 +169,8 @@ const mapItem = (raw: any): Item => {
     location: raw?.location ?? null,
     sede: raw?.sede ?? raw?.location ?? null,
     unidad: raw?.unidad ?? null,
-    fecha_vigencia: raw?.fecha_vigencia
-      ? toStringOr(raw.fecha_vigencia, "")
-      : null,
-    fecha_activacion: raw?.fecha_activacion
-      ? toStringOr(raw.fecha_activacion, "")
-      : null,
+    fecha_vigencia: raw?.fecha_vigencia ? toStringOr(raw.fecha_vigencia, "") : null,
+    fecha_activacion: raw?.fecha_activacion ? toStringOr(raw.fecha_activacion, "") : null,
     fuente: raw?.fuente ?? raw?.source_file ?? null,
     file_hash: raw?.file_hash ?? null,
     ingested_at: raw?.ingested_at ? toStringOr(raw.ingested_at, "") : null,
@@ -209,8 +186,7 @@ const mapInventarioItem = (raw: any): InventarioItem => ({
   especie: raw?.especie ?? null,
   entradas: toNumber(raw?.entradas, 0),
   salidas_pendientes: toNumber(raw?.salidas_pendientes, 0),
-  umbral_minimo:
-    raw?.umbral_minimo == null ? undefined : toNumber(raw?.umbral_minimo, 0),
+  umbral_minimo: raw?.umbral_minimo == null ? undefined : toNumber(raw?.umbral_minimo, 0),
 });
 
 const mapUser = (raw: any): UserProfile => ({
@@ -233,9 +209,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   sede: raw?.sede ?? null,
   peso_inicial: toNumber(raw?.peso_inicial, 0),
   peso_final: toNumber(raw?.peso_final, 0),
-  porcentaje_perdida: raw?.porcentaje_perdida
-    ? toNumber(raw?.porcentaje_perdida, 0)
-    : null,
+  porcentaje_perdida: raw?.porcentaje_perdida ? toNumber(raw?.porcentaje_perdida, 0) : null,
   especie: toStringOr(raw?.especie, ""),
   item_principal_id: raw?.item_principal_id ?? null,
   codigo_principal: toStringOr(raw?.codigo_principal, ""),
@@ -248,26 +222,14 @@ const mapTaller = (raw: any): TallerResponse => ({
         peso: toNumber(det?.peso, 0),
         item_id: det?.item_id ?? null,
         categoria: normalizeCategory(det?.categoria),
-        unidad_medida: normalizeUnit(det?.unidad_medida),
-        factor_conversion: normalizeFactor(
-          det?.factor_conversion ?? det?.factorConversion
-        ),
-        peso_normalizado: toNumber(
-          det?.peso_normalizado ?? det?.pesoNormalizado ?? det?.peso,
-          0
-        ),
+        peso_normalizado: toNumber(det?.peso_normalizado ?? det?.pesoNormalizado ?? det?.peso, 0),
       }))
     : [],
 });
 
 const mapTallerAdmin = (raw: any): TallerAdminResponse => ({
   ...mapTaller(raw),
-  creado_por:
-    raw?.creado_por ??
-    raw?.creadoPor ??
-    raw?.creador ??
-    raw?.creado_por_nombre ??
-    null,
+  creado_por: raw?.creado_por ?? raw?.creadoPor ?? raw?.creador ?? raw?.creado_por_nombre ?? null,
 });
 
 const mapTallerActividadUsuario = (raw: any): TallerActividadUsuario => ({
@@ -314,10 +276,7 @@ const mapTallerCalculoRow = (raw: any): TallerCalculoRow => ({
   valor_estimado: toNumber(raw?.valor_estimado, 0),
 });
 
-export const login = async (
-  username: string,
-  password: string
-): Promise<AuthToken> => {
+export const login = async (username: string, password: string): Promise<AuthToken> => {
   const payload = new URLSearchParams();
   payload.set("grant_type", "password");
   payload.set("username", username);
@@ -340,7 +299,6 @@ export const refreshToken = async (): Promise<AuthToken> => {
   return data;
 };
 
-
 export interface RegisterUserPayload {
   username: string;
   email?: string;
@@ -357,9 +315,7 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
   return mapUser(data);
 };
 
-export const createTaller = async (
-  payload: CrearTallerPayload
-): Promise<TallerResponse> => {
+export const createTaller = async (payload: CrearTallerPayload): Promise<TallerResponse> => {
   const { data } = await api.post<unknown>("/talleres", payload);
   return mapTaller(data);
 };
@@ -389,7 +345,6 @@ export const getInventario = async (
   return (Array.isArray(data) ? data : []).map(mapInventarioItem);
 };
 
-
 export interface AdminCreateUserPayload extends RegisterUserPayload {
   is_admin?: boolean;
   is_active?: boolean;
@@ -397,9 +352,7 @@ export interface AdminCreateUserPayload extends RegisterUserPayload {
   sede?: string;
 }
 
-export const adminCreateUser = async (
-  payload: AdminCreateUserPayload
-): Promise<UserProfile> => {
+export const adminCreateUser = async (payload: AdminCreateUserPayload): Promise<UserProfile> => {
   const { data } = await api.post<unknown>("/users", payload);
   return mapUser(data);
 };
@@ -458,9 +411,7 @@ export const adminGetTallerHistorial = async (
   return (Array.isArray(data) ? data : []).map(mapTallerAdmin);
 };
 
-export const adminGetTaller = async (
-  tallerId: string | number
-): Promise<TallerAdminResponse> => {
+export const adminGetTaller = async (tallerId: string | number): Promise<TallerAdminResponse> => {
   const { data } = await api.get<unknown>(`/talleres/${tallerId}`);
   return mapTallerAdmin(data);
 };
@@ -473,9 +424,7 @@ export const adminUpdateTaller = async (
   return mapTallerAdmin(data);
 };
 
-export const adminDeleteTaller = async (
-  tallerId: string | number
-): Promise<void> => {
+export const adminDeleteTaller = async (tallerId: string | number): Promise<void> => {
   await api.delete(`/talleres/${tallerId}`);
 };
 
@@ -510,9 +459,7 @@ export const getTalleres = async (): Promise<TallerListItem[]> => {
   return (Array.isArray(data) ? data : []).map(mapTallerListItem);
 };
 
-export const getTallerCalculo = async (
-  tallerId: string | number
-): Promise<TallerCalculoRow[]> => {
+export const getTallerCalculo = async (tallerId: string | number): Promise<TallerCalculoRow[]> => {
   const { data } = await api.get<unknown[]>(`/talleres/${tallerId}/calculo`);
   return (Array.isArray(data) ? data : []).map(mapTallerCalculoRow);
 };

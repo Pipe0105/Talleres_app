@@ -13,12 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  AddCircleOutline,
-  CheckCircle,
-  PlaylistAdd,
-  SaveRounded,
-} from "@mui/icons-material";
+import { AddCircleOutline, CheckCircle, PlaylistAdd, SaveRounded } from "@mui/icons-material";
 
 import { createTaller } from "../../api/talleresApi";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
@@ -73,17 +68,10 @@ const TalleresPlus = () => {
     texto: string;
   }>(null);
   const [pesoInicialGuardado, setPesoInicialGuardado] = useState(false);
-  const [subcortesSeleccionados, setSubcortesSeleccionados] = useState<
-    string[]
-  >([]);
-  const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] =
-    useState(false);
-  const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>(
-    {}
-  );
-  const [materialesGuardados, setMaterialesGuardados] = useState<
-    TallerPlusMaterial[]
-  >([]);
+  const [subcortesSeleccionados, setSubcortesSeleccionados] = useState<string[]>([]);
+  const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] = useState(false);
+  const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>({});
+  const [materialesGuardados, setMaterialesGuardados] = useState<TallerPlusMaterial[]>([]);
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
 
@@ -112,10 +100,7 @@ const TalleresPlus = () => {
   );
 
   const subcortesActivos = useMemo<SubcorteDefinition[]>(
-    () =>
-      subcortes.filter((subcorte) =>
-        subcortesSeleccionados.includes(subcorte.codigo)
-      ),
+    () => subcortes.filter((subcorte) => subcortesSeleccionados.includes(subcorte.codigo)),
     [subcortes, subcortesSeleccionados]
   );
 
@@ -125,20 +110,14 @@ const TalleresPlus = () => {
     return acc + parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
   }, 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
-  const perdida =
-    pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
-  const porcentajePerdida =
-    pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
+  const perdida = pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
+  const porcentajePerdida = pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
 
   const readyForSubcortes =
-    pesoInicialGuardado &&
-    Boolean(materialSeleccionado) &&
-    pesoInicialNumero > 0;
+    pesoInicialGuardado && Boolean(materialSeleccionado) && pesoInicialNumero > 0;
 
   const readyToQueueMaterial =
-    readyForSubcortes &&
-    seleccionSubcortesGuardada &&
-    subcortesActivos.length > 0;
+    readyForSubcortes && seleccionSubcortesGuardada && subcortesActivos.length > 0;
 
   const resetFormularioMaterial = () => {
     setCodigoMaterial("");
@@ -167,9 +146,7 @@ const TalleresPlus = () => {
   const handleToggleSubcorte = (codigo: string) => {
     setSeleccionSubcortesGuardada(false);
     setSubcortesSeleccionados((prev) =>
-      prev.includes(codigo)
-        ? prev.filter((item) => item !== codigo)
-        : [...prev, codigo]
+      prev.includes(codigo) ? prev.filter((item) => item !== codigo) : [...prev, codigo]
     );
   };
 
@@ -207,8 +184,7 @@ const TalleresPlus = () => {
     if (!readyToQueueMaterial) {
       setMensaje({
         tipo: "error",
-        texto:
-          "Selecciona y guarda al menos un subcorte para añadir el material.",
+        texto: "Selecciona y guarda al menos un subcorte para añadir el material.",
       });
       return;
     }
@@ -245,9 +221,7 @@ const TalleresPlus = () => {
   };
 
   const handleRemoverMaterial = (id: string) => {
-    setMaterialesGuardados((prev) =>
-      prev.filter((material) => material.id !== id)
-    );
+    setMaterialesGuardados((prev) => prev.filter((material) => material.id !== id));
   };
 
   const handleGuardarLote = async () => {
@@ -270,9 +244,7 @@ const TalleresPlus = () => {
       try {
         await createTaller({
           nombre_taller:
-            material.nombreTaller ||
-            nombreGrupo.trim() ||
-            `Taller de ${material.materialNombre}`,
+            material.nombreTaller || nombreGrupo.trim() || `Taller de ${material.materialNombre}`,
           descripcion: material.descripcion || descripcionGrupo || undefined,
           sede: isAdmin ? material.sede || undefined : undefined,
           peso_inicial: material.pesoInicial,
@@ -284,8 +256,6 @@ const TalleresPlus = () => {
             nombre_subcorte: sc.nombre,
             peso: sc.peso,
             categoria: "corte",
-            unidad_medida: "kg",
-            factor_conversion: 1,
           })),
         });
         exitos += 1;
@@ -341,8 +311,8 @@ const TalleresPlus = () => {
               Talleres+
             </Typography>
             <Typography color="text.secondary">
-              Crea varios materiales en un mismo flujo, guárdalos en una lista y
-              envía todo el taller en conjunto.
+              Crea varios materiales en un mismo flujo, guárdalos en una lista y envía todo el
+              taller en conjunto.
             </Typography>
           </Box>
 
@@ -372,8 +342,7 @@ const TalleresPlus = () => {
               sx={{
                 borderRadius: 4,
                 borderColor: "rgba(0,0,0,0.04)",
-                boxShadow:
-                  "0 20px 80px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)",
+                boxShadow: "0 20px 80px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)",
                 height: "100%",
               }}
             >
@@ -430,8 +399,8 @@ const TalleresPlus = () => {
                       </Typography>
                     </Stack>
                     <Typography color="text.secondary">
-                      Repite el proceso de pesos y subcortes para cada material
-                      que quieras incluir en este taller+.
+                      Repite el proceso de pesos y subcortes para cada material que quieras incluir
+                      en este taller+.
                     </Typography>
                   </Stack>
 
@@ -471,10 +440,7 @@ const TalleresPlus = () => {
                         }}
                       >
                         {materiales.map((material) => (
-                          <MenuItem
-                            key={material.codigo}
-                            value={material.codigo}
-                          >
+                          <MenuItem key={material.codigo} value={material.codigo}>
                             {material.nombre} ({material.codigo})
                           </MenuItem>
                         ))}
@@ -509,20 +475,12 @@ const TalleresPlus = () => {
                         onChange={(e) => setPesoInicial(e.target.value)}
                       />
                     </Grid>
-                    <Grid
-                      item
-                      xs={12}
-                      md={6}
-                      display="flex"
-                      alignItems="center"
-                    >
+                    <Grid item xs={12} md={6} display="flex" alignItems="center">
                       <Button
                         variant="contained"
                         fullWidth
                         color="primary"
-                        disabled={
-                          !materialSeleccionado || pesoInicialNumero <= 0
-                        }
+                        disabled={!materialSeleccionado || pesoInicialNumero <= 0}
                         onClick={handleGuardarPesoInicial}
                       >
                         Guardar peso inicial
@@ -545,8 +503,8 @@ const TalleresPlus = () => {
                           Subcortes ({materialSeleccionado?.nombre})
                         </Typography>
                         <Typography color="text.secondary">
-                          Selecciona los subcortes disponibles, guarda tu
-                          selección y luego registra los pesos obtenidos.
+                          Selecciona los subcortes disponibles, guarda tu selección y luego registra
+                          los pesos obtenidos.
                         </Typography>
                       </Box>
 
@@ -556,14 +514,9 @@ const TalleresPlus = () => {
                           spacing={2}
                           alignItems={{ xs: "stretch", md: "center" }}
                         >
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                          >
+                          <Stack direction="row" spacing={1} alignItems="center">
                             <Typography fontWeight={700}>
-                              Selección guardada (
-                              {subcortesSeleccionados.length} subcorte(s))
+                              Selección guardada ({subcortesSeleccionados.length} subcorte(s))
                             </Typography>
                             <Chip
                               label="Checklist listo"
@@ -587,18 +540,10 @@ const TalleresPlus = () => {
                         <Stack spacing={2}>
                           <Grid container spacing={2}>
                             {subcortes.map((subcorte) => (
-                              <Grid
-                                item
-                                xs={12}
-                                md={6}
-                                lg={4}
-                                key={subcorte.codigo}
-                              >
+                              <Grid item xs={12} md={6} lg={4} key={subcorte.codigo}>
                                 <SelectableSubcorteCard
                                   subcorte={subcorte}
-                                  checked={subcortesSeleccionados.includes(
-                                    subcorte.codigo
-                                  )}
+                                  checked={subcortesSeleccionados.includes(subcorte.codigo)}
                                   onToggle={handleToggleSubcorte}
                                 />
                               </Grid>
@@ -609,14 +554,9 @@ const TalleresPlus = () => {
                             spacing={2}
                             alignItems={{ xs: "stretch", md: "center" }}
                           >
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                            >
+                            <Stack direction="row" spacing={1} alignItems="center">
                               <Typography fontWeight={700}>
-                                {subcortesSeleccionados.length} subcorte(s)
-                                seleccionado(s)
+                                {subcortesSeleccionados.length} subcorte(s) seleccionado(s)
                               </Typography>
                               {seleccionSubcortesGuardada && (
                                 <Chip
@@ -679,24 +619,19 @@ const TalleresPlus = () => {
                           </Grid>
 
                           <Box>
-                            <Typography
-                              variant="subtitle1"
-                              fontWeight={700}
-                              color="error"
-                            >
-                              Pérdida: {formatKg(perdida)} kg (
-                              {porcentajePerdida.toFixed(2)}%)
+                            <Typography variant="subtitle1" fontWeight={700} color="error">
+                              Pérdida: {formatKg(perdida)} kg ({porcentajePerdida.toFixed(2)}%)
                             </Typography>
                             <Typography color="text.secondary">
-                              Total subcortes: {formatKg(totalSubcortes)} kg ·
-                              Peso final: {formatKg(pesoFinalNumero)} kg
+                              Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}
+                              {formatKg(pesoFinalNumero)} kg
                             </Typography>
                           </Box>
                         </Stack>
                       ) : (
                         <Alert severity="info" sx={{ mt: 1 }}>
-                          Selecciona y guarda los subcortes para habilitar los
-                          campos de registro de peso.
+                          Selecciona y guarda los subcortes para habilitar los campos de registro de
+                          peso.
                         </Alert>
                       )}
                     </Stack>
@@ -707,10 +642,7 @@ const TalleresPlus = () => {
                     spacing={2}
                     justifyContent="flex-end"
                   >
-                    <Button
-                      variant="outlined"
-                      onClick={resetFormularioMaterial}
-                    >
+                    <Button variant="outlined" onClick={resetFormularioMaterial}>
                       Limpiar formulario
                     </Button>
                     <Button
@@ -740,15 +672,12 @@ const TalleresPlus = () => {
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Stack direction="row" spacing={1} alignItems="center" mb={2}>
                     <PlaylistAdd color="primary" />
-                    <Typography fontWeight={800}>
-                      Materiales guardados
-                    </Typography>
+                    <Typography fontWeight={800}>Materiales guardados</Typography>
                   </Stack>
 
                   {!materialesGuardados.length ? (
                     <Alert severity="info" icon={false}>
-                      Aún no has agregado materiales. Guárdalos aquí y luego
-                      envíalos todos juntos.
+                      Aún no has agregado materiales. Guárdalos aquí y luego envíalos todos juntos.
                     </Alert>
                   ) : (
                     <Stack spacing={2}>
@@ -766,9 +695,7 @@ const TalleresPlus = () => {
                                 alignItems="center"
                                 justifyContent="space-between"
                               >
-                                <Typography fontWeight={700}>
-                                  {material.materialNombre}
-                                </Typography>
+                                <Typography fontWeight={700}>{material.materialNombre}</Typography>
                                 <Chip
                                   size="small"
                                   label={`${formatKg(material.pesoInicial)} kg`}
@@ -776,40 +703,25 @@ const TalleresPlus = () => {
                                   variant="outlined"
                                 />
                               </Stack>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {material.subcortes.length} subcorte(s) ·
-                                Pérdida: {formatKg(material.perdida)} kg
+                              <Typography variant="body2" color="text.secondary">
+                                {material.subcortes.length} subcorte(s) · Pérdida:{" "}
+                                {formatKg(material.perdida)} kg
                               </Typography>
-                              <Stack
-                                direction="row"
-                                spacing={1}
-                                flexWrap="wrap"
-                              >
+                              <Stack direction="row" spacing={1} flexWrap="wrap">
                                 {material.subcortes.map((sc) => (
                                   <Chip
                                     key={sc.codigo}
                                     size="small"
-                                    label={`${sc.nombre} (${formatKg(
-                                      sc.peso
-                                    )} kg)`}
+                                    label={`${sc.nombre} (${formatKg(sc.peso)} kg)`}
                                   />
                                 ))}
                               </Stack>
-                              <Stack
-                                direction="row"
-                                spacing={1}
-                                justifyContent="flex-end"
-                              >
+                              <Stack direction="row" spacing={1} justifyContent="flex-end">
                                 <Button
                                   variant="text"
                                   color="error"
                                   size="small"
-                                  onClick={() =>
-                                    handleRemoverMaterial(material.id)
-                                  }
+                                  onClick={() => handleRemoverMaterial(material.id)}
                                 >
                                   Eliminar
                                 </Button>

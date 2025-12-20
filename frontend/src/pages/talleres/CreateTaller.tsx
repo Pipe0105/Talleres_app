@@ -30,7 +30,6 @@ import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
 import { formatKg, parseWeightInput } from "../../utils/weights";
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const DEFAULT_UNIT = "kg";
 const DEFAULT_CATEGORY = "corte";
 
 const CreateTaller = () => {
@@ -50,9 +49,6 @@ const CreateTaller = () => {
   const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] = useState(false);
   const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>({});
 
-  const [subcorteUnidades, setSubcorteUnidades] = useState<Record<string, string>>({});
-  const [subcorteFactores, setSubcorteFactores] = useState<Record<string, string>>({});
-  const [subcorteCategorias, setSubcorteCategorias] = useState<Record<string, string>>({});
   const [sede, setSede] = useState<string>("");
 
   const { user } = useAuth();
@@ -212,8 +208,6 @@ const CreateTaller = () => {
         nombre_subcorte: sc.nombre,
         peso: pesoRaw,
         categoria: DEFAULT_CATEGORY,
-        unidad_medida: DEFAULT_UNIT,
-        factor_conversion: 1,
       });
     }
 
