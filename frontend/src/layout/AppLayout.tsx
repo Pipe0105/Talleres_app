@@ -15,6 +15,7 @@ import {
   Stack,
   Toolbar,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
@@ -30,6 +31,8 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useAuth } from "../context/AuthContext";
+import InvertColorsIcon from "@mui/icons-material/InvertColors";
+import { useAppTheme } from "../context/ThemeContext";
 
 interface NavItem {
   label: string;
@@ -48,6 +51,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
   const drawerWidth = 260;
   const appBarHeight = 80;
   const { user } = useAuth();
+  const { highContrast, toggleHighContrast } = useAppTheme();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const navigationSections = useMemo(
@@ -120,7 +124,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                       mb: 1,
                       borderRadius: 12,
                       "&.Mui-selected": {
-                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                        backgroundColor: alpha(
+                          theme.palette.primary.main,
+                          highContrast ? 0.22 : 0.12
+                        ),
                         color: theme.palette.primary.main,
                         boxShadow: "0px 12px 30px rgba(0,178,144,0.14)",
                       },
@@ -222,6 +229,27 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           <Box sx={{ flex: 1 }} />
 
           <Stack direction="row" spacing={2} alignItems="center">
+            <Tooltip
+              title={highContrast ? "Desactivar alto contraste" : "Activar alto contraste"}
+              arrow
+            >
+              <Button
+                variant={highContrast ? "contained" : "outlined"}
+                color="secondary"
+                size="medium"
+                startIcon={<InvertColorsIcon />}
+                onClick={toggleHighContrast}
+                aria-pressed={highContrast}
+                aria-label={
+                  highContrast
+                    ? "Desactivar modo de alto contraste"
+                    : "Activar modo de alto contraste"
+                }
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                Alto contraste
+              </Button>
+            </Tooltip>
             <Paper
               sx={(theme) => ({
                 display: "flex",
@@ -319,7 +347,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             flexGrow: 1,
             ml: { xs: 0, md: `${drawerWidth}px` },
             pt: 10,
-            pb: theme.layout.pagePaddingY,
+            pb: {
+              xs: theme.spacing(theme.layout.pagePaddingY.xs),
+              md: theme.spacing(theme.layout.pagePaddingY.md),
+            },
           })}
         >
           <Container
@@ -328,7 +359,10 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
               width: "100%",
               maxWidth: theme.layout.contentMaxWidth,
               mx: 0,
-              px: { xs: 2, md: 4 },
+              px: {
+                xs: theme.spacing(theme.layout.pagePaddingX.xs),
+                md: theme.spacing(theme.layout.pagePaddingX.md),
+              },
             })}
           >
             <Box>{children}</Box>

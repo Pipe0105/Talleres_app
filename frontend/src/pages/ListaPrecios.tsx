@@ -46,9 +46,7 @@ const ListaPrecios = () => {
   const [filter, setFilter] = useState(() =>
     sanitizeSearchQuery(safeStorage.getItem(STORAGE_KEYS.filter) ?? "")
   );
-  const [sortOrder, setSortOrder] = useState<
-    "descripcion" | "precio-asc" | "precio-desc"
-  >(
+  const [sortOrder, setSortOrder] = useState<"descripcion" | "precio-asc" | "precio-desc">(
     (safeStorage.getItem(STORAGE_KEYS.sort) as
       | "descripcion"
       | "precio-asc"
@@ -56,15 +54,9 @@ const ListaPrecios = () => {
       | null) ?? "descripcion"
   );
   const [species, setSpecies] = useState<"todas" | "res" | "cerdo">(
-    (safeStorage.getItem(STORAGE_KEYS.species) as
-      | "todas"
-      | "res"
-      | "cerdo"
-      | null) ?? "todas"
+    (safeStorage.getItem(STORAGE_KEYS.species) as "todas" | "res" | "cerdo" | null) ?? "todas"
   );
-  const [branch, setBranch] = useState<string>(
-    safeStorage.getItem(STORAGE_KEYS.branch) ?? "todas"
-  );
+  const [branch, setBranch] = useState<string>(safeStorage.getItem(STORAGE_KEYS.branch) ?? "todas");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const theme = useTheme();
@@ -125,23 +117,16 @@ const ListaPrecios = () => {
       }
     });
 
-    return Array.from(branches).sort((a, b) =>
-      a.localeCompare(b, "es", { sensitivity: "base" })
-    );
+    return Array.from(branches).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
   }, [items]);
 
   const filteredItems = useMemo(() => {
     const query = filter.trim().toLowerCase();
     const normalizedSpecies = species.toLowerCase();
 
-    const normalizePrice = (
-      value: number | null,
-      direction: "asc" | "desc"
-    ) => {
+    const normalizePrice = (value: number | null, direction: "asc" | "desc") => {
       if (value == null) {
-        return direction === "asc"
-          ? Number.POSITIVE_INFINITY
-          : Number.NEGATIVE_INFINITY;
+        return direction === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
       }
 
       return Number(value);
@@ -152,11 +137,7 @@ const ListaPrecios = () => {
       const codigo = (item.codigo_producto ?? "").toLowerCase();
       const descripcion = (item.descripcion ?? "").toLowerCase();
       const sede = (item.sede ?? item.location ?? "").toLowerCase();
-      return (
-        codigo.includes(query) ||
-        descripcion.includes(query) ||
-        sede.includes(query)
-      );
+      return codigo.includes(query) || descripcion.includes(query) || sede.includes(query);
     };
 
     const matchesSpecies = (item: Item) => {
@@ -174,14 +155,10 @@ const ListaPrecios = () => {
 
     const sortByOrder = (a: Item, b: Item) => {
       if (sortOrder === "precio-asc") {
-        return (
-          normalizePrice(a.precio, "asc") - normalizePrice(b.precio, "asc")
-        );
+        return normalizePrice(a.precio, "asc") - normalizePrice(b.precio, "asc");
       }
       if (sortOrder === "precio-desc") {
-        return (
-          normalizePrice(b.precio, "desc") - normalizePrice(a.precio, "desc")
-        );
+        return normalizePrice(b.precio, "desc") - normalizePrice(a.precio, "desc");
       }
 
       return (a.descripcion ?? "").localeCompare(b.descripcion ?? "", "es", {
@@ -190,10 +167,7 @@ const ListaPrecios = () => {
     };
 
     return [...items]
-      .filter(
-        (item) =>
-          matchesQuery(item) && matchesSpecies(item) && matchesBranch(item)
-      )
+      .filter((item) => matchesQuery(item) && matchesSpecies(item) && matchesBranch(item))
       .sort(sortByOrder);
   }, [branch, filter, items, sortOrder, species]);
 
@@ -237,31 +211,19 @@ const ListaPrecios = () => {
       `"${String(value ?? "").replace(/"/g, '""')}"`;
 
     const rows = [
-      [
-        "Código",
-        "Producto",
-        "Lista",
-        "Sede",
-        "Especie",
-        "Precio (COP)",
-        "Fecha de vigencia",
-      ],
+      ["Código", "Producto", "Lista", "Sede", "Especie", "Precio (COP)", "Fecha de vigencia"],
       ...filteredItems.map((item) => [
         item.codigo_producto,
         item.descripcion,
         item.lista_id ?? "",
         item.sede ?? item.location ?? "",
         item.especie ?? "",
-        item.precio == null
-          ? ""
-          : currencyFormatter.format(Number(item.precio)),
+        item.precio == null ? "" : currencyFormatter.format(Number(item.precio)),
         item.fecha_vigencia,
       ]),
     ];
 
-    const csvContent = rows
-      .map((row) => row.map(escapeCsvValue).join(","))
-      .join("\n");
+    const csvContent = rows.map((row) => row.map(escapeCsvValue).join(",")).join("\n");
 
     const blob = new Blob([csvContent], {
       type: "text/csv;charset=utf-8;",
@@ -271,9 +233,7 @@ const ListaPrecios = () => {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `lista_precios_${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
+    link.download = `lista_precios_${new Date().toISOString().slice(0, 10)}.csv`;
 
     link.click();
     URL.revokeObjectURL(url);
@@ -305,8 +265,8 @@ const ListaPrecios = () => {
               Productos y precios vigentes
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Los datos provienen de la API en línea y se actualizan cada vez
-              que cambia la lista en la base de datos.
+              Los datos provienen de la API en línea y se actualizan cada vez que cambia la lista en
+              la base de datos.
             </Typography>
           </div>
           <TextField
@@ -315,11 +275,7 @@ const ListaPrecios = () => {
             value={filter}
             onChange={(event) => handleFilterChange(event.target.value)}
           />
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            justifyContent="flex-end"
-          >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="flex-end">
             <Button
               variant="outlined"
               startIcon={<ZoomOutMap />}
@@ -345,9 +301,8 @@ const ListaPrecios = () => {
                 labelId="sort-order-label"
                 value={sortOrder}
                 label="Ordenar por"
-                onChange={(event) =>
-                  setSortOrder(event.target.value as typeof sortOrder)
-                }
+                onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}
+                inputProps={{ "aria-label": "Ordenar lista de precios" }}
               >
                 <MenuItem value="descripcion">Nombre (A-Z)</MenuItem>
                 <MenuItem value="precio-asc">Precio de menor a mayor</MenuItem>
@@ -360,9 +315,8 @@ const ListaPrecios = () => {
                 labelId="species-filter-label"
                 value={species}
                 label="Especie"
-                onChange={(event) =>
-                  setSpecies(event.target.value as typeof species)
-                }
+                onChange={(event) => setSpecies(event.target.value as typeof species)}
+                inputProps={{ "aria-label": "Filtrar precios por especie" }}
               >
                 <MenuItem value="todas">Todas</MenuItem>
                 <MenuItem value="res">Res</MenuItem>
@@ -376,6 +330,7 @@ const ListaPrecios = () => {
                 value={branch}
                 label="Sede"
                 onChange={(event) => setBranch(event.target.value)}
+                inputProps={{ "aria-label": "Filtrar precios por sede" }}
               >
                 <MenuItem value="todas">Todas</MenuItem>
                 {availableBranches.map((branchName) => (

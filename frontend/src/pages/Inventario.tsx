@@ -17,11 +17,13 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
+  TableSortLabel,
   TextField,
   Typography,
-  Tooltip,
 } from "@mui/material";
 import type { ChipProps } from "@mui/material";
 
@@ -38,20 +40,14 @@ const weightFormatter = new Intl.NumberFormat("es-CO", {
 
 const normalizeBranch = (raw: string | null | undefined) => {
   if (!raw) return null;
-  return (
-    BRANCH_LOCATIONS.find(
-      (branch) => branch.toLowerCase() === raw.toLowerCase()
-    ) ?? null
-  );
+  return BRANCH_LOCATIONS.find((branch) => branch.toLowerCase() === raw.toLowerCase()) ?? null;
 };
 
 const Inventario = () => {
   const { user } = useAuth();
 
   const [selectedBranch, setSelectedBranch] = useState<string>("todas");
-  const [selectedSpecies, setSelectedSpecies] = useState<
-    "todas" | "res" | "cerdo"
-  >("todas");
+  const [selectedSpecies, setSelectedSpecies] = useState<"todas" | "res" | "cerdo">("todas");
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [inventario, setInventario] = useState<InventarioItem[]>([]);
@@ -93,9 +89,7 @@ const Inventario = () => {
       } catch (err) {
         console.error(err);
         if (isMounted) {
-          setError(
-            "No se pudo cargar el inventario. Intenta nuevamente más tarde."
-          );
+          setError("No se pudo cargar el inventario. Intenta nuevamente más tarde.");
         }
       } finally {
         if (isMounted) {
@@ -114,22 +108,64 @@ const Inventario = () => {
   const totalKg = useMemo(
     () =>
       inventario.reduce(
-        (acc, item) =>
-          acc + (typeof item.total_peso === "number" ? item.total_peso : 0),
+        (acc, item) => acc + (typeof item.total_peso === "number" ? item.total_peso : 0),
         0
       ),
     [inventario]
   );
 
-  const sortedInventory = useMemo(
-    () => [...inventario].sort((a, b) => b.total_peso - a.total_peso),
-    [inventario]
+  const [orderBy, setOrderBy] = useState<keyof InventarioItem>("total_peso");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const sortedInventory = useMemo(() => {
+    const comparator = (a: InventarioItem, b: InventarioItem) => {
+      const valueA = a[orderBy] ?? "";
+      const valueB = b[orderBy] ?? "";
+
+      if (typeof valueA === "number" && typeof valueB === "number") {
+        return order === "asc" ? valueA - valueB : valueB - valueA;
+      }
+
+      return order === "asc"
+        ? String(valueA).localeCompare(String(valueB))
+        : String(valueB).localeCompare(String(valueA));
+    };
+
+    return [...inventario].sort(comparator);
+  }, [inventario, order, orderBy]);
+
+  const paginatedInventory = useMemo(
+    () => sortedInventory.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [sortedInventory, page, rowsPerPage]
   );
 
-  const selectedLabel =
-    selectedBranch === "todas" ? "todas las sedes" : selectedBranch;
-  const selectedSpeciesLabel =
-    selectedSpecies === "todas" ? "todas las especies" : selectedSpecies;
+  const handleRequestSort = (property: keyof InventarioItem) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  useEffect(() => {
+    if (page > 0 && page * rowsPerPage >= sortedInventory.length) {
+      setPage(Math.max(0, Math.ceil(sortedInventory.length / rowsPerPage) - 1));
+    }
+  }, [page, rowsPerPage, sortedInventory.length]);
+
+  const selectedLabel = selectedBranch === "todas" ? "todas las sedes" : selectedBranch;
+  const selectedSpeciesLabel = selectedSpecies === "todas" ? "todas las especies" : selectedSpecies;
 
   const clearFilters = () => {
     setSelectedBranch("todas");
@@ -139,7 +175,14 @@ const Inventario = () => {
 
   return (
     <Stack spacing={3} className="animate-fade-up">
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
+      <Paper
+        sx={(theme) => ({
+          p: {
+            xs: theme.spacing(theme.space.sectionPadding.xs),
+            md: theme.spacing(theme.space.sectionPadding.md),
+          },
+        })}
+      >
         <PageHeader
           title="Inventario por sede"
           description="Consulta rápidamente cuánto inventario en KG se ha producido por cada producto a partir de los talleres registrados."
@@ -153,7 +196,14 @@ const Inventario = () => {
         />
       </Paper>
 
-      <Paper sx={{ p: { xs: 2, md: 3 } }}>
+      <Paper
+        sx={(theme) => ({
+          p: {
+            xs: theme.spacing(theme.space.sectionPadding.xs),
+            md: theme.spacing(theme.space.sectionPadding.md),
+          },
+        })}
+      >
         <Stack spacing={3}>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <FormControl fullWidth>
@@ -163,6 +213,7 @@ const Inventario = () => {
                 value={selectedBranch}
                 label="Sede"
                 onChange={(event) => setSelectedBranch(event.target.value)}
+                inputProps={{ "aria-label": "Filtrar inventario por sede" }}
               >
                 <MenuItem value="todas">Todas las sedes</MenuItem>
                 {BRANCH_LOCATIONS.map((branch) => (
@@ -179,10 +230,9 @@ const Inventario = () => {
                 value={selectedSpecies}
                 label="Especie"
                 onChange={(event) =>
-                  setSelectedSpecies(
-                    event.target.value as typeof selectedSpecies
-                  )
+                  setSelectedSpecies(event.target.value as typeof selectedSpecies)
                 }
+                inputProps={{ "aria-label": "Filtrar inventario por especie" }}
               >
                 <MenuItem value="todas">Todas las especies</MenuItem>
                 <MenuItem value="res">Res</MenuItem>
@@ -225,33 +275,20 @@ const Inventario = () => {
 
           <Divider />
 
-          <Stack
-            direction="row"
-            spacing={1}
-            flexWrap="wrap"
-            alignItems="center"
-          >
+          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
             <Typography variant="body2" color="text.secondary">
               Filtros activos:
             </Typography>
             <Chip
               color="primary"
               label={`Sede: ${selectedLabel}`}
-              onDelete={
-                selectedBranch !== "todas"
-                  ? () => setSelectedBranch("todas")
-                  : undefined
-              }
+              onDelete={selectedBranch !== "todas" ? () => setSelectedBranch("todas") : undefined}
               variant={selectedBranch === "todas" ? "outlined" : "filled"}
             />
             <Chip
               color="secondary"
               label={`Especie: ${selectedSpeciesLabel}`}
-              onDelete={
-                selectedSpecies !== "todas"
-                  ? () => setSelectedSpecies("todas")
-                  : undefined
-              }
+              onDelete={selectedSpecies !== "todas" ? () => setSelectedSpecies("todas") : undefined}
               variant={selectedSpecies === "todas" ? "outlined" : "filled"}
             />
             {debouncedSearch && (
@@ -273,48 +310,98 @@ const Inventario = () => {
           {error ? (
             <Alert severity="error">{error}</Alert>
           ) : (
-            <Box sx={{ position: "relative" }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Código</TableCell>
-                    <TableCell>Descripción</TableCell>
-                    <TableCell>Especie</TableCell>
-                    <TableCell align="right">Inventario (KG)</TableCell>
-                    <TableCell>Sede</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedInventory.map((item) => (
-                    <TableRow
-                      key={`${item.codigo_producto}-${item.sede ?? "todas"}`}
-                    >
-                      <TableCell>
-                        <Typography fontWeight={600}>
-                          {item.codigo_producto || "Sin código"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {item.descripcion || "Sin descripción"}
-                      </TableCell>
-                      <TableCell>{item.especie || "—"}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700 }}>
-                        {weightFormatter.format(item.total_peso)}
-                      </TableCell>
-                      <TableCell>{item.sede ?? "Sin sede"}</TableCell>
-                    </TableRow>
-                  ))}
-                  {!loading && sortedInventory.length === 0 && (
+            <Paper
+              variant="outlined"
+              sx={(theme) => ({
+                borderRadius: 3,
+                overflow: "hidden",
+                border: `1px solid ${theme.palette.divider}`,
+              })}
+            >
+              <TableContainer>
+                <Table size="medium">
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        <Typography color="text.secondary">
-                          No hay movimientos de inventario para esta vista.
-                        </Typography>
+                      <TableCell sortDirection={orderBy === "codigo_producto" ? order : false}>
+                        <TableSortLabel
+                          active={orderBy === "codigo_producto"}
+                          direction={orderBy === "codigo_producto" ? order : "asc"}
+                          onClick={() => handleRequestSort("codigo_producto")}
+                        >
+                          Código
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>Descripción</TableCell>
+                      <TableCell sortDirection={orderBy === "especie" ? order : false}>
+                        <TableSortLabel
+                          active={orderBy === "especie"}
+                          direction={orderBy === "especie" ? order : "asc"}
+                          onClick={() => handleRequestSort("especie")}
+                        >
+                          Especie
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sortDirection={orderBy === "total_peso" ? order : false}
+                      >
+                        <TableSortLabel
+                          active={orderBy === "total_peso"}
+                          direction={orderBy === "total_peso" ? order : "desc"}
+                          onClick={() => handleRequestSort("total_peso")}
+                        >
+                          Inventario (KG)
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sortDirection={orderBy === "sede" ? order : false}>
+                        <TableSortLabel
+                          active={orderBy === "sede"}
+                          direction={orderBy === "sede" ? order : "asc"}
+                          onClick={() => handleRequestSort("sede")}
+                        >
+                          Sede
+                        </TableSortLabel>
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedInventory.map((item) => (
+                      <TableRow key={`${item.codigo_producto}-${item.sede ?? "todas"}`} hover>
+                        <TableCell>
+                          <Typography fontWeight={600}>
+                            {item.codigo_producto || "Sin código"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{item.descripcion || "Sin descripción"}</TableCell>
+                        <TableCell>{item.especie || "—"}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>
+                          {weightFormatter.format(item.total_peso)}
+                        </TableCell>
+                        <TableCell>{item.sede ?? "Sin sede"}</TableCell>
+                      </TableRow>
+                    ))}
+                    {!loading && sortedInventory.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center">
+                          <Typography color="text.secondary">
+                            No hay movimientos de inventario para esta vista.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                component="div"
+                count={sortedInventory.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[10, 25, 50]}
+                labelRowsPerPage="Filas por página"
+              />
 
               {loading && (
                 <Stack
@@ -322,13 +409,13 @@ const Inventario = () => {
                   spacing={1}
                   alignItems="center"
                   justifyContent="center"
-                  sx={{ py: 4 }}
+                  sx={{ py: 3 }}
                 >
                   <CircularProgress size={24} />
                   <Typography>Cargando inventario...</Typography>
                 </Stack>
               )}
-            </Box>
+            </Paper>
           )}
         </Stack>
       </Paper>

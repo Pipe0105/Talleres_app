@@ -26,6 +26,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -33,14 +34,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 
 import PageHeader from "../../components/PageHeader";
-import {
-  getTallerActividad,
-  getTallerActividadDetalle,
-} from "../../api/talleresApi";
+import { getTallerActividad, getTallerActividadDetalle } from "../../api/talleresApi";
 import { TallerActividadUsuario, TallerResponse } from "../../types";
 
-const formatDateInput = (value: Date): string =>
-  value.toISOString().slice(0, 10);
+const formatDateInput = (value: Date): string => value.toISOString().slice(0, 10);
 
 const startOfWeek = (): Date => {
   const now = new Date();
@@ -127,12 +124,8 @@ const resolveActividadKey = (usuario: TallerActividadUsuario): string =>
   `${usuario.user_id}-${resolveSede(usuario)}`;
 
 const SeguimientoTalleres = () => {
-  const [startDate, setStartDate] = useState<string>(() =>
-    formatDateInput(startOfWeek())
-  );
-  const [endDate, setEndDate] = useState<string>(() =>
-    formatDateInput(endOfWeek(startOfWeek()))
-  );
+  const [startDate, setStartDate] = useState<string>(() => formatDateInput(startOfWeek()));
+  const [endDate, setEndDate] = useState<string>(() => formatDateInput(endOfWeek(startOfWeek())));
   const [actividad, setActividad] = useState<TallerActividadUsuario[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,28 +141,21 @@ const SeguimientoTalleres = () => {
     error: null,
   });
 
-  const displayedDates = useMemo(
-    () => buildDateRange(startDate, endDate),
-    [startDate, endDate]
-  );
+  const displayedDates = useMemo(() => buildDateRange(startDate, endDate), [startDate, endDate]);
 
   const availableSedes = useMemo(() => {
     const sedes = new Set<string>();
     actividad.forEach((usuario) => {
       sedes.add(resolveSede(usuario));
     });
-    return Array.from(sedes).sort((a, b) =>
-      a.localeCompare(b, "es", { sensitivity: "base" })
-    );
+    return Array.from(sedes).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
   }, [actividad]);
 
   const filteredActividad = useMemo(() => {
     if (!selectedSedes.length) {
       return actividad;
     }
-    return actividad.filter((usuario) =>
-      selectedSedes.includes(resolveSede(usuario))
-    );
+    return actividad.filter((usuario) => selectedSedes.includes(resolveSede(usuario)));
   }, [actividad, selectedSedes]);
 
   const loadActividad = useCallback(async () => {
@@ -196,9 +182,7 @@ const SeguimientoTalleres = () => {
   };
 
   useEffect(() => {
-    setSelectedSedes((prev) =>
-      prev.filter((sede) => availableSedes.includes(sede))
-    );
+    setSelectedSedes((prev) => prev.filter((sede) => availableSedes.includes(sede)));
   }, [availableSedes]);
 
   useEffect(() => {
@@ -269,9 +253,7 @@ const SeguimientoTalleres = () => {
         <Table size={tableSize} sx={{ minWidth: 680 }}>
           <TableHead>
             <TableRow>
-              <TableCell
-                sx={{ minWidth: { xs: 180, md: 220 }, fontSize: "1.2rem" }}
-              >
+              <TableCell sx={{ minWidth: { xs: 180, md: 220 }, fontSize: "1.2rem" }}>
                 Sede
               </TableCell>
               {displayedDates.map((fecha) => {
@@ -313,48 +295,41 @@ const SeguimientoTalleres = () => {
                         aria-label={`Ver detalles de ${resolveSede(
                           usuario
                         )} el ${formatFriendlyDate(actividadDia.fecha)}`}
-                        onClick={() =>
-                          handleCellClick(usuario, fecha, hasRegistro)
-                        }
+                        onClick={() => handleCellClick(usuario, fecha, hasRegistro)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
                             handleCellClick(usuario, fecha, hasRegistro);
                           }
                         }}
-                        sx={{
+                        sx={(theme) => ({
                           bgcolor: hasRegistro ? "success.light" : "grey.100",
-                          color: hasRegistro
-                            ? "success.contrastText"
-                            : "text.secondary",
+                          color: hasRegistro ? "success.contrastText" : "text.secondary",
                           borderRadius: 1,
                           px: { xs: 0.75, sm: 1 },
                           py: { xs: 0.75, sm: 1 },
-                          border: (theme) =>
-                            `1px solid ${
-                              hasRegistro
-                                ? theme.palette.success.main
-                                : theme.palette.grey[200]
-                            }`,
+                          border: `1px solid ${
+                            hasRegistro ? theme.palette.success.main : theme.palette.grey[200]
+                          }`,
                           cursor: "pointer",
-                          transition:
-                            "transform 150ms ease, box-shadow 150ms ease",
-                          boxShadow: hasRegistro
-                            ? "0 1px 6px rgba(0,0,0,0.12)"
-                            : undefined,
+                          transition: "transform 150ms ease, box-shadow 150ms ease",
+                          boxShadow: hasRegistro ? "0 1px 6px rgba(0,0,0,0.12)" : undefined,
                           "&:hover": {
                             transform: "translateY(-1px)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
                           },
-                        }}
+                          "&:focus-visible": {
+                            outline: `3px solid ${alpha(theme.palette.primary.main, 0.4)}`,
+                            outlineOffset: 3,
+                            boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.12)}`,
+                          },
+                        })}
                       >
                         <Typography variant="subtitle2" display="block">
                           {hasRegistro ? "Con taller" : "Sin registro"}
                         </Typography>
                         <Typography variant="caption" display="block">
-                          {hasRegistro
-                            ? `${actividadDia.cantidad} en el día`
-                            : "—"}
+                          {hasRegistro ? `${actividadDia.cantidad} en el día` : "—"}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -457,17 +432,14 @@ const SeguimientoTalleres = () => {
       ctx.fillStyle = "#111111";
       ctx.font = "14px Inter, Arial, sans-serif";
       ctx.fillText(
-        filteredActividad.length
-          ? resolveSede(usuario)
-          : "Sin usuarios activos",
+        filteredActividad.length ? resolveSede(usuario) : "Sin usuarios activos",
         16,
         y + rowHeight / 2 + 5
       );
 
       displayedDates.forEach((fecha, columnIndex) => {
         const actividadDia =
-          usuario.dias.find((dia) => dia.fecha === fecha) ??
-          ({ fecha, cantidad: 0 } as const);
+          usuario.dias.find((dia) => dia.fecha === fecha) ?? ({ fecha, cantidad: 0 } as const);
         const hasRegistro = actividadDia.cantidad > 0;
         const x = leftColumnWidth + columnIndex * cellWidth;
 
@@ -477,17 +449,9 @@ const SeguimientoTalleres = () => {
 
         ctx.fillStyle = hasRegistro ? "#2e7d32" : "#616161";
         ctx.font = "13px Inter, Arial, sans-serif";
-        ctx.fillText(
-          hasRegistro ? "Con taller" : "Sin registro",
-          x + 12,
-          y + 26
-        );
+        ctx.fillText(hasRegistro ? "Con taller" : "Sin registro", x + 12, y + 26);
         ctx.font = "11px Inter, Arial, sans-serif";
-        ctx.fillText(
-          hasRegistro ? `${actividadDia.cantidad} en el día` : "—",
-          x + 12,
-          y + 44
-        );
+        ctx.fillText(hasRegistro ? `${actividadDia.cantidad} en el día` : "—", x + 12, y + 44);
       });
     });
 
@@ -551,6 +515,7 @@ const SeguimientoTalleres = () => {
               value={startDate}
               onChange={(event) => setStartDate(event.target.value)}
               InputLabelProps={{ shrink: true }}
+              inputProps={{ "aria-label": "Fecha de inicio del rango de seguimiento" }}
               sx={{ minWidth: 200 }}
             />
             <TextField
@@ -559,13 +524,10 @@ const SeguimientoTalleres = () => {
               value={endDate}
               onChange={(event) => setEndDate(event.target.value)}
               InputLabelProps={{ shrink: true }}
+              inputProps={{ "aria-label": "Fecha final del rango de seguimiento" }}
               sx={{ minWidth: 200 }}
             />
-            <Button
-              variant="contained"
-              type="submit"
-              disabled={loading || !displayedDates.length}
-            >
+            <Button variant="contained" type="submit" disabled={loading || !displayedDates.length}>
               {loading ? "Cargando..." : "Aplicar filtro"}
             </Button>
           </Stack>
@@ -604,20 +566,17 @@ const SeguimientoTalleres = () => {
                 {...params}
                 label="Filtrar por sedes"
                 placeholder="Selecciona una o varias sedes"
+                inputProps={{
+                  ...params.inputProps,
+                  "aria-label": "Filtrar por sedes a mostrar en la tabla",
+                }}
                 helperText="Si no seleccionas ninguna, se mostrarán todas las sedes."
               />
             )}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
                 const { key, ...tagProps } = getTagProps({ index });
-                return (
-                  <Chip
-                    key={key ?? option}
-                    label={option}
-                    size="small"
-                    {...tagProps}
-                  />
-                );
+                return <Chip key={key ?? option} label={option} size="small" {...tagProps} />;
               })
             }
             sx={{ maxWidth: 520, mb: 2 }}
@@ -634,20 +593,13 @@ const SeguimientoTalleres = () => {
           )}
         </CardContent>
       </Card>
-      <Dialog
-        fullWidth
-        maxWidth="md"
-        open={detalleDia.open}
-        onClose={closeDetalleDia}
-      >
+      <Dialog fullWidth maxWidth="md" open={detalleDia.open} onClose={closeDetalleDia}>
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <InsightsOutlinedIcon color="primary" />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               {detalleDia.usuario
-                ? `${resolveSede(detalleDia.usuario)} · ${resolveDisplayName(
-                    detalleDia.usuario
-                  )}`
+                ? `${resolveSede(detalleDia.usuario)} · ${resolveDisplayName(detalleDia.usuario)}`
                 : ""}
             </Typography>
             <Typography variant="h6">
@@ -665,16 +617,9 @@ const SeguimientoTalleres = () => {
         </DialogTitle>
         <DialogContent dividers>
           {detalleDia.loading && (
-            <Stack
-              spacing={2}
-              alignItems="center"
-              justifyContent="center"
-              sx={{ minHeight: 220 }}
-            >
+            <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ minHeight: 220 }}>
               <CircularProgress size={32} />
-              <Typography color="text.secondary">
-                Consultando talleres del día…
-              </Typography>
+              <Typography color="text.secondary">Consultando talleres del día…</Typography>
             </Stack>
           )}
           {!detalleDia.loading && detalleDia.error && (
@@ -688,37 +633,29 @@ const SeguimientoTalleres = () => {
                   <Card key={taller.id} variant="outlined">
                     <CardHeader
                       title={taller.nombre_taller || "Taller sin nombre"}
-                      subheader={`Creado el ${formatDateTime(
-                        taller.creado_en
-                      )}`}
+                      subheader={`Creado el ${formatDateTime(taller.creado_en)}`}
                     />
                     <CardContent>
                       <Stack spacing={1.5}>
                         <Typography color="text.secondary">
                           {taller.descripcion || "Sin descripción registrada."}
                         </Typography>
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={2}
-                        >
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                           <Typography variant="body2">
                             <strong>Especie:</strong> {taller.especie}
                           </Typography>
                           <Typography variant="body2">
-                            <strong>Peso inicial:</strong> {taller.peso_inicial}{" "}
-                            kg
+                            <strong>Peso inicial:</strong> {taller.peso_inicial} kg
                           </Typography>
                           <Typography variant="body2">
                             <strong>Peso final:</strong> {taller.peso_final} kg
                           </Typography>
                           <Typography variant="body2">
-                            <strong>Pérdida:</strong>{" "}
-                            {taller.porcentaje_perdida ?? "N/D"}%
+                            <strong>Pérdida:</strong> {taller.porcentaje_perdida ?? "N/D"}%
                           </Typography>
                         </Stack>
                         <Typography variant="body2">
-                          <strong>Código principal:</strong>{" "}
-                          {taller.codigo_principal}
+                          <strong>Código principal:</strong> {taller.codigo_principal}
                         </Typography>
                         <Box>
                           <Typography variant="subtitle2" gutterBottom>
@@ -748,18 +685,12 @@ const SeguimientoTalleres = () => {
               </Stack>
             ) : (
               <Alert severity="info">
-                No se registraron talleres para esta sede en la fecha
-                seleccionada.
+                No se registraron talleres para esta sede en la fecha seleccionada.
               </Alert>
             ))}
         </DialogContent>
       </Dialog>
-      <Dialog
-        fullWidth
-        maxWidth="xl"
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      >
+      <Dialog fullWidth maxWidth="xl" open={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <InsightsOutlinedIcon color="primary" />
           <Box sx={{ flexGrow: 1 }}>Tabla de seguimiento ampliada</Box>
@@ -777,10 +708,7 @@ const SeguimientoTalleres = () => {
             >
               Descargar imagen
             </Button>
-            <Button
-              startIcon={<CloseIcon />}
-              onClick={() => setIsModalOpen(false)}
-            >
+            <Button startIcon={<CloseIcon />} onClick={() => setIsModalOpen(false)}>
               Cerrar
             </Button>
           </DialogActions>

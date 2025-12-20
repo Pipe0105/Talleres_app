@@ -458,6 +458,7 @@ const HistorialTalleres = () => {
                 onChange={(event) => setFilters((prev) => ({ ...prev, sede: event.target.value }))}
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ "aria-label": "Filtrar talleres por sede" }}
               >
                 <option value="">Todas</option>
                 {BRANCH_LOCATIONS.map((branch) => (
@@ -481,6 +482,7 @@ const HistorialTalleres = () => {
                 }
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ "aria-label": "Filtrar talleres por especie" }}
               >
                 <option value="">Todas</option>
                 <option value="res">Res</option>
@@ -500,6 +502,7 @@ const HistorialTalleres = () => {
                   }))
                 }
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ "aria-label": "Fecha inicial del historial" }}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -515,6 +518,7 @@ const HistorialTalleres = () => {
                   }))
                 }
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ "aria-label": "Fecha final del historial" }}
               />
             </Grid>
           </Grid>
