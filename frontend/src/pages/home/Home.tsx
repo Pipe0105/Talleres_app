@@ -604,7 +604,7 @@ const Home = () => {
                   Revisa el estado de tus talleres y acciones disponibles.
                 </Typography>
               </Stack>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Stack direction="row" spacing={0.75} flexWrap="wrap">
                 {[
                   { value: "todos", label: "Todos", count: statusCounts.todos },
                   { value: "completado", label: "Completados", count: statusCounts.completado },
@@ -616,7 +616,17 @@ const Home = () => {
                     label={`${tab.label} (${tab.count})`}
                     color={statusFilter === tab.value ? "primary" : "default"}
                     onClick={() => setStatusFilter(tab.value as WorkshopStatus | "todos")}
-                    sx={{ borderRadius: 2, fontWeight: 700 }}
+                    size="small"
+                    sx={{
+                      borderRadius: 2,
+                      fontWeight: 700,
+                      height: 30,
+                      "& .MuiChip-label": {
+                        px: 1.25,
+                        py: 0.5,
+                        fontSize: 12,
+                      },
+                    }}
                   />
                 ))}
               </Stack>
