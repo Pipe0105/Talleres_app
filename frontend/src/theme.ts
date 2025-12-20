@@ -67,7 +67,7 @@ export const appTheme = createTheme({
     subtitle1: { fontWeight: 600 },
   },
   shape: {
-    borderRadius: 6,
+    borderRadius: 10,
   },
   layout: {
     sectionSpacing: 6,
@@ -75,20 +75,20 @@ export const appTheme = createTheme({
       xs: 4,
       md: 6,
     },
-    contentMaxWidth: 1280,
+    contentMaxWidth: 1400,
   },
   gradients: {
-    page: "linear-gradient(180deg, #f6f8fc 0%, #f3f6fb 45%, #eef2f7 100% )",
-    hero: "linear-gradient(120deg, rgba(16, 178, 211, 0.15) 0%, rgba(15,41,69,0.06)100%)",
-    heroOverlay: "radial-gradient(circle at 20% 20%, rgba(16,178,211,0.18), transparent 55%)",
-    callout: "linear-gradient(135deg, rgba(16,178,211,0.08), rgba(15,41,69,0.04))",
+    page: "linear-gradient(180deg, #f7f9fc 0%, #f4f7fb 40%, #eff3f9 100% )",
+    hero: "linear-gradient(120deg, rgba(0,178,144,0.12) 0%, rgba(88,205,173,0.06) 100%)",
+    heroOverlay: "radial-gradient(circle at 20% 20%, rgba(0,178,144,0.16), transparent 55%)",
+    callout: "linear-gradient(135deg, rgba(0,178,144,0.08), rgba(115,92,245,0.06))",
     subtle:
-      "radial-gradient(circle at top left, rgba(16,178,211,0.04) 0%, transparent 55%), radial-gradient(circle at bottom right, rgba(15,41,69,0.04) 0%, transparent 50%)",
+      "radial-gradient(circle at top left, rgba(0,178,144,0.06) 0%, transparent 55%), radial-gradient(circle at bottom right, rgba(115,92,245,0.06) 0%, transparent 50%)",
   },
   customShadows: {
-    surface: "0px 8px 26px rgba(15, 23, 42, 0.06)",
-    floating: "0px 20px 52px rgba(15, 23, 42, 0.14)",
-    frosted: "0px 18px 46px rgba(15, 41, 69, 0.16)",
+    surface: "0px 12px 30px rgba(12, 53, 83, 0.08)",
+    floating: "0px 22px 60px rgba(12, 53, 83, 0.14)",
+    frosted: "0px 20px 54px rgba(12, 53, 83, 0.18)",
   },
   components: {
     MuiPaper: {
