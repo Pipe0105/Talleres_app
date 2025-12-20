@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -15,7 +16,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import ArrowDropUpRoundedIcon from "@mui/icons-material/ArrowDropUpRounded";
 import ArrowDropDownRoundedIcon from "@mui/icons-material/ArrowDropDownRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
@@ -28,10 +30,12 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import TrendingFlatRoundedIcon from "@mui/icons-material/TrendingFlatRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
-import TalleresPlus from "../talleres/TalleresPlus";
-import { color } from "framer-motion";
+import { getTalleres } from "../../api/talleresApi";
+import { TallerListItem } from "../../types";
+import { formatKg } from "../../utils/weights";
 
 type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
+type TallerConEstado = TallerListItem & { estado: WorkshopStatus; progreso: number };
 
 const navigationPaths = {
   talleres: "/talleres",
@@ -48,63 +52,6 @@ const statsCards = [
   { title: "Completados Hoy", value: "18", trend: "+8%", trendUp: true },
   { title: "Inventario Bajo", value: "7", trend: "-3%", trendUp: false },
   { title: "Usuarios Activos", value: "42", trend: "+5%", trendUp: true },
-];
-
-const recentWorkshops = [
-  {
-    id: "TL-1001",
-    nombre: "Desposte Res Premium",
-    estado: "completado",
-    fecha: "2024-01-15",
-    responsable: "Carlos Méndez",
-    iniciales: "CM",
-    cantidad: "250 kg",
-  },
-  {
-    id: "TL-1002",
-    nombre: "Desposte Cerdo Estándar",
-    estado: "en-proceso",
-    fecha: "2024-01-15",
-    responsable: "Ana García",
-    iniciales: "AG",
-    cantidad: "180 kg",
-  },
-  {
-    id: "TL-1003",
-    nombre: "Desposte Pollo Orgánico",
-    estado: "completado",
-    fecha: "2024-01-14",
-    responsable: "Luis Torres",
-    iniciales: "LT",
-    cantidad: "320 kg",
-  },
-  {
-    id: "TL-1004",
-    nombre: "Desposte Res Especial",
-    estado: "pendiente",
-    fecha: "2024-01-14",
-    responsable: "María López",
-    iniciales: "ML",
-    cantidad: "200 kg",
-  },
-  {
-    id: "TL-1005",
-    nombre: "Desposte Cerdo Premium",
-    estado: "en-proceso",
-    fecha: "2024-01-15",
-    responsable: "Pedro Ruiz",
-    iniciales: "PR",
-    cantidad: "250 kg",
-  },
-  {
-    id: "TL-1006",
-    nombre: "Desposte Cordero",
-    estado: "completado",
-    fecha: "2024-01-14",
-    responsable: "Sofía Ramírez",
-    iniciales: "SR",
-    cantidad: "90 kg",
-  },
 ];
 
 const activityFeed = [
@@ -242,15 +189,108 @@ const StatCard = ({
 );
 
 const Home = () => {
-  const [statusFilter, setStatusFilter] = useState<WorkshopStatus | "todos">("todos");
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const filteredWorkshops = useMemo(
+  const [talleres, setTalleres] = useState<TallerListItem[]>([]);
+  const [loadingTalleres, setLoadingTalleres] = useState(false);
+  const [errorTalleres, setErrorTalleres] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<WorkshopStatus | "todos">("todos");
+  const [searcTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchTalleres = async () => {
+      try {
+        setLoadingTalleres(true);
+        const data = await getTalleres();
+        if (!active) return;
+        setTalleres(data);
+        setErrorTalleres(null);
+      } catch (error) {
+        console.error("Error al obtener talleres recientes", error);
+        if (!active) return;
+        setErrorTalleres("No fue posible cargar los talleres. Intenta nuevamente");
+      } finally {
+        if (active) {
+          setLoadingTalleres(false);
+        }
+      }
+    };
+
+    void fetchTalleres();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const talleresConEstado = useMemo<TallerConEstado[]>(() => {
+    const deriveEstado = (taller: TallerListItem): WorkshopStatus => {
+      const processed = Math.max(taller.total_peso, taller.peso_final);
+      const ratio = taller.peso_inicial > 0 ? processed / taller.peso_inicial : 0;
+
+      if (ratio >= 0.99) return "completado";
+      if (ratio > 0) return "en-proceso";
+      return "pendiente";
+    };
+
+    return talleres.map((taller) => ({
+      ...taller,
+      estado: deriveEstado(taller),
+      progreso:
+        taller.peso_inicial > 0
+          ? Math.min(
+              Math.max(Math.max(taller.total_peso, taller.peso_final) / taller.peso_inicial, 0),
+              1
+            )
+          : 0,
+    }));
+  }, [talleres]);
+
+  const statusCounts = useMemo(
     () =>
-      statusFilter === "todos"
-        ? recentWorkshops
-        : recentWorkshops.filter((taller) => taller.estado === statusFilter),
-    [statusFilter]
+      talleresConEstado.reduce<Record<WorkshopStatus | "todos", number>>(
+        (acc, taller) => {
+          acc.todos += 1;
+          acc[taller.estado] += 1;
+          return acc;
+        },
+        { todos: 0, completado: 0, "en-proceso": 0, pendiente: 0 }
+      ),
+    [talleresConEstado]
   );
+
+  const filteredWorkshops = useMemo<TallerConEstado[]>(() => {
+    const query = searcTerm.trim().toLowerCase();
+    const matchesQuery = (taller: TallerConEstado) =>
+      !query ||
+      [taller.nombre_taller, taller.codigo_principal ?? "", taller.especie, taller.sede ?? ""]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(query));
+
+    return talleresConEstado.filter(
+      (taller) =>
+        (statusFilter === "todos" || taller.estado === statusFilter) && matchesQuery(taller)
+    );
+  }, [statusFilter, searcTerm, talleresConEstado]);
+
+  const formatFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toISOString().slice(0, 10);
+  };
+
+  const getIniciales = (label?: string | null) => {
+    if (!label) return "??";
+    return label
+      .split(/\s+/)
+      .map((part) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <Stack spacing={3}>
@@ -323,10 +363,10 @@ const Home = () => {
               </Stack>
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {[
-                  { value: "todos", label: "Todos", count: 6 },
-                  { value: "completado", label: "Completados", count: 3 },
-                  { value: "en-proceso", label: "En Proceso", count: 2 },
-                  { value: "pendiente", label: "Pendientes", count: 1 },
+                  { value: "todos", label: "Todos", count: statusCounts.todos },
+                  { value: "completado", label: "Completados", count: statusCounts.completado },
+                  { value: "en-proceso", label: "En Proceso", count: statusCounts["en-proceso"] },
+                  { value: "pendiente", label: "Pendientes", count: statusCounts.pendiente },
                 ].map((tab) => (
                   <Chip
                     key={tab.value}
@@ -352,7 +392,12 @@ const Home = () => {
               })}
             >
               <SearchRoundedIcon color="disabled" />
-              <InputBase fullWidth placeholder="Buscar..." />
+              <InputBase
+                fullWidth
+                placeholder="Buscar..."
+                value={searcTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
               <Button
                 variant="text"
                 startIcon={<FileDownloadRoundedIcon />}
@@ -364,129 +409,151 @@ const Home = () => {
             </Paper>
 
             <Box>
-              <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>
-                <Grid item xs={1.5}>
-                  <Typography variant="caption">ID</Typography>
+              <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>
+                  <Grid item xs={4} md={3.5}>
+                    <Typography variant="caption">ID / Taller</Typography>
+                  </Grid>
+                  <Grid item xs={5} md={6.5}>
+                    <Typography variant="caption">Estado y detalles</Typography>
+                  </Grid>
+                  <Grid item xs={3} md={2}>
+                    <Typography variant="caption">Acciones</Typography>
+                  </Grid>
                 </Grid>
-                <Grid item xs={3.5}>
-                  <Typography variant="caption">Nombre del Taller</Typography>
-                </Grid>
-                <Grid item xs={1.5}>
-                  <Typography variant="caption">Estado</Typography>
-                </Grid>
-                <Grid item xs={1.5}>
-                  <Typography variant="caption">Fecha</Typography>
-                </Grid>
-                <Grid item xs={2}>
-                  <Typography variant="caption">Responsable</Typography>
-                </Grid>
-                <Grid item xs={1.5}>
-                  <Typography variant="caption">Cantidad</Typography>
-                </Grid>
-                <Grid item xs={0.5}>
-                  <Typography variant="caption">Acciones</Typography>
-                </Grid>
-              </Grid>
-              <Divider />
+                <Divider />
+              </Box>
+
+              {errorTalleres && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {errorTalleres}
+                </Alert>
+              )}
               <Stack spacing={1.25} mt={1.5}>
-                {filteredWorkshops.map((taller) => (
-                  <Paper
-                    key={taller.id}
-                    variant="outlined"
-                    sx={(theme) => ({
-                      p: 1.25,
-                      borderRadius: 12,
-                      border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
-                      boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
-                    })}
-                  >
-                    <Grid container alignItems="center">
-                      <Grid item xs={1.5}>
-                        <Typography variant="subtitle2" fontWeight={800}>
-                          {taller.id}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Código principal
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={3.5}>
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          {taller.nombre}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={1.5}>
-                        <Chip
-                          label={statusStyles[taller.estado as WorkshopStatus].label}
-                          size="small"
-                          sx={{
-                            fontWeight: 700,
-                            backgroundColor: statusStyles[taller.estado as WorkshopStatus].bg,
-                            color: statusStyles[taller.estado as WorkshopStatus].color,
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={1.5}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {taller.fecha}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={2}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Avatar
-                            sx={(theme) => ({
-                              width: 32,
-                              height: 32,
-                              backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                              color: theme.palette.primary.main,
-                              fontWeight: 700,
-                            })}
-                          >
-                            {taller.iniciales}
-                          </Avatar>
-                          <Typography variant="body2" fontWeight={700}>
-                            {taller.responsable}
+                {loadingTalleres && <LinearProgress />}
+                {!loadingTalleres && !filteredWorkshops.length ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No hay talleres que coincidan con los filtros seleccionados.
+                  </Typography>
+                ) : (
+                  filteredWorkshops.map((taller) => (
+                    <Paper
+                      key={taller.id}
+                      variant="outlined"
+                      sx={(theme) => ({
+                        p: 1.25,
+                        borderRadius: 12,
+                        border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
+                        boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
+                      })}
+                    >
+                      <Grid
+                        container
+                        alignItems={isSmallScreen ? "flex-start" : "center"}
+                        spacing={isSmallScreen ? 1 : 1.5}
+                      >
+                        <Grid item xs={12} sm={4} md={3.5}>
+                          <Typography variant="subtitle2" fontWeight={800}>
+                            {taller.codigo_principal ?? `TL-${taller.id}`}
                           </Typography>
-                        </Stack>
-                      </Grid>
-                      <Grid item xs={1.5}>
-                        <Typography variant="body2" fontWeight={700}>
-                          {taller.cantidad}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={0.5} sx={{ display: "flex", justifyContent: "flex-end" }}>
-                        <Stack direction="row" spacing={0.5}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            component={RouterLink}
-                            to={navigationPaths.seguimiento}
-                            aria-label="Ver seguimiento del taller"
+                          <Typography variant="body2" fontWeight={700}>
+                            {taller.nombre_taller}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {taller.descripcion || "Sin descripción"}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={5} md={6.5}>
+                          <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={{ xs: 1, sm: 1.5 }}
+                            alignItems={{ xs: "flex-start", sm: "center" }}
+                            flexWrap="wrap"
+                            rowGap={0.75}
                           >
-                            <VisibilityRoundedIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="success"
-                            component={RouterLink}
-                            to={navigationPaths.TalleresPlus}
-                            aria-label="Editar taller"
-                          >
-                            <EditRoundedIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            component={RouterLink}
-                            to={navigationPaths.historial}
-                            aria-label="Ir al historial de talleres"
-                          >
-                            <DeleteRoundedIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
+                            <Chip
+                              label={statusStyles[taller.estado as WorkshopStatus].label}
+                              size="small"
+                              sx={{
+                                fontWeight: 700,
+                                backgroundColor: statusStyles[taller.estado as WorkshopStatus].bg,
+                                color: statusStyles[taller.estado as WorkshopStatus].color,
+                              }}
+                            />
+                            <Typography variant="body2" fontWeight={600}>
+                              {formatFecha(taller.creado_en)}
+                            </Typography>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Avatar
+                                sx={(theme) => ({
+                                  width: 32,
+                                  height: 32,
+                                  backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                                  color: theme.palette.primary.main,
+                                  fontWeight: 700,
+                                })}
+                              >
+                                {getIniciales(taller.sede)}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="body2" fontWeight={700}>
+                                  {taller.sede ?? "Sin sede"}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {taller.especie || "Especie no definida"}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                            <Typography variant="body2" fontWeight={700}>
+                              {formatKg(Math.max(taller.total_peso, taller.peso_final || 0))} kg
+                            </Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid
+                          item
+                          xs={12}
+                          sm={3}
+                          md={2}
+                          sx={{
+                            display: "flex",
+                            justifyContent: { xs: "flex-start", sm: "flex-end" },
+                            mt: { xs: 0.5, sm: 0 },
+                          }}
+                        >
+                          <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              component={RouterLink}
+                              to={navigationPaths.seguimiento}
+                              aria-label="Ver seguimiento del taller"
+                            >
+                              <VisibilityRoundedIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="success"
+                              component={RouterLink}
+                              to={navigationPaths.TalleresPlus}
+                              aria-label="Editar taller"
+                            >
+                              <EditRoundedIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              component={RouterLink}
+                              to={navigationPaths.historial}
+                              aria-label="Ir al historial de talleres"
+                            >
+                              <DeleteRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Paper>
-                ))}
+                    </Paper>
+                  ))
+                )}
               </Stack>
             </Box>
           </Card>
