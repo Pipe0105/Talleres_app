@@ -18,9 +18,7 @@ import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
 import type { TallerOption } from "../components/informes/TallerSelectionCard";
 import InformeFilters from "../components/informes/InformeFilters";
-import InformeExportPanel, {
-  ExportField,
-} from "../components/informes/InformeExportPanel";
+import InformeExportPanel, { ExportField } from "../components/informes/InformeExportPanel";
 
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 3,
@@ -117,16 +115,10 @@ const escapeCsvValue = (value: string) => {
 };
 
 const escapeHtmlValue = (value: string) =>
-  normalizeWhitespace(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  normalizeWhitespace(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const escapePdfText = (value: string) =>
-  normalizeWhitespace(value)
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
+  normalizeWhitespace(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 
 type PdfHighlight = { label: string; value: string };
 
@@ -170,16 +162,9 @@ const createSimplePdf = (
   let currentLines: string[] = [];
   let currentY = pageHeight - margin;
 
-  const wrapText = (
-    text: string,
-    fontSize: number,
-    maxWidth: number = contentWidth
-  ) => {
+  const wrapText = (text: string, fontSize: number, maxWidth: number = contentWidth) => {
     const normalized = normalizeWhitespace(text);
-    const maxChars = Math.max(
-      8,
-      Math.floor(maxWidth / (fontSize * approxCharWidth))
-    );
+    const maxChars = Math.max(8, Math.floor(maxWidth / (fontSize * approxCharWidth)));
     const words = normalized.split(" ");
     const lines: string[] = [];
     let currentLine = "";
@@ -369,21 +354,14 @@ const createSimplePdf = (
 
   const columnWeights = getColumnWeights(header);
   const totalWeight = columnWeights.reduce((acc, weight) => acc + weight, 0);
-  const columnWidths = columnWeights.map(
-    (weight) => (weight / totalWeight) * contentWidth
-  );
+  const columnWidths = columnWeights.map((weight) => (weight / totalWeight) * contentWidth);
   const columnOffsets = columnWidths.reduce<number[]>((acc, width) => {
     const last = acc[acc.length - 1] ?? 0;
     acc.push(last + width);
     return acc;
   }, []);
 
-  const addTableRow = (
-    cells: string[],
-    fontSize: number,
-    rowIndex: number,
-    isHeader = false
-  ) => {
+  const addTableRow = (cells: string[], fontSize: number, rowIndex: number, isHeader = false) => {
     const cellPadding = 4;
     const wrappedCells = cells.map((cell, columnIndex) =>
       wrapText(cell, fontSize, columnWidths[columnIndex] - cellPadding * 2)
@@ -397,17 +375,11 @@ const createSimplePdf = (
     const backgroundColor = isHeader
       ? color.neutralDarker
       : rowIndex % 2 === 0
-      ? color.neutral
-      : undefined;
+        ? color.neutral
+        : undefined;
 
     if (backgroundColor) {
-      addRoundedRect(
-        margin,
-        rowTopY - rowHeight,
-        contentWidth,
-        rowHeight,
-        backgroundColor
-      );
+      addRoundedRect(margin, rowTopY - rowHeight, contentWidth, rowHeight, backgroundColor);
     }
 
     wrappedCells.forEach((cellLines, columnIndex) => {
@@ -440,14 +412,7 @@ const createSimplePdf = (
   if (metadata.filters?.length) {
     addTextLine("Filtros", 12, margin, undefined, "F2", color.primaryDark);
     metadata.filters.forEach((filter) =>
-      addWrappedText(
-        `• ${filter}`,
-        10,
-        margin + 8,
-        contentWidth,
-        "F1",
-        color.textMuted
-      )
+      addWrappedText(`• ${filter}`, 10, margin + 8, contentWidth, "F1", color.textMuted)
     );
     addSeparator();
   }
@@ -457,28 +422,14 @@ const createSimplePdf = (
     metadata.highlights.forEach((item) => {
       ensureSpace(28);
       addRoundedRect(margin, currentY - 22, contentWidth, 20, color.neutral);
-      addTextLine(
-        `${item.label}`,
-        10,
-        margin + 8,
-        currentY - 18,
-        "F2",
-        color.textMuted
-      );
+      addTextLine(`${item.label}`, 10, margin + 8, currentY - 18, "F2", color.textMuted);
       addTextLine(`${item.value}`, 11, margin + 200, currentY - 18, "F1");
       currentY -= 26;
     });
     addSeparator();
   }
 
-  addTextLine(
-    "Detalle de registros",
-    12,
-    margin,
-    undefined,
-    "F2",
-    color.primaryDark
-  );
+  addTextLine("Detalle de registros", 12, margin, undefined, "F2", color.primaryDark);
   addSeparator();
 
   addTableRow(header, 11, 0, true);
@@ -486,14 +437,7 @@ const createSimplePdf = (
     if (currentY < margin + 60) {
       addSeparator();
       startPage(false);
-      addTextLine(
-        "Detalle (continuación)",
-        12,
-        margin,
-        undefined,
-        "F2",
-        color.primaryDark
-      );
+      addTextLine("Detalle (continuación)", 12, margin, undefined, "F2", color.primaryDark);
       addSeparator();
       addTableRow(header, 11, 0, true);
     }
@@ -505,9 +449,7 @@ const createSimplePdf = (
   }
 
   const pageContentStreams = pages.map((pageLines) => pageLines.join("\n"));
-  const pageContentBytes = pageContentStreams.map((content) =>
-    encoder.encode(content)
-  );
+  const pageContentBytes = pageContentStreams.map((content) => encoder.encode(content));
 
   const fontObjectIdStart = 3 + pages.length * 2;
   const pageObjectIds = pages.map((_, index) => 3 + index * 2);
@@ -616,9 +558,7 @@ const InformesHistoricos = () => {
   const [scope, setScope] = useState<InformeScope>("taller");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTaller, setSelectedTaller] = useState<TallerOption | null>(
-    null
-  );
+  const [selectedTaller, setSelectedTaller] = useState<TallerOption | null>(null);
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [calculo, setCalculo] = useState<TallerCalculoWithMeta[] | null>(null);
@@ -632,9 +572,7 @@ const InformesHistoricos = () => {
   const individualTallerOptions = useMemo<TallerOption[]>(() => {
     return talleres.map((taller) => ({
       id: String(taller.id),
-      label: `${taller.nombre_taller} · ${pesoFormatter.format(
-        taller.total_peso
-      )} kg`,
+      label: `${taller.nombre_taller} · ${pesoFormatter.format(taller.total_peso)} kg`,
     }));
   }, [talleres]);
 
@@ -665,11 +603,7 @@ const InformesHistoricos = () => {
 
     let filtered = talleres;
     const normalizedSedes =
-      scope === "sede"
-        ? selectedSedes.length
-          ? selectedSedes
-          : availableSedes
-        : selectedSedes;
+      scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
 
     if (normalizedSedes.length) {
       filtered = filtered.filter((taller) => {
@@ -682,26 +616,14 @@ const InformesHistoricos = () => {
       if (!selectedMaterial) {
         return [];
       }
-      filtered = filtered.filter(
-        (taller) => taller.codigo_principal === selectedMaterial
-      );
+      filtered = filtered.filter((taller) => taller.codigo_principal === selectedMaterial);
     }
 
     return filtered.map((taller) => String(taller.id));
-  }, [
-    availableSedes,
-    scope,
-    selectedMaterial,
-    selectedSedes,
-    selectedTaller,
-    talleres,
-  ]);
+  }, [availableSedes, scope, selectedMaterial, selectedSedes, selectedTaller, talleres]);
 
   const selectedTalleres = useMemo(
-    () =>
-      talleres.filter((taller) =>
-        selectedTallerIds.includes(String(taller.id))
-      ),
+    () => talleres.filter((taller) => selectedTallerIds.includes(String(taller.id))),
     [selectedTallerIds, talleres]
   );
 
@@ -751,9 +673,7 @@ const InformesHistoricos = () => {
         const responses = await Promise.allSettled(
           selectedTallerIds.map(async (tallerId) => {
             const data = await getTallerCalculo(tallerId);
-            const meta = talleres.find(
-              (taller) => String(taller.id) === tallerId
-            );
+            const meta = talleres.find((taller) => String(taller.id) === tallerId);
 
             return data.map((row) => ({
               ...row,
@@ -776,9 +696,7 @@ const InformesHistoricos = () => {
         const merged = fulfilledResults.flatMap((result) => result.value);
         setCalculo(merged);
 
-        const hasFailures = responses.some(
-          (result) => result.status === "rejected"
-        );
+        const hasFailures = responses.some((result) => result.status === "rejected");
 
         if (hasFailures) {
           setError(
@@ -790,9 +708,7 @@ const InformesHistoricos = () => {
       } catch (err) {
         console.error(err);
         if (isMounted) {
-          setError(
-            "No fue posible obtener el cálculo de los talleres seleccionados."
-          );
+          setError("No fue posible obtener el cálculo de los talleres seleccionados.");
         }
       } finally {
         if (isMounted) {
@@ -831,20 +747,15 @@ const InformesHistoricos = () => {
           .map((value) => normalizeWhitespace(value).toLowerCase())
           .some((value) => value.includes(normalizedQuery));
 
-      const matchesMinPeso =
-        Number.isNaN(minPesoValue) || row.peso >= minPesoValue;
-      const matchesMaxPeso =
-        Number.isNaN(maxPesoValue) || row.peso <= maxPesoValue;
+      const matchesMinPeso = Number.isNaN(minPesoValue) || row.peso >= minPesoValue;
+      const matchesMaxPeso = Number.isNaN(maxPesoValue) || row.peso <= maxPesoValue;
 
       return matchesQuery && matchesMinPeso && matchesMaxPeso;
     });
   }, [calculo, maxPeso, minPeso, searchQuery]);
 
   const selectedFieldDefinitions = useMemo(
-    () =>
-      exportFieldDefinitions.filter((field) =>
-        selectedFields.includes(field.key)
-      ),
+    () => exportFieldDefinitions.filter((field) => selectedFields.includes(field.key)),
     [selectedFields]
   );
 
@@ -854,9 +765,7 @@ const InformesHistoricos = () => {
     }
 
     return filteredCalculo.map((row) =>
-      selectedFieldDefinitions.map((field) =>
-        normalizeWhitespace(field.getValue(row))
-      )
+      selectedFieldDefinitions.map((field) => normalizeWhitespace(field.getValue(row)))
     );
   }, [filteredCalculo, selectedFieldDefinitions]);
 
@@ -916,9 +825,7 @@ const InformesHistoricos = () => {
     }
     const csvRows = [
       headers.map((header) => escapeCsvValue(header)).join(";"),
-      ...formattedRows.map((row) =>
-        row.map((value) => escapeCsvValue(value)).join(";")
-      ),
+      ...formattedRows.map((row) => row.map((value) => escapeCsvValue(value)).join(";")),
     ];
 
     const csvContent = `\ufeff${csvRows.join("\n")}`;
@@ -934,16 +841,9 @@ const InformesHistoricos = () => {
       return;
     }
 
-    const tableHead = headers
-      .map((header) => `<th>${escapeHtmlValue(header)}</th>`)
-      .join("");
+    const tableHead = headers.map((header) => `<th>${escapeHtmlValue(header)}</th>`).join("");
     const tableBody = formattedRows
-      .map(
-        (row) =>
-          `<tr>${row
-            .map((value) => `<td>${escapeHtmlValue(value)}</td>`)
-            .join("")}</tr>`
-      )
+      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtmlValue(value)}</td>`).join("")}</tr>`)
       .join("");
 
     const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table></body></html>`;
@@ -960,29 +860,21 @@ const InformesHistoricos = () => {
     }
 
     const sedesSeleccionadas =
-      scope === "sede"
-        ? selectedSedes.length
-          ? selectedSedes
-          : availableSedes
-        : selectedSedes;
+      scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
 
     const scopeDescription =
       scope === "taller" && selectedTaller
         ? `Alcance: Taller ${selectedTaller.label}`
         : scope === "sede"
-        ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
-        : scope === "material" && selectedMaterial
-        ? `Alcance: Material ${selectedMaterial}`
-        : "Alcance: selección personalizada";
+          ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
+          : scope === "material" && selectedMaterial
+            ? `Alcance: Material ${selectedMaterial}`
+            : "Alcance: selección personalizada";
 
     const filtersSummary = [
       scopeDescription,
-      sedesSeleccionadas.length
-        ? `Sedes: ${sedesSeleccionadas.join(", ")}`
-        : null,
-      scope === "material" && selectedMaterial
-        ? `Material: ${selectedMaterial}`
-        : null,
+      sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
+      scope === "material" && selectedMaterial ? `Material: ${selectedMaterial}` : null,
       `Columnas incluidas: ${headers.join(", ")}`,
       `Registros filtrados: ${formattedRows.length}`,
     ].filter(Boolean) as string[];
@@ -1018,12 +910,8 @@ const InformesHistoricos = () => {
 
   const resumen = useMemo(() => {
     const totalPeso = filteredCalculo.reduce((acc, row) => acc + row.peso, 0);
-    const totalValor = filteredCalculo.reduce(
-      (acc, row) => acc + row.valor_estimado,
-      0
-    );
-    const talleresContados = new Set(filteredCalculo.map((row) => row.tallerId))
-      .size;
+    const totalValor = filteredCalculo.reduce((acc, row) => acc + row.valor_estimado, 0);
+    const talleresContados = new Set(filteredCalculo.map((row) => row.tallerId)).size;
 
     return {
       totalPeso,
@@ -1045,8 +933,8 @@ const InformesHistoricos = () => {
         description={null}
       >
         <Typography variant="body2" color="text.secondary">
-          Usa las tarjetas de filtros y exportacion para trabajar con los datos
-          que más importan a tu equipo.
+          Usa las tarjetas de filtros y exportacion para trabajar con los datos que más importan a
+          tu equipo.
         </Typography>
       </PageSection>
 
@@ -1079,9 +967,7 @@ const InformesHistoricos = () => {
               loading={loading}
               onChange={(_, selected) => setSelectedTaller(selected)}
               getOptionLabel={(option) => option.label}
-              isOptionEqualToValue={(option, optionValue) =>
-                option.id === optionValue.id
-              }
+              isOptionEqualToValue={(option, optionValue) => option.id === optionValue.id}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -1113,23 +999,14 @@ const InformesHistoricos = () => {
                 multiple
                 disableCloseOnSelect
                 value={
-                  scope === "sede" && selectedSedes.length === 0
-                    ? availableSedes
-                    : selectedSedes
+                  scope === "sede" && selectedSedes.length === 0 ? availableSedes : selectedSedes
                 }
                 options={availableSedes}
                 onChange={(_, values) => setSelectedSedes(values)}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
                     const { key, ...tagProps } = getTagProps({ index });
-                    return (
-                      <Chip
-                        key={key ?? option}
-                        label={option}
-                        size="small"
-                        {...tagProps}
-                      />
-                    );
+                    return <Chip key={key ?? option} label={option} size="small" {...tagProps} />;
                   })
                 }
                 renderInput={(params) => (
@@ -1150,8 +1027,8 @@ const InformesHistoricos = () => {
                 {scope === "material" && !selectedMaterial
                   ? "Selecciona un material para ver los talleres disponibles."
                   : selectedTallerIds.length
-                  ? `Se incluirán ${selectedTallerIds.length} talleres en el informe.`
-                  : "Ajusta los filtros de alcance para incluir talleres en el informe."}
+                    ? `Se incluirán ${selectedTallerIds.length} talleres en el informe.`
+                    : "Ajusta los filtros de alcance para incluir talleres en el informe."}
               </Typography>
 
               {selectedTalleres.length ? (
@@ -1159,9 +1036,7 @@ const InformesHistoricos = () => {
                   {selectedTalleres.map((taller) => (
                     <Chip
                       key={taller.id}
-                      label={`${taller.nombre_taller}${
-                        taller.sede ? ` · ${taller.sede}` : ""
-                      }`}
+                      label={`${taller.nombre_taller}${taller.sede ? ` · ${taller.sede}` : ""}`}
                       size="small"
                     />
                   ))}
@@ -1204,9 +1079,7 @@ const InformesHistoricos = () => {
             </Stack>
           ) : null}
 
-          {selectedTallerIds.length &&
-          !loadingCalculo &&
-          filteredCalculo.length === 0 ? (
+          {selectedTallerIds.length && !loadingCalculo && filteredCalculo.length === 0 ? (
             <Alert severity="warning">
               No se encontraron cortes que coincidan con los filtros aplicados.
             </Alert>
@@ -1229,9 +1102,7 @@ const InformesHistoricos = () => {
                   <Typography variant="overline" color="text.secondary">
                     Peso filtrado
                   </Typography>
-                  <Typography variant="h6">
-                    {pesoFormatter.format(resumen.totalPeso)} kg
-                  </Typography>
+                  <Typography variant="h6">{pesoFormatter.format(resumen.totalPeso)} kg</Typography>
                 </Stack>
                 <Stack spacing={0.5}>
                   <Typography variant="overline" color="text.secondary">
@@ -1261,9 +1132,7 @@ const InformesHistoricos = () => {
                     }}
                   >
                     <Stack spacing={0.25}>
-                      <Typography variant="subtitle2">
-                        {row.nombre_corte}
-                      </Typography>
+                      <Typography variant="subtitle2">{row.nombre_corte}</Typography>
                       <Typography variant="body2" color="text.secondary">
                         {row.descripcion}
                       </Typography>

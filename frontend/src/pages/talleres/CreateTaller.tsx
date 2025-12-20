@@ -30,7 +30,6 @@ import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
 import { formatKg, parseWeightInput } from "../../utils/weights";
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const DEFAULT_CATEGORY = "corte";
 
 const CreateTaller = () => {
   const [especie, setEspecie] = useState<Especie | "">("");
@@ -207,7 +206,6 @@ const CreateTaller = () => {
         codigo_producto: sc.codigo,
         nombre_subcorte: sc.nombre,
         peso: pesoRaw,
-        categoria: DEFAULT_CATEGORY,
       });
     }
 

@@ -42,8 +42,6 @@ export interface TallerDetallePayload {
   nombre_subcorte: string;
   peso: number;
   item_id?: number | null;
-  categoria: string;
-  peso_normalizado?: number;
 }
 
 export interface CrearTallerPayload {
@@ -60,6 +58,7 @@ export interface CrearTallerPayload {
 
 export interface TallerDetalleResponse extends TallerDetallePayload {
   id: number;
+  peso_normalizado?: number;
 }
 
 export interface TallerResponse {

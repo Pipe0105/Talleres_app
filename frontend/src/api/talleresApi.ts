@@ -144,14 +144,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 const resolveItemNombre = (raw: any): string =>
   toStringOr(raw?.nombre ?? raw?.detalle ?? raw?.descripcion ?? raw?.descripcion_item, "");
 
-const DEFAULT_CATEGORY = "corte";
-const ALLOWED_CATEGORIES = ["corte", "subproducto", "merma", "otro"];
-
-const normalizeCategory = (raw: any): string => {
-  const category = toStringOr(raw, DEFAULT_CATEGORY).toLowerCase().trim();
-  return ALLOWED_CATEGORIES.includes(category) ? category : DEFAULT_CATEGORY;
-};
-
 const mapItem = (raw: any): Item => {
   const nombre = resolveItemNombre(raw);
   const precio = raw?.precio == null ? null : toNumber(raw?.precio, 0);
@@ -224,7 +216,6 @@ const mapTaller = (raw: any): TallerResponse => ({
         nombre_subcorte: toStringOr(det?.nombre_subcorte, ""),
         peso: toNumber(det?.peso, 0),
         item_id: det?.item_id ?? null,
-        categoria: normalizeCategory(det?.categoria),
         peso_normalizado: toNumber(det?.peso_normalizado ?? det?.pesoNormalizado ?? det?.peso, 0),
       }))
     : [],

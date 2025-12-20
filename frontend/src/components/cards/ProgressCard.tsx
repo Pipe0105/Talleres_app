@@ -1,11 +1,5 @@
 import { forwardRef } from "react";
-import {
-  LinearProgress,
-  Paper,
-  PaperProps,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { LinearProgress, Paper, PaperProps, Stack, Typography } from "@mui/material";
 
 export interface ProgressCardProps extends PaperProps {
   title: string;
@@ -32,11 +26,7 @@ const ProgressCard = forwardRef<HTMLDivElement, ProgressCardProps>(
         ]}
       >
         <Stack spacing={1.5}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="baseline"
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="baseline">
             <Typography variant="subtitle1">{title}</Typography>
             <Typography variant="body2" color="secondary">
               {value}%

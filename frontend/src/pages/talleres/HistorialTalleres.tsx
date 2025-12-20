@@ -104,7 +104,6 @@ const parseNumber = (value: string): number => {
 };
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const DEFAULT_CATEGORY = "corte";
 
 const HistorialTalleres = () => {
   const [filters, setFilters] = useState<FiltersState>(() => ({
@@ -312,7 +311,6 @@ const HistorialTalleres = () => {
         nombre_subcorte: detalle.nombre_subcorte.trim() || codigo,
         peso: pesoDetalle,
         item_id: detalle.item_id ?? undefined,
-        categoria: DEFAULT_CATEGORY,
       });
     }
 
