@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
@@ -33,6 +33,7 @@ import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import { getDashboardStats, getTalleres } from "../../api/talleresApi";
 import { DashboardStats, TallerListItem } from "../../types";
 import { formatKg } from "../../utils/weights";
+import { useAuth } from "../../context/AuthContext";
 
 type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
 type TallerConEstado = TallerListItem & { estado: WorkshopStatus; progreso: number };
@@ -57,7 +58,15 @@ const navigationPaths = {
   usuarios: "/usuarios",
 };
 
-const quickActions = [
+type QuickAction = {
+  label: string;
+  icon: ReactNode;
+  color: string;
+  to: string;
+  requiresAdmin?: boolean;
+};
+
+const quickActions: QuickAction[] = [
   {
     label: "Nuevo Taller",
     icon: <AddCircleRoundedIcon />,
@@ -81,6 +90,7 @@ const quickActions = [
     icon: <GroupAddRoundedIcon />,
     color: "#2dd4bf",
     to: navigationPaths.usuarios,
+    requiresAdmin: true,
   },
 ];
 
@@ -166,6 +176,8 @@ const StatCard = ({
 const Home = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const { user } = useAuth();
+  const isAdmin = Boolean(user?.is_admin || user?.is_gerente);
 
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [loadingTalleres, setLoadingTalleres] = useState(false);
@@ -180,6 +192,7 @@ const Home = () => {
     let active = true;
 
     const fetchTalleres = async () => {
+      if (!isAdmin) return;
       try {
         setLoadingTalleres(true);
         const data = await getTalleres();
@@ -202,12 +215,13 @@ const Home = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     let active = true;
 
     const fetchDashboardStats = async () => {
+      if (!isAdmin) return;
       try {
         setLoadingStats(true);
         const data = await getDashboardStats();
@@ -230,7 +244,7 @@ const Home = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isAdmin]);
 
   const talleresConEstado = useMemo<TallerConEstado[]>(() => {
     const deriveEstado = (taller: TallerListItem): WorkshopStatus => {
@@ -398,6 +412,125 @@ const Home = () => {
     ];
   }, [activeWorkshopsCount, completadosHoy, dashboardStats, formatTrend]);
 
+  const availableQuickActions = useMemo(
+    () => quickActions.filter((action) => isAdmin || !action.requiresAdmin),
+    [isAdmin]
+  );
+
+  const QuickActionsPanel = ({ actions }: { actions: QuickAction[] }) => (
+    <Card
+      sx={(theme) => ({
+        p: 2.5,
+        border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+        borderRadius: 4,
+      })}
+    >
+      <Typography variant="subtitle1" fontWeight={800} mb={2}>
+        Accesos Rápidos
+      </Typography>
+      <Grid container spacing={1.5}>
+        {actions.map((action) => (
+          <Grid item xs={12} sm={6} key={action.label}>
+            <Paper
+              component={RouterLink}
+              to={action.to}
+              sx={(theme) => ({
+                p: 2,
+                borderRadius: 2,
+                position: "relative",
+                overflow: "hidden",
+                border: `1px solid ${alpha(action.color, 0.2)}`,
+                background: `linear-gradient(135deg, ${alpha(action.color, 0.12)}, ${alpha(
+                  action.color,
+                  0.05
+                )})`,
+                color: theme.palette.text.primary,
+                textAlign: "center",
+                cursor: "pointer",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
+                textDecoration: "none",
+                minHeight: 134,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 14px 32px rgba(15,23,42,0.12)",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  inset: "12px",
+                  borderRadius: 2,
+                  background: `radial-gradient(circle at 20% 20%, ${alpha(
+                    action.color,
+                    0.16
+                  )}, transparent 45%)`,
+                  opacity: 0.7,
+                },
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  width: 160,
+                  height: 160,
+                  bottom: -70,
+                  right: -60,
+                  background: alpha(action.color, 0.18),
+                  filter: "blur(48px)",
+                  opacity: 0.55,
+                },
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: "0px 16px 38px rgba(15,23,42,0.15)",
+                  background: `linear-gradient(145deg, ${alpha(action.color, 0.16)}, ${alpha(
+                    action.color,
+                    0.08
+                  )})`,
+                },
+              })}
+            >
+              <Stack alignItems="center" spacing={1.2} position="relative" zIndex={1}>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    display: "grid",
+                    placeItems: "center",
+                    backgroundColor: alpha(action.color, 0.18),
+                    color: action.color,
+                    border: `1px solid ${alpha(action.color, 0.3)}`,
+                    boxShadow: `0 10px 22px ${alpha(action.color, 0.26)}`,
+                  }}
+                >
+                  {action.icon}
+                </Box>
+                <Typography variant="body2" fontWeight={800} color="text.primary">
+                  {action.label}
+                </Typography>
+              </Stack>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Card>
+  );
+
+  if (!isAdmin) {
+    return (
+      <Stack spacing={3}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="h4" fontWeight={800} color="text.primary">
+              Accesos Rápidos
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Elige una acción para continuar con tu trabajo diario.
+            </Typography>
+          </Box>
+        </Stack>
+
+        <QuickActionsPanel actions={availableQuickActions} />
+      </Stack>
+    );
+  }
   return (
     <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
@@ -741,100 +874,7 @@ const Home = () => {
               </Stack>
             </Card>
 
-            <Card
-              sx={(theme) => ({
-                p: 2.5,
-                border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
-                borderRadius: 4,
-              })}
-            >
-              <Typography variant="subtitle1" fontWeight={800} mb={2}>
-                Accesos Rápidos
-              </Typography>
-              <Grid container spacing={1.5}>
-                {quickActions.map((action) => (
-                  <Grid item xs={12} sm={6} key={action.label}>
-                    <Paper
-                      component={RouterLink}
-                      to={action.to}
-                      sx={(theme) => ({
-                        p: 2,
-                        borderRadius: 2,
-                        position: "relative",
-                        overflow: "hidden",
-                        border: `1px solid ${alpha(action.color, 0.2)}`,
-                        background: `linear-gradient(135deg, ${alpha(action.color, 0.12)}, ${alpha(
-                          action.color,
-                          0.05
-                        )})`,
-                        color: theme.palette.text.primary,
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition:
-                          "transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
-                        textDecoration: "none",
-                        minHeight: 134,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 14px 32px rgba(15,23,42,0.12)",
-                        "&::before": {
-                          content: '""',
-                          position: "absolute",
-                          inset: "12px",
-                          borderRadius: 2,
-                          background: `radial-gradient(circle at 20% 20%, ${alpha(
-                            action.color,
-                            0.16
-                          )}, transparent 45%)`,
-                          opacity: 0.7,
-                        },
-                        "&::after": {
-                          content: '""',
-                          position: "absolute",
-                          width: 160,
-                          height: 160,
-                          bottom: -70,
-                          right: -60,
-                          background: alpha(action.color, 0.18),
-                          filter: "blur(48px)",
-                          opacity: 0.55,
-                        },
-                        "&:hover": {
-                          transform: "translateY(-4px)",
-                          boxShadow: "0px 16px 38px rgba(15,23,42,0.15)",
-                          background: `linear-gradient(145deg, ${alpha(action.color, 0.16)}, ${alpha(
-                            action.color,
-                            0.08
-                          )})`,
-                        },
-                      })}
-                    >
-                      <Stack alignItems="center" spacing={1.2} position="relative" zIndex={1}>
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 2,
-                            display: "grid",
-                            placeItems: "center",
-                            backgroundColor: alpha(action.color, 0.18),
-                            color: action.color,
-                            border: `1px solid ${alpha(action.color, 0.3)}`,
-                            boxShadow: `0 10px 22px ${alpha(action.color, 0.26)}`,
-                          }}
-                        >
-                          {action.icon}
-                        </Box>
-                        <Typography variant="body2" fontWeight={800} color="text.primary">
-                          {action.label}
-                        </Typography>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </Card>
+            <QuickActionsPanel actions={availableQuickActions} />
           </Stack>
         </Grid>
       </Grid>
