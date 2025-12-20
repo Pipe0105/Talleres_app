@@ -1,10 +1,17 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import {
   AppBar,
+  Avatar,
+  Badge,
   Box,
   Button,
-  Chip,
   Container,
+  IconButton,
+  InputBase,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Paper,
   Stack,
   Toolbar,
@@ -12,6 +19,21 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
+import ViewTimelineRoundedIcon from "@mui/icons-material/ViewTimelineRounded";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
+import StoreMallDirectoryOutlinedIcon from "@mui/icons-material/StoreMallDirectoryOutlined";
+import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
+import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import { useAuth } from "../context/AuthContext";
 
 interface NavItem {
   label: string;
@@ -27,6 +49,54 @@ interface AppLayoutProps {
 }
 
 export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
+  const drawerWidth = 260;
+  const { user } = useAuth();
+
+  const navigationSections = useMemo(
+    () => [
+      {
+        title: "Principal",
+        items: navItems.filter((item) =>
+          ["Talleres", "Talleres+", "Seguimiento", "Informes"].includes(item.label)
+        ),
+      },
+      {
+        title: "Gestión",
+        items: navItems.filter((item) => ["Inventario", "Lista de precios"].includes(item.label)),
+      },
+      {
+        title: "Configuración",
+        items: navItems.filter((item) => ["Usuario", "Iniciar sesión"].includes(item.label)),
+      },
+    ],
+    [navItems]
+  );
+
+  const getIconForLabel = (label: string) => {
+    switch (label) {
+      case "Talleres":
+        return <DashboardRoundedIcon />;
+      case "Talleres+":
+        return <TimelineRoundedIcon />;
+      case "Seguimiento":
+        return <ViewTimelineRoundedIcon />;
+      case "Informes":
+        return <HistoryEduRoundedIcon />;
+      case "Inventario":
+        return <Inventory2OutlinedIcon />;
+      case "Lista de precios":
+        return <ListAltRoundedIcon />;
+      case "Usuario":
+        return <PeopleAltOutlinedIcon />;
+      case "Iniciar sesión":
+        return <PeopleAltOutlinedIcon />;
+      default:
+        return <StoreMallDirectoryOutlinedIcon />;
+    }
+  };
+
+  const displayName = user?.full_name?.trim() || user?.email || "Invitado";
+
   return (
     <Box
       sx={(theme) => ({
@@ -36,211 +106,258 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       })}
     >
       <AppBar
-        position="sticky"
+        position="fixed"
         elevation={0}
+        color="transparent"
         sx={(theme) => ({
-          backgroundColor: theme.palette.primary.main,
-          borderRadius: 0,
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
-          boxShadow: "0px 12px 32px rgba(4, 17, 37, 0.35)",
+          borderBottom: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+          backdropFilter: "blur(10px)",
+          backgroundColor: alpha(theme.palette.background.paper, 0.9),
+          boxShadow: "0px 10px 30px rgba(15,23,42,0.08)",
         })}
       >
-        <Box sx={{ width: "100%" }}>
-          {" "}
-          <Toolbar
-            disableGutters
-            sx={(theme) => ({
-              py: { xs: 2.5, md: 3 },
-              gap: { xs: 2, md: 3 },
-              alignItems: { xs: "flex-start", md: "center" },
-              flexDirection: { xs: "column", md: "row" },
-
-              // 🔥 CLAVE VISUAL
-              px: { xs: 2, md: 6 },
-              maxWidth: theme.layout.contentMaxWidth,
-              margin: "0 auto",
-            })}
-          >
+        <Toolbar
+          sx={{
+            px: { xs: 2, md: 4 },
+            gap: 2,
+            minHeight: 80,
+            justifyContent: "space-between",
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton color="inherit" edge="start">
+              <MenuRoundedIcon />
+            </IconButton>
             <Stack
               direction="row"
-              spacing={2}
+              spacing={1.5}
               alignItems="center"
-              sx={{
-                flexShrink: 0,
-                width: { xs: "100%", md: "auto" },
-              }}
+              component={RouterLink}
+              to="/"
+              sx={{ color: "inherit", textDecoration: "none" }}
             >
               <Box
                 sx={(theme) => ({
-                  width: 48,
-                  height: 48,
+                  width: 46,
+                  height: 46,
                   borderRadius: 14,
-                  backgroundColor: theme.palette.secondary.main,
+                  backgroundColor: theme.palette.primary.main,
                   display: "grid",
                   placeItems: "center",
                   color: theme.palette.common.white,
-                  boxShadow: "0px 12px 25px rgba(16,178,211,0.3)",
-                  border: `2px solid ${alpha(theme.palette.common.white, 0.5)}`,
+                  boxShadow: "0px 18px 36px rgba(0,178,144,0.25)",
                 })}
               >
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={800}
-                  letterSpacing={0.6}
-                >
+                <Typography variant="subtitle1" fontWeight={800}>
                   TD
                 </Typography>
               </Box>
-              <Box
-                component={RouterLink}
-                to="/"
-                sx={{
-                  textDecoration: "none",
-                  color: "inherit",
-                  display: "flex",
-                  flexDirection: "column",
-                  cursor: "pointer",
-                  "&:hover": { opacity: 0.85 },
-                }}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  sx={{ mb: 0.25 }}
-                >
-                  <Typography
-                    variant="h6"
-                    fontSize={26}
-                    fontWeight={800}
-                    color="inherit"
-                  >
-                    Panel Operativo
-                  </Typography>
-                </Stack>
-
-                <Typography
-                  variant="body2"
-                  sx={(theme) => ({
-                    color: alpha(theme.palette.common.white, 0.86),
-                  })}
-                >
-                  Panel principal para acceder a las herramientas disponibles.
+              <Box>
+                <Typography variant="h6" fontWeight={800}>
+                  Panel Operativo
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Gestión de Talleres
                 </Typography>
               </Box>
             </Stack>
+          </Stack>
 
+          <Paper
+            sx={(theme) => ({
+              px: 2.5,
+              py: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              width: { xs: "45%", md: "50%" },
+              maxWidth: 620,
+              borderRadius: 999,
+              border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              boxShadow: "0px 12px 32px rgba(15,23,42,0.08)",
+            })}
+            variant="outlined"
+          >
+            <SearchRoundedIcon color="disabled" />
+            <InputBase
+              fullWidth
+              placeholder="Buscar talleres, reportes, precios..."
+              sx={{ fontWeight: 600 }}
+            />
+          </Paper>
+
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Button
+              variant="contained"
+              color="primary"
+              size="medium"
+              component={RouterLink}
+              to="/talleres"
+              startIcon={<AddCircleRoundedIcon />}
+              sx={{ borderRadius: 999, px: 2.5, fontWeight: 700 }}
+            >
+              Nuevo Taller
+            </Button>
+            <IconButton size="large">
+              <Badge color="secondary" variant="dot">
+                <NotificationsNoneRoundedIcon />
+              </Badge>
+            </IconButton>
             <Paper
-              elevation={0}
               sx={(theme) => ({
-                backgroundColor: alpha(theme.palette.common.white, 0.06),
-                border: `1px solid ${alpha(theme.palette.common.white, 0.12)}`,
-                px: 1.5,
-                py: 1,
-                borderRadius: 16,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "flex-start",
-                maxWidth: "100%",
-                width: { xs: "100%", md: "auto" },
-                flexGrow: { xs: 1, md: 0 },
-                minWidth: 0,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-                "&::-webkit-scrollbar": { display: "none" },
-                mt: { xs: 1.5, md: 0 },
+                gap: 1,
+                px: 1.5,
+                py: 1,
+                borderRadius: 999,
+                border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
               })}
             >
-              <Stack
-                direction="row"
-                spacing={0.75}
-                alignItems="center"
-                sx={{
-                  flexWrap: "nowrap",
-                  whiteSpace: "nowrap",
-                  justifyContent: "flex-start",
-                  width: "100%",
-                  minWidth: 0,
-                }}
+              <Avatar
+                sx={(theme) => ({
+                  width: 36,
+                  height: 36,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.18),
+                  color: theme.palette.primary.main,
+                  fontWeight: 700,
+                })}
               >
-                {navItems.map((item) => (
-                  <Button
-                    key={item.to ?? item.label}
-                    {...(item.to ? { component: RouterLink, to: item.to } : {})}
-                    variant={item.isActive ? "contained" : "text"}
-                    color={item.isActive ? "secondary" : "inherit"}
-                    aria-current={item.isActive ? "page" : undefined}
-                    startIcon={item.icon}
-                    sx={(theme) => ({
-                      fontWeight: 600,
-                      textTransform: "none",
-                      gap: 0.75,
-                      px: 1.8,
-                      py: 1,
-                      minWidth: "auto",
-                      fontSize: "0.81rem",
-                      justifyContent: "center",
-                      borderRadius: 999,
-                      position: "relative",
-                      flexShrink: 0,
-                      whiteSpace: "nowrap",
-                      color: item.isActive
-                        ? theme.palette.primary.main
-                        : alpha(theme.palette.common.white, 0.9),
-                      backgroundImage: item.isActive
-                        ? "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72))"
-                        : "linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))",
-                      backgroundColor: item.isActive
-                        ? alpha(theme.palette.common.white, 0.92)
-                        : alpha(theme.palette.common.white, 0.16),
-                      border: `1px solid ${alpha(
-                        theme.palette.common.white,
-                        item.isActive ? 0.75 : 0.24
-                      )}`,
-                      boxShadow: item.isActive
-                        ? "0 18px 36px rgba(4,17,37,0.32), inset 0 1px 0 rgba(255,255,255,0.45)"
-                        : "0 12px 30px rgba(4,17,37,0.18), inset 0 1px 0 rgba(255,255,255,0.18)",
-                      transition: "all 0.2s ease",
-                      "&:hover": {
-                        backgroundImage: item.isActive
-                          ? "linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.78))"
-                          : "linear-gradient(135deg, rgba(255,255,255,0.26), rgba(255,255,255,0.14))",
-                        boxShadow: item.isActive
-                          ? "0 20px 40px rgba(4,17,37,0.36), inset 0 1px 0 rgba(255,255,255,0.5)"
-                          : "0 16px 36px rgba(4,17,37,0.22), inset 0 1px 0 rgba(255,255,255,0.22)",
-                        borderColor: alpha(
-                          theme.palette.common.white,
-                          item.isActive ? 0.85 : 0.32
-                        ),
-                      },
-                    })}
-                    disabled={item.disabled}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </Stack>
+                {displayName.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  {displayName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Administrador
+                </Typography>
+              </Box>
+              <IconButton size="small">
+                <SettingsOutlinedIcon fontSize="small" />
+              </IconButton>
             </Paper>
-          </Toolbar>
-        </Box>
+          </Stack>
+        </Toolbar>
       </AppBar>
 
-      <Box
-        component="main"
-        sx={(theme) => ({
-          py: theme.layout.pagePaddingY,
-          backgroundImage: theme.gradients.page,
-        })}
-      >
-        <Container
-          maxWidth={false}
+      <Box sx={{ display: "flex" }}>
+        <Box
+          component="aside"
           sx={(theme) => ({
-            maxWidth: theme.layout.contentMaxWidth,
-            px: { xs: 2, md: 4 },
+            width: drawerWidth,
+            position: "fixed",
+            top: 80,
+            left: 0,
+            bottom: 0,
+            borderRight: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+            backgroundColor: alpha(theme.palette.background.paper, 0.96),
+            backdropFilter: "blur(8px)",
+            px: 2.5,
+            py: 3,
+            display: { xs: "none", md: "block" },
           })}
         >
-          <Box>{children}</Box>
-        </Container>
+          <Stack spacing={4} height="100%">
+            {navigationSections.map(
+              (section) =>
+                section.items.length > 0 && (
+                  <Box key={section.title}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontWeight: 700, letterSpacing: 0.5, mb: 1.5 }}
+                      display="block"
+                    >
+                      {section.title}
+                    </Typography>
+                    <List disablePadding>
+                      {section.items.map((item) => (
+                        <ListItemButton
+                          key={item.to ?? item.label}
+                          {...(item.to ? { component: RouterLink, to: item.to } : {})}
+                          selected={item.isActive}
+                          sx={(theme) => ({
+                            mb: 1,
+                            borderRadius: 12,
+                            "&.Mui-selected": {
+                              backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                              color: theme.palette.primary.main,
+                              boxShadow: "0px 12px 30px rgba(0,178,144,0.14)",
+                            },
+                          })}
+                        >
+                          <ListItemIcon
+                            sx={{
+                              minWidth: 32,
+                              color: item.isActive ? "primary.main" : "inherit",
+                            }}
+                          >
+                            {item.icon ?? getIconForLabel(item.label)}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={item.label}
+                            primaryTypographyProps={{ fontWeight: 700 }}
+                          />
+                          <ChevronRightRoundedIcon fontSize="small" sx={{ opacity: 0.4 }} />
+                        </ListItemButton>
+                      ))}
+                    </List>
+                  </Box>
+                )
+            )}
+
+            <Box mt="auto">
+              <Paper
+                sx={(theme) => ({
+                  p: 2,
+                  borderRadius: 14,
+                  backgroundImage: theme.gradients.callout,
+                  boxShadow: theme.customShadows.surface,
+                  textAlign: "center",
+                })}
+              >
+                <Typography variant="subtitle2" fontWeight={800} mb={1}>
+                  ¿Necesitas ayuda?
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  Consulta la guía de usuario para conocer las nuevas mejoras.
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  component={RouterLink}
+                  to="/informes-historicos"
+                >
+                  Ver guía
+                </Button>
+              </Paper>
+            </Box>
+          </Stack>
+        </Box>
+
+        <Box
+          component="main"
+          sx={(theme) => ({
+            flexGrow: 1,
+            ml: { xs: 0, md: `${drawerWidth}px` },
+            pt: 10,
+            pb: theme.layout.pagePaddingY,
+          })}
+        >
+          <Container
+            maxWidth={false}
+            sx={(theme) => ({
+              maxWidth: theme.layout.contentMaxWidth + drawerWidth,
+              px: { xs: 2, md: 4 },
+            })}
+          >
+            <Box>{children}</Box>
+          </Container>
+        </Box>
       </Box>
     </Box>
   );
