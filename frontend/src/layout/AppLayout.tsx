@@ -46,6 +46,7 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
   const drawerWidth = 260;
+  const appBarHeight = 80;
   const { user } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
@@ -200,7 +201,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           sx={{
             px: { xs: 2, md: 4 },
             gap: 2,
-            minHeight: 80,
+            minHeight: appBarHeight,
             justifyContent: "space-between",
           }}
         >
@@ -298,14 +299,15 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           sx={(theme) => ({
             width: drawerWidth,
             position: "fixed",
-            top: 80,
+            top: 0,
             left: 0,
             bottom: 0,
             borderRight: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
             backgroundColor: alpha(theme.palette.background.paper, 0.96),
             backdropFilter: "blur(8px)",
             px: 2.5,
-            py: 3,
+            pt: `calc(${appBarHeight}px + ${theme.spacing(3)})`,
+            pb: 3,
             display: { xs: "none", md: "block" },
           })}
         >
@@ -321,14 +323,24 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             display: { xs: "block", md: "none" },
             "& .MuiDrawer-paper": {
               width: drawerWidth,
-              top: 80,
+              top: 0,
               backgroundColor: alpha(theme.palette.background.paper, 0.96),
               borderRight: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
               padding: 0,
             },
           })}
         >
-          <Box sx={{ px: 2.5, py: 3, height: "100%", overflowY: "auto" }}>{navigationContent}</Box>
+          <Box
+            sx={(theme) => ({
+              px: 2.5,
+              pt: `calc(${appBarHeight}px + ${theme.spacing(3)})`,
+              pb: 3,
+              height: "100%",
+              overflowY: "auto",
+            })}
+          >
+            {navigationContent}
+          </Box>{" "}
         </Drawer>
 
         <Box
