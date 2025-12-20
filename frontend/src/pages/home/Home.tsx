@@ -37,6 +37,16 @@ import { formatKg } from "../../utils/weights";
 type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
 type TallerConEstado = TallerListItem & { estado: WorkshopStatus; progreso: number };
 
+type RecentActivityItem = {
+  id: number;
+  nombre: string;
+  codigo: string;
+  sede: string;
+  especie: string;
+  estado: WorkshopStatus;
+  creadoEn: string;
+};
+
 const navigationPaths = {
   talleres: "/talleres",
   TalleresPlus: "/talleres-plus",
@@ -52,44 +62,6 @@ const statsCards = [
   { title: "Completados Hoy", value: "18", trend: "+8%", trendUp: true },
   { title: "Inventario Bajo", value: "7", trend: "-3%", trendUp: false },
   { title: "Usuarios Activos", value: "42", trend: "+5%", trendUp: true },
-];
-
-const activityFeed = [
-  {
-    titulo: "Carlos Méndez completó el taller",
-    ref: "TL-1001",
-    tiempo: "Hace 15 min",
-    color: "#00b290",
-    iniciales: "CM",
-  },
-  {
-    titulo: "Ana García actualizó el inventario",
-    ref: "Producto #245",
-    tiempo: "Hace 32 min",
-    color: "#ff6f61",
-    iniciales: "AG",
-  },
-  {
-    titulo: "Luis Torres generó un informe",
-    ref: "Reporte Mensual",
-    tiempo: "Hace 1 hora",
-    color: "#fbbf24",
-    iniciales: "LT",
-  },
-  {
-    titulo: "María López creó un nuevo taller",
-    ref: "TL-1004",
-    tiempo: "Hace 2 horas",
-    color: "#4ade80",
-    iniciales: "ML",
-  },
-  {
-    titulo: "Pedro Ruiz modificó precios",
-    ref: "Lista Principal",
-    tiempo: "Hace 3 horas",
-    color: "#60a5fa",
-    iniciales: "PR",
-  },
 ];
 
 const quickActions = [
@@ -291,6 +263,46 @@ const Home = () => {
       .join("")
       .toUpperCase();
   };
+
+  const formatRelativeTime = (value: string): string => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Fecha no disponible";
+
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    if (minutes < 1) return "Hace instantes";
+    if (minutes < 60) return `Hace ${minutes} min`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Hace ${hours} h`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 14) {
+      return `Hace ${days} día${days === 1 ? "" : "s"}`;
+    }
+
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const actividadReciente = useMemo<RecentActivityItem[]>(() => {
+    const sorted = [...talleresConEstado].sort(
+      (a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
+    );
+
+    return sorted.slice(0, 5).map((taller) => ({
+      id: taller.id,
+      nombre: taller.nombre_taller,
+      codigo: taller.codigo_principal ?? `TL-${taller.id}`,
+      sede: taller.sede?.trim() || "Sede no registrada",
+      especie: taller.especie || "Especie no definida",
+      estado: taller.estado,
+      creadoEn: taller.creado_en,
+    }));
+  }, [talleresConEstado]);
 
   return (
     <Stack spacing={3}>
@@ -576,32 +588,59 @@ const Home = () => {
                 </Button>
               </Stack>
               <Stack spacing={1.5}>
-                {activityFeed.map((actividad) => (
-                  <Stack key={actividad.titulo} direction="row" spacing={1.5} alignItems="center">
-                    <Avatar
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        fontWeight: 700,
-                        bgcolor: alpha(actividad.color, 0.15),
-                        color: actividad.color,
-                      }}
-                    >
-                      {actividad.iniciales}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body2" fontWeight={700}>
-                        {actividad.titulo}
-                      </Typography>
-                      <Typography variant="body2" color="primary">
-                        {actividad.ref}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {actividad.tiempo}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                ))}
+                {loadingTalleres && <LinearProgress />}
+                {!loadingTalleres && !actividadReciente.length ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No hay actividad reciente para mostrar.
+                  </Typography>
+                ) : (
+                  actividadReciente.map((actividad) => {
+                    const estado = statusStyles[actividad.estado as WorkshopStatus];
+                    return (
+                      <Stack
+                        key={`${actividad.id}-${actividad.creadoEn}`}
+                        direction="row"
+                        spacing={1.5}
+                        alignItems="center"
+                      >
+                        <Avatar
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            fontWeight: 700,
+                            bgcolor: alpha(estado.color, 0.12),
+                            color: estado.color,
+                          }}
+                        >
+                          {getIniciales(actividad.sede || actividad.nombre)}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                            <Typography variant="body2" fontWeight={800} color="text.primary">
+                              {actividad.nombre}
+                            </Typography>
+                            <Chip
+                              label={estado.label}
+                              size="small"
+                              sx={{
+                                fontWeight: 700,
+                                backgroundColor: estado.bg,
+                                color: estado.color,
+                              }}
+                            />
+                          </Stack>
+                          <Typography variant="body2" color="primary" fontWeight={700}>
+                            {actividad.codigo}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {actividad.sede} • {actividad.especie} •{" "}
+                            {formatRelativeTime(actividad.creadoEn)}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    );
+                  })
+                )}
               </Stack>
             </Card>
 

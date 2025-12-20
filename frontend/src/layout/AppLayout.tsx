@@ -210,9 +210,12 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                 alignItems: "center",
                 gap: 1,
                 px: 1.5,
-                py: 1,
+                py: 0.75,
+                height: 60,
                 borderRadius: 999,
                 border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
+                boxShadow: "0px 10px 24px rgba(15,23,42,0.08)",
+                backgroundColor: alpha(theme.palette.background.paper, 0.96),
               })}
             >
               <Avatar

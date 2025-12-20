@@ -908,6 +908,12 @@ const InformesHistoricos = () => {
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
   };
 
+  const isExportDisabled =
+    loadingCalculo ||
+    !formattedRows.length ||
+    selectedFieldDefinitions.length === 0 ||
+    (scope === "taller" && !selectedTaller);
+
   const resumen = useMemo(() => {
     const totalPeso = filteredCalculo.reduce((acc, row) => acc + row.peso, 0);
     const totalValor = filteredCalculo.reduce((acc, row) => acc + row.valor_estimado, 0);
@@ -1181,12 +1187,7 @@ const InformesHistoricos = () => {
       <InformeExportPanel
         fields={exportFieldDefinitions}
         selectedFields={selectedFields}
-        disabled={
-          !formattedRows.length ||
-          selectedFieldDefinitions.length === 0 ||
-          !selectedTaller ||
-          loadingCalculo
-        }
+        disabled={isExportDisabled}
         onToggleField={handleFieldToggle}
         onExportCsv={handleExportCsv}
         onExportExcel={handleExportExcel}
