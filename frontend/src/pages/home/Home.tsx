@@ -84,6 +84,7 @@ const quickActions: QuickAction[] = [
     icon: <TrendingFlatRoundedIcon />,
     color: "#ffb020",
     to: navigationPaths.listaPrecios,
+    requiresAdmin: true,
   },
   {
     label: "Añadir usuario",
