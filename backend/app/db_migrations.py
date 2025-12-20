@@ -12,13 +12,27 @@ from sqlalchemy.engine import Connection
 logger = logging.getLogger(__name__)
 
 
-def _has_table_privilege(conn: Connection, table_name: str, privilege: str) -> bool:
+def _can_alter_table(conn: Connection, table_name: str) -> bool:
+    """Return True when current user is the table owner or a superuser.
+
+    PostgreSQL does not expose an ``ALTER`` privilege for tables, so we rely on
+    ownership (or superuser status) as the proxy for having rights to run the
+    DDL below. The query is scoped to the current schema to avoid cross-schema
+    collisions.
+    """
     result = conn.execute(
         text(
-            "SELECT has_table_privilege(current_user, :table_name, :privilege) "
-            "AS has_privilege"
+            "SELECT EXISTS ("
+            "  SELECT 1"
+            "  FROM pg_class c"
+            "  JOIN pg_namespace n ON n.oid = c.relnamespace"
+            "  WHERE n.nspname = current_schema()"
+            "    AND c.relname = :table_name"
+            "    AND (pg_catalog.pg_get_userbyid(c.relowner) = current_user"
+            "         OR (SELECT rolsuper FROM pg_roles WHERE rolname = current_user))"
+            ") AS can_alter"
         ),
-        {"table_name": table_name, "privilege": privilege},
+        {"table_name": table_name},
     ).scalar_one_or_none()
     return bool(result)
 
@@ -46,7 +60,7 @@ def apply_startup_migrations(engine: Engine) -> None:
     the startup hook.
     """
     with engine.begin() as conn:
-        if _has_table_privilege(conn, "users", "ALTER"):
+        if _can_alter_table(conn, "users"):
             conn.execute(
                 text(
                     "ALTER TABLE IF EXISTS users "
@@ -79,21 +93,21 @@ def apply_startup_migrations(engine: Engine) -> None:
             )
         else:
             logger.warning(
-                "Skipping user schema migrations because current user lacks ALTER "
-                "privilege on 'users'."
+                "Skipping user schema migrations because current user is not the owner "
+                "or a superuser for 'users'."
             )
 
-        if _has_table_privilege(conn, "talleres", "ALTER"):
+        if _can_alter_table(conn, "talleres"):
             conn.execute(
                 text("ALTER TABLE IF EXISTS talleres ADD COLUMN IF NOT EXISTS sede TEXT")
             )
         else:
             logger.warning(
-                "Skipping talleres schema migrations because current user lacks ALTER "
-                "privilege on 'talleres'."
+               "Skipping talleres schema migrations because current user is not the "
+                "owner or a superuser for 'talleres'."
             )
 
-        if _has_table_privilege(conn, "talleres_detalle", "ALTER"):
+        if _can_alter_table(conn, "talleres_detalle"):
             conn.execute(
                 text(
                     "ALTER TABLE IF EXISTS talleres_detalle "
