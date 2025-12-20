@@ -11,6 +11,8 @@ import {
   TallerListItem,
   TallerResponse,
   UserProfile,
+  DashboardStats,
+  DashboardMetric,
 } from "../types";
 import { safeStorage } from "../utils/storage";
 const TOKEN_STORAGE_KEY = "talleres.authToken";
@@ -182,6 +184,12 @@ const mapInventarioItem = (raw: any): InventarioItem => ({
   entradas: toNumber(raw?.entradas, 0),
   salidas_pendientes: toNumber(raw?.salidas_pendientes, 0),
   umbral_minimo: raw?.umbral_minimo == null ? undefined : toNumber(raw?.umbral_minimo, 0),
+});
+
+const mapDashboardMetric = (raw: any): DashboardMetric => ({
+  value: toNumber(raw?.value, 0),
+  trend:
+    typeof raw?.trend === "number" ? raw.trend : raw?.trend == null ? null : toNumber(raw.trend, 0),
 });
 
 const mapUser = (raw: any): UserProfile => ({
@@ -424,6 +432,17 @@ export const adminUpdateUser = async (
 
 export const adminDeleteUser = async (userId: string): Promise<void> => {
   await api.delete(`/users/${userId}`);
+};
+
+export const getDashboardStats = async (): Promise<DashboardStats> => {
+  const { data } = await api.get<unknown>("/dashboard/resumen");
+
+  return {
+    talleres_activos: mapDashboardMetric((data as any)?.talleres_activos),
+    completados_hoy: mapDashboardMetric((data as any)?.completados_hoy),
+    inventario_bajo: mapDashboardMetric((data as any)?.inventario_bajo),
+    usuarios_activos: mapDashboardMetric((data as any)?.usuarios_activos),
+  };
 };
 
 export interface GetTallerHistorialParams {

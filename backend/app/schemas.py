@@ -75,6 +75,18 @@ class ItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DashboardMetric(BaseModel):
+    value: int
+    trend: float | None = None
+
+
+class DashboardStats(BaseModel):
+    talleres_activos: DashboardMetric
+    completados_hoy: DashboardMetric
+    inventario_bajo: DashboardMetric
+    usuarios_activos: DashboardMetric
+
+
 class UserBase(BaseModel):
     username: str
     email: Optional[EmailStr] = None

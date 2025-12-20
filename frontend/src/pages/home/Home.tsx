@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
@@ -30,8 +30,8 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import TrendingFlatRoundedIcon from "@mui/icons-material/TrendingFlatRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
-import { getTalleres } from "../../api/talleresApi";
-import { TallerListItem } from "../../types";
+import { getDashboardStats, getTalleres } from "../../api/talleresApi";
+import { DashboardStats, TallerListItem } from "../../types";
 import { formatKg } from "../../utils/weights";
 
 type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
@@ -56,13 +56,6 @@ const navigationPaths = {
   listaPrecios: "/lista-precios",
   usuarios: "/usuarios",
 };
-
-const statsCards = [
-  { title: "Talleres Activos", value: "24", trend: "+12%", trendUp: true },
-  { title: "Completados Hoy", value: "18", trend: "+8%", trendUp: true },
-  { title: "Inventario Bajo", value: "7", trend: "-3%", trendUp: false },
-  { title: "Usuarios Activos", value: "42", trend: "+5%", trendUp: true },
-];
 
 const quickActions = [
   {
@@ -114,51 +107,61 @@ const StatCard = ({
   value,
   trend,
   trendUp,
+  loading,
 }: {
   title: string;
   value: string;
-  trend: string;
-  trendUp: boolean;
-}) => (
-  <Paper
-    sx={(theme) => ({
-      p: 2.5,
-      borderRadius: 4,
-      height: "100%",
-      border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
-      boxShadow: "0px 12px 30px rgba(15,23,42,0.08)",
-      backgroundColor: theme.palette.common.white,
-    })}
-  >
-    <Stack spacing={1}>
-      <Chip
-        label={trend}
-        size="small"
-        icon={
-          trendUp ? (
-            <ArrowDropUpRoundedIcon color="success" />
-          ) : (
-            <ArrowDropDownRoundedIcon color="error" />
-          )
-        }
-        sx={(theme) => ({
-          alignSelf: "flex-end",
-          backgroundColor: trendUp
-            ? alpha(theme.palette.success.main, 0.1)
-            : alpha(theme.palette.error.main, 0.1),
-          color: trendUp ? theme.palette.success.dark : theme.palette.error.dark,
-          fontWeight: 700,
-        })}
-      />
-      <Typography variant="h4" fontWeight={800} color="text.primary">
-        {value}
-      </Typography>
-      <Typography variant="subtitle2" color="text.secondary">
-        {title}
-      </Typography>
-    </Stack>
-  </Paper>
-);
+  trend?: string | null;
+  trendUp?: boolean;
+  loading?: boolean;
+}) => {
+  const showTrend = Boolean(trend);
+  const isTrendUp = trendUp ?? true;
+
+  return (
+    <Paper
+      sx={(theme) => ({
+        p: 2.5,
+        borderRadius: 4,
+        height: "100%",
+        border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+        boxShadow: "0px 12px 30px rgba(15,23,42,0.08)",
+        backgroundColor: theme.palette.common.white,
+      })}
+    >
+      <Stack spacing={1}>
+        {showTrend ? (
+          <Chip
+            label={trend}
+            size="small"
+            icon={
+              isTrendUp ? (
+                <ArrowDropUpRoundedIcon color="success" />
+              ) : (
+                <ArrowDropDownRoundedIcon color="error" />
+              )
+            }
+            sx={(theme) => ({
+              alignSelf: "flex-end",
+              backgroundColor: isTrendUp
+                ? alpha(theme.palette.success.main, 0.1)
+                : alpha(theme.palette.error.main, 0.1),
+              color: isTrendUp ? theme.palette.success.dark : theme.palette.error.dark,
+              fontWeight: 700,
+            })}
+          />
+        ) : null}
+        <Typography variant="h4" fontWeight={800} color="text.primary">
+          {loading ? "…" : value}
+        </Typography>
+        <Typography variant="subtitle2" color="text.secondary">
+          {title}
+        </Typography>
+        {loading ? <LinearProgress sx={{ mt: 0.5, height: 6, borderRadius: 3 }} /> : null}
+      </Stack>
+    </Paper>
+  );
+};
 
 const Home = () => {
   const theme = useTheme();
@@ -167,6 +170,9 @@ const Home = () => {
   const [talleres, setTalleres] = useState<TallerListItem[]>([]);
   const [loadingTalleres, setLoadingTalleres] = useState(false);
   const [errorTalleres, setErrorTalleres] = useState<string | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [errorStats, setErrorStats] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<WorkshopStatus | "todos">("todos");
   const [searcTerm, setSearchTerm] = useState("");
 
@@ -192,6 +198,34 @@ const Home = () => {
     };
 
     void fetchTalleres();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchDashboardStats = async () => {
+      try {
+        setLoadingStats(true);
+        const data = await getDashboardStats();
+        if (!active) return;
+        setDashboardStats(data);
+        setErrorStats(null);
+      } catch (error) {
+        console.error("Error al obtener las estadísticas del dashboard", error);
+        if (!active) return;
+        setErrorStats("No fue posible cargar las estadísticas de resumen.");
+      } finally {
+        if (active) {
+          setLoadingStats(false);
+        }
+      }
+    };
+
+    void fetchDashboardStats();
 
     return () => {
       active = false;
@@ -233,6 +267,24 @@ const Home = () => {
       ),
     [talleresConEstado]
   );
+
+  const activeWorkshopsCount = useMemo(
+    () => talleresConEstado.filter((taller) => taller.estado !== "completado").length,
+    [talleresConEstado]
+  );
+
+  const completadosHoy = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(todayStart.getDate() + 1);
+
+    return talleresConEstado.filter((taller) => {
+      const createdAt = new Date(taller.creado_en);
+      if (Number.isNaN(createdAt.getTime())) return false;
+      return createdAt >= todayStart && createdAt < tomorrowStart && taller.estado === "completado";
+    }).length;
+  }, [talleresConEstado]);
 
   const filteredWorkshops = useMemo<TallerConEstado[]>(() => {
     const query = searcTerm.trim().toLowerCase();
@@ -304,6 +356,44 @@ const Home = () => {
     }));
   }, [talleresConEstado]);
 
+  const formatTrend = useCallback((trend?: number | null): string | null => {
+    if (trend === null || trend === undefined || Number.isNaN(trend)) {
+      return null;
+    }
+
+    const absolute = Math.abs(trend);
+    const formatted = absolute >= 10 ? trend.toFixed(0) : trend.toFixed(1);
+    const prefix = trend > 0 ? "+" : "";
+    return `${prefix}${formatted}%`;
+  }, []);
+
+  const statCards = useMemo(() => {
+    const buildStat = (
+      title: string,
+      metric: DashboardStats[keyof DashboardStats] | undefined,
+      fallbackValue?: number
+    ) => {
+      const valueNumber = metric?.value ?? fallbackValue;
+      const valueText = typeof valueNumber === "number" ? valueNumber.toLocaleString("es-CO") : "—";
+      const trendNumber = metric?.trend;
+      const trendText = formatTrend(trendNumber);
+
+      return {
+        title,
+        value: valueText,
+        trend: trendText,
+        trendUp: trendText ? (trendNumber ?? 0) >= 0 : undefined,
+      };
+    };
+
+    return [
+      buildStat("Talleres Activos", dashboardStats?.talleres_activos, activeWorkshopsCount),
+      buildStat("Completados Hoy", dashboardStats?.completados_hoy, completadosHoy),
+      buildStat("Inventario Bajo", dashboardStats?.inventario_bajo),
+      buildStat("Usuarios Activos", dashboardStats?.usuarios_activos),
+    ];
+  }, [activeWorkshopsCount, completadosHoy, dashboardStats, formatTrend]);
+
   return (
     <Stack spacing={3}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
@@ -336,14 +426,17 @@ const Home = () => {
         </Stack>
       </Stack>
 
+      {errorStats ? <Alert severity="warning">{errorStats}</Alert> : null}
+
       <Grid container spacing={2}>
-        {statsCards.map((stat) => (
+        {statCards.map((stat) => (
           <Grid item xs={12} sm={6} md={3} key={stat.title}>
             <StatCard
               title={stat.title}
               value={stat.value}
               trend={stat.trend}
               trendUp={stat.trendUp}
+              loading={loadingStats}
             />
           </Grid>
         ))}

@@ -167,3 +167,15 @@ export interface InventarioMovimientoList {
   page_size: number;
   items: InventarioMovimiento[];
 }
+
+export interface DashboardMetric {
+  value: number;
+  trend: number | null;
+}
+
+export interface DashboardStats {
+  talleres_activos: DashboardMetric;
+  completados_hoy: DashboardMetric;
+  inventario_bajo: DashboardMetric;
+  usuarios_activos: DashboardMetric;
+}
