@@ -522,10 +522,13 @@ class TallerCalculoRow(BaseModel):
     
     
 class InventarioItem(BaseModel):
-    codigo_producto: str
-    descripcion: str
+    codigo_producto: Optional[str] = None
+    descripcion: Optional[str] = None
     total_peso: Decimal
-    sede: str | None = None
-    especie: str | None = None
+    sede: Optional[str] = None
+    especie: Optional[str] = None
+    entradas: Decimal = Decimal("0")
+    salidas_pendientes: Decimal = Decimal("0")
+    umbral_minimo: Optional[Decimal] = None
     
     model_config = ConfigDict(from_attributes=True)

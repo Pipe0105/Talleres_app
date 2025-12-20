@@ -48,7 +48,7 @@ export const appTheme = createTheme({
       main: "#10b2d3", // Teal accent
     },
     background: {
-      default: "#f3f6fb", // Soft gray canvas
+      default: "#f6f8fb", // Soft gray canvas
       paper: "#ffffff",
     },
     text: {
@@ -57,8 +57,7 @@ export const appTheme = createTheme({
     },
   },
   typography: {
-    fontFamily:
-      "'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily: "'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     h1: { fontWeight: 700 },
     h2: { fontWeight: 700 },
     h3: { fontWeight: 700 },
@@ -81,10 +80,8 @@ export const appTheme = createTheme({
   gradients: {
     page: "linear-gradient(180deg, #f6f8fc 0%, #f3f6fb 45%, #eef2f7 100% )",
     hero: "linear-gradient(120deg, rgba(16, 178, 211, 0.15) 0%, rgba(15,41,69,0.06)100%)",
-    heroOverlay:
-      "radial-gradient(circle at 20% 20%, rgba(16,178,211,0.18), transparent 55%)",
-    callout:
-      "linear-gradient(135deg, rgba(16,178,211,0.08), rgba(15,41,69,0.04))",
+    heroOverlay: "radial-gradient(circle at 20% 20%, rgba(16,178,211,0.18), transparent 55%)",
+    callout: "linear-gradient(135deg, rgba(16,178,211,0.08), rgba(15,41,69,0.04))",
     subtle:
       "radial-gradient(circle at top left, rgba(16,178,211,0.04) 0%, transparent 55%), radial-gradient(circle at bottom right, rgba(15,41,69,0.04) 0%, transparent 50%)",
   },
