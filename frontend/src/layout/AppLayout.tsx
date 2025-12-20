@@ -343,7 +343,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           <Container
             maxWidth={false}
             sx={(theme) => ({
-              maxWidth: theme.layout.contentMaxWidth + drawerWidth,
+              width: "100%",
+              maxWidth: theme.layout.contentMaxWidth,
+              mx: 0,
               px: { xs: 2, md: 4 },
             })}
           >
