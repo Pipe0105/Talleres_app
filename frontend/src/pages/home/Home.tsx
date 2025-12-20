@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Avatar,
   Box,
@@ -27,8 +28,20 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import TrendingFlatRoundedIcon from "@mui/icons-material/TrendingFlatRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
+import TalleresPlus from "../talleres/TalleresPlus";
+import { color } from "framer-motion";
 
 type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
+
+const navigationPaths = {
+  talleres: "/talleres",
+  TalleresPlus: "/talleres-plus",
+  seguimiento: "/talleres/seguimiento",
+  historial: "/talleres/historial",
+  informes: "/informes-historicos",
+  listaPrecios: "/lista-precios",
+  usuarios: "/usuarios",
+};
 
 const statsCards = [
   { title: "Talleres Activos", value: "24", trend: "+12%", trendUp: true },
@@ -133,10 +146,30 @@ const activityFeed = [
 ];
 
 const quickActions = [
-  { label: "Nuevo Taller", icon: <AddCircleRoundedIcon />, color: "#00b290" },
-  { label: "Generar Informe", icon: <AssessmentRoundedIcon />, color: "#735cf5" },
-  { label: "Actualizar Precios", icon: <TrendingFlatRoundedIcon />, color: "#ffb020" },
-  { label: "Añadir Usuario", icon: <GroupAddRoundedIcon />, color: "#2dd4bf" },
+  {
+    label: "Nuevo Taller",
+    icon: <AddCircleRoundedIcon />,
+    color: "#00b290",
+    to: navigationPaths.talleres,
+  },
+  {
+    label: "Generar Informe",
+    icon: <AssessmentRoundedIcon />,
+    color: "#735cf5",
+    to: navigationPaths.informes,
+  },
+  {
+    label: "Actualizar Precios",
+    icon: <TrendingFlatRoundedIcon />,
+    color: "#ffb020",
+    to: navigationPaths.listaPrecios,
+  },
+  {
+    label: "Añadir usuario",
+    icon: <GroupAddRoundedIcon />,
+    color: "#2dd4bf",
+    to: navigationPaths.usuarios,
+  },
 ];
 
 const statusStyles: Record<WorkshopStatus, { label: string; color: string; bg: string }> = {
@@ -231,10 +264,21 @@ const Home = () => {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<FilterListRoundedIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<FilterListRoundedIcon />}
+            component={RouterLink}
+            to={navigationPaths.seguimiento}
+          >
             Filtros
           </Button>
-          <Button variant="contained" color="primary" startIcon={<AddCircleRoundedIcon />}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddCircleRoundedIcon />}
+            component={RouterLink}
+            to={navigationPaths.talleres}
+          >
             Nuevo Taller
           </Button>
         </Stack>
@@ -309,7 +353,12 @@ const Home = () => {
             >
               <SearchRoundedIcon color="disabled" />
               <InputBase fullWidth placeholder="Buscar..." />
-              <Button variant="text" startIcon={<FileDownloadRoundedIcon />}>
+              <Button
+                variant="text"
+                startIcon={<FileDownloadRoundedIcon />}
+                component={RouterLink}
+                to={navigationPaths.informes}
+              >
                 Exportar
               </Button>
             </Paper>
@@ -406,13 +455,31 @@ const Home = () => {
                       </Grid>
                       <Grid item xs={0.5} sx={{ display: "flex", justifyContent: "flex-end" }}>
                         <Stack direction="row" spacing={0.5}>
-                          <IconButton size="small" color="primary">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            component={RouterLink}
+                            to={navigationPaths.seguimiento}
+                            aria-label="Ver seguimiento del taller"
+                          >
                             <VisibilityRoundedIcon fontSize="small" />
                           </IconButton>
-                          <IconButton size="small" color="success">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            component={RouterLink}
+                            to={navigationPaths.TalleresPlus}
+                            aria-label="Editar taller"
+                          >
                             <EditRoundedIcon fontSize="small" />
                           </IconButton>
-                          <IconButton size="small" color="error">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            component={RouterLink}
+                            to={navigationPaths.historial}
+                            aria-label="Ir al historial de talleres"
+                          >
                             <DeleteRoundedIcon fontSize="small" />
                           </IconButton>
                         </Stack>
@@ -437,7 +504,9 @@ const Home = () => {
                 <Typography variant="subtitle1" fontWeight={800}>
                   Actividad Reciente
                 </Typography>
-                <Button size="small">Ver todo</Button>
+                <Button size="small" component={RouterLink} to={navigationPaths.seguimiento}>
+                  Ver todo
+                </Button>
               </Stack>
               <Stack spacing={1.5}>
                 {activityFeed.map((actividad) => (
@@ -483,6 +552,8 @@ const Home = () => {
                 {quickActions.map((action) => (
                   <Grid item xs={6} key={action.label}>
                     <Paper
+                      component={RouterLink}
+                      to={action.to}
                       sx={(theme) => ({
                         p: 1.5,
                         borderRadius: 14,
@@ -492,6 +563,7 @@ const Home = () => {
                         textAlign: "center",
                         cursor: "pointer",
                         transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                        textDecoration: "none",
                         "&:hover": {
                           transform: "translateY(-2px)",
                           boxShadow: "0px 12px 32px rgba(15,23,42,0.12)",
@@ -523,7 +595,12 @@ const Home = () => {
                 <Typography variant="subtitle1" fontWeight={800}>
                   Rendimiento del Mes
                 </Typography>
-                <IconButton size="small" sx={{ color: alpha("#ffffff", 0.85) }}>
+                <IconButton
+                  size="small"
+                  sx={{ color: alpha("#ffffff", 0.85) }}
+                  component={RouterLink}
+                  to={navigationPaths.informes}
+                >
                   <FilterListRoundedIcon />
                 </IconButton>
               </Stack>

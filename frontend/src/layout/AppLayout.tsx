@@ -125,7 +125,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
-            <IconButton color="inherit" edge="start">
+            <IconButton color="inherit" edge="start" component={RouterLink} to="/">
               <MenuRoundedIcon />
             </IconButton>
             <Stack
@@ -199,7 +199,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             >
               Nuevo Taller
             </Button>
-            <IconButton size="large">
+            <IconButton size="large" component={RouterLink} to="/talleres/seguimiento">
               <Badge color="secondary" variant="dot">
                 <NotificationsNoneRoundedIcon />
               </Badge>
@@ -234,7 +234,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   Administrador
                 </Typography>
               </Box>
-              <IconButton size="small">
+              <IconButton size="small" component={RouterLink} to="/perfil">
                 <SettingsOutlinedIcon fontSize="small" />
               </IconButton>
             </Paper>
