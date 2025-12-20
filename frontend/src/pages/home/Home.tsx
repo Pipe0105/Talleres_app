@@ -361,6 +361,10 @@ const Home = () => {
       return null;
     }
 
+    if (Math.abs(trend + 100) < 0.0001) {
+      return null;
+    }
+
     const absolute = Math.abs(trend);
     const formatted = absolute >= 10 ? trend.toFixed(0) : trend.toFixed(1);
     const prefix = trend > 0 ? "+" : "";
