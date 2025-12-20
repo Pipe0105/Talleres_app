@@ -550,29 +550,80 @@ const Home = () => {
               </Typography>
               <Grid container spacing={1.5}>
                 {quickActions.map((action) => (
-                  <Grid item xs={6} key={action.label}>
+                  <Grid item xs={12} sm={6} key={action.label}>
                     <Paper
                       component={RouterLink}
                       to={action.to}
                       sx={(theme) => ({
-                        p: 1.5,
-                        borderRadius: 14,
-                        border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
-                        backgroundColor: alpha(action.color, 0.08),
-                        color: action.color,
+                        p: 2,
+                        borderRadius: 2,
+                        position: "relative",
+                        overflow: "hidden",
+                        border: `1px solid ${alpha(action.color, 0.2)}`,
+                        background: `linear-gradient(135deg, ${alpha(action.color, 0.12)}, ${alpha(
+                          action.color,
+                          0.05
+                        )})`,
+                        color: theme.palette.text.primary,
                         textAlign: "center",
                         cursor: "pointer",
-                        transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                        transition:
+                          "transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
                         textDecoration: "none",
+                        minHeight: 134,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 14px 32px rgba(15,23,42,0.12)",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          inset: "12px",
+                          borderRadius: 2,
+                          background: `radial-gradient(circle at 20% 20%, ${alpha(
+                            action.color,
+                            0.16
+                          )}, transparent 45%)`,
+                          opacity: 0.7,
+                        },
+                        "&::after": {
+                          content: '""',
+                          position: "absolute",
+                          width: 160,
+                          height: 160,
+                          bottom: -70,
+                          right: -60,
+                          background: alpha(action.color, 0.18),
+                          filter: "blur(48px)",
+                          opacity: 0.55,
+                        },
                         "&:hover": {
-                          transform: "translateY(-2px)",
-                          boxShadow: "0px 12px 32px rgba(15,23,42,0.12)",
+                          transform: "translateY(-4px)",
+                          boxShadow: "0px 16px 38px rgba(15,23,42,0.15)",
+                          background: `linear-gradient(145deg, ${alpha(action.color, 0.16)}, ${alpha(
+                            action.color,
+                            0.08
+                          )})`,
                         },
                       })}
                     >
-                      <Stack alignItems="center" spacing={1}>
-                        <IconButton sx={{ color: action.color }}>{action.icon}</IconButton>
-                        <Typography variant="body2" fontWeight={700}>
+                      <Stack alignItems="center" spacing={1.2} position="relative" zIndex={1}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            display: "grid",
+                            placeItems: "center",
+                            backgroundColor: alpha(action.color, 0.18),
+                            color: action.color,
+                            border: `1px solid ${alpha(action.color, 0.3)}`,
+                            boxShadow: `0 10px 22px ${alpha(action.color, 0.26)}`,
+                          }}
+                        >
+                          {action.icon}
+                        </Box>
+                        <Typography variant="body2" fontWeight={800} color="text.primary">
                           {action.label}
                         </Typography>
                       </Stack>
@@ -581,63 +632,6 @@ const Home = () => {
                 ))}
               </Grid>
             </Card>
-
-            <Paper
-              sx={(theme) => ({
-                p: 2.5,
-                borderRadius: 4,
-                backgroundColor: "#00b290",
-                color: theme.palette.common.white,
-                boxShadow: theme.customShadows.floating,
-              })}
-            >
-              <Stack direction="row" justifyContent="space-between" mb={1.5}>
-                <Typography variant="subtitle1" fontWeight={800}>
-                  Rendimiento del Mes
-                </Typography>
-                <IconButton
-                  size="small"
-                  sx={{ color: alpha("#ffffff", 0.85) }}
-                  component={RouterLink}
-                  to={navigationPaths.informes}
-                >
-                  <FilterListRoundedIcon />
-                </IconButton>
-              </Stack>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                Enero 2024
-              </Typography>
-              <Box mt={2}>
-                <Stack spacing={1.5}>
-                  {[
-                    { label: "Talleres Completados", value: 87 },
-                    { label: "Eficiencia Operativa", value: 92 },
-                  ].map((item) => (
-                    <Box key={item.label}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2">{item.label}</Typography>
-                        <Typography variant="body2" fontWeight={700}>
-                          {item.value}%
-                        </Typography>
-                      </Stack>
-                      <LinearProgress
-                        variant="determinate"
-                        value={item.value}
-                        sx={{
-                          mt: 0.5,
-                          height: 8,
-                          borderRadius: 10,
-                          backgroundColor: alpha("#ffffff", 0.2),
-                          "& .MuiLinearProgress-bar": {
-                            backgroundColor: alpha("#ffffff", 0.9),
-                          },
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              </Box>
-            </Paper>
           </Stack>
         </Grid>
       </Grid>
