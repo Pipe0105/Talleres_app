@@ -51,10 +51,6 @@ interface EditableSubcorte {
   codigo_producto: string;
   nombre_subcorte: string;
   peso: string;
-  categoria: string;
-  unidad_medida: string;
-  factor_conversion?: string;
-  peso_normalizado?: string;
   item_id?: number | null;
 }
 
@@ -108,42 +104,8 @@ const parseNumber = (value: string): number => {
 };
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const UNIT_OPTIONS = [
-  { value: "kg", label: "Kilogramos" },
-  { value: "g", label: "Gramos" },
-  { value: "lb", label: "Libras" },
-  { value: "unidad", label: "Unidades (requiere factor)" },
-  { value: "caja", label: "Cajas (requiere factor)" },
-];
-const CATEGORY_OPTIONS = [
-  { value: "corte", label: "Corte" },
-  { value: "subproducto", label: "Subproducto" },
-  { value: "merma", label: "Merma" },
-  { value: "otro", label: "Otro" },
-];
 const DEFAULT_UNIT = "kg";
 const DEFAULT_CATEGORY = "corte";
-const UNIT_FACTORS: Record<string, number | undefined> = {
-  kg: 1,
-  g: 0.001,
-  lb: 0.45359237,
-};
-
-const requiresFactor = (unit: string) => ["caja", "unidad"].includes(unit);
-
-const normalizeUnit = (value?: string): string => {
-  const unit = (value || "").toLowerCase();
-  return UNIT_OPTIONS.find((option) => option.value === unit)?.value ?? DEFAULT_UNIT;
-};
-
-const normalizeCategory = (value?: string): string => {
-  const category = (value || "").toLowerCase();
-  return (
-    CATEGORY_OPTIONS.find((option) => option.value === category)?.value ??
-    DEFAULT_CATEGORY
-  );
-};
-
 
 const HistorialTalleres = () => {
   const [filters, setFilters] = useState<FiltersState>(() => ({
@@ -195,9 +157,7 @@ const HistorialTalleres = () => {
         codigoItem: filters.codigoItem || undefined,
       });
       setTalleres(data);
-      setSelectedIds((prev) =>
-        prev.filter((id) => data.some((taller) => taller.id === id))
-      );
+      setSelectedIds((prev) => prev.filter((id) => data.some((taller) => taller.id === id)));
       setSelected((prev) => {
         if (!data.length) return null;
         if (prev) {
@@ -246,40 +206,16 @@ const HistorialTalleres = () => {
         codigo_producto: detalle.codigo_producto,
         nombre_subcorte: detalle.nombre_subcorte,
         peso: String(detalle.peso ?? detalle.peso_normalizado ?? ""),
-        categoria: normalizeCategory(detalle.categoria),
-        unidad_medida: normalizeUnit(detalle.unidad_medida),
-        factor_conversion:
-          detalle.factor_conversion != null
-            ? String(detalle.factor_conversion)
-            : UNIT_FACTORS[normalizeUnit(detalle.unidad_medida)]?.toString() ?? "",
-        peso_normalizado: detalle.peso_normalizado
-          ? String(detalle.peso_normalizado)
-          : undefined,
         item_id: detalle.item_id ?? undefined,
       })),
     });
   };
 
-  const handleChangeSubcorte = (
-    index: number,
-    key: keyof EditableSubcorte,
-    value: string
-  ) => {
+  const handleChangeSubcorte = (index: number, key: keyof EditableSubcorte, value: string) => {
     setEditForm((prev) => {
       if (!prev) return prev;
       const updated = [...prev.subcortes];
       const nextSubcorte = { ...updated[index], [key]: value } as EditableSubcorte;
-
-      if (key === "unidad_medida") {
-        const normalizedUnit = normalizeUnit(value);
-        nextSubcorte.unidad_medida = normalizedUnit;
-        if (!requiresFactor(normalizedUnit)) {
-          nextSubcorte.factor_conversion =
-            UNIT_FACTORS[normalizedUnit]?.toString() ?? "";
-        } else if (!nextSubcorte.factor_conversion) {
-          nextSubcorte.factor_conversion = "";
-        }
-      }
 
       updated[index] = nextSubcorte;
       return { ...prev, subcortes: updated };
@@ -298,9 +234,6 @@ const HistorialTalleres = () => {
                 codigo_producto: "",
                 nombre_subcorte: "",
                 peso: "",
-                categoria: DEFAULT_CATEGORY,
-                unidad_medida: DEFAULT_UNIT,
-                factor_conversion: UNIT_FACTORS[DEFAULT_UNIT]?.toString() ?? "",
               },
             ],
           }
@@ -339,7 +272,7 @@ const HistorialTalleres = () => {
     }
 
     if (!editForm.subcortes.length) {
-      setEditError("Debes registrar al menos un subcorte con su SKU y unidad.");
+      setEditError("Debes registrar al menos un subcorte con su SKU.");
       return;
     }
 
@@ -348,14 +281,6 @@ const HistorialTalleres = () => {
 
     for (const detalle of editForm.subcortes) {
       const codigo = detalle.codigo_producto.trim();
-      const categoria = detalle.categoria?.trim() || "";
-      const unidad = normalizeUnit(detalle.unidad_medida);
-      const factorParsed = parseNumber(detalle.factor_conversion || "");
-      const factor =
-        requiresFactor(unidad) && Number.isFinite(factorParsed)
-          ? factorParsed
-          : UNIT_FACTORS[unidad] ?? (Number.isFinite(factorParsed) ? factorParsed : NaN);
-      const pesoDetalle = parseNumber(detalle.peso || "0");
       if (!codigo || !SKU_PATTERN.test(codigo)) {
         setEditError(
           "Cada subcorte debe tener un SKU válido (letras, números, guiones o guiones bajos)."
@@ -374,24 +299,6 @@ const HistorialTalleres = () => {
         return;
       }
 
-      if (!categoria) {
-        setEditError("Asigna una categoría a cada subcorte.");
-        return;
-      }
-
-      if (!UNIT_OPTIONS.some((option) => option.value === unidad)) {
-        setEditError("Selecciona una unidad de medida válida para cada subcorte.");
-        return;
-      }
-
-      if (requiresFactor(unidad)) {
-        if (!Number.isFinite(factor) || factor <= 0) {
-          setEditError(
-            "Las unidades tipo caja/unidad necesitan un factor de conversión mayor a cero."
-          );
-          return;
-        }
-      }
       if (Number.isNaN(pesoDetalle)) {
         setEditError("Hay subcortes con peso inválido.");
         return;
@@ -405,9 +312,9 @@ const HistorialTalleres = () => {
         nombre_subcorte: detalle.nombre_subcorte.trim() || codigo,
         peso: pesoDetalle,
         item_id: detalle.item_id ?? undefined,
-        categoria,
-        unidad_medida: unidad,
-        factor_conversion: Number.isFinite(factor) ? factor : undefined,
+        categoria: DEFAULT_CATEGORY,
+        unidad_medida: DEFAULT_UNIT,
+        factor_conversion: 1,
       });
     }
 
@@ -490,11 +397,7 @@ const HistorialTalleres = () => {
       />
 
       {successMessage && (
-        <Alert
-          severity="success"
-          onClose={() => setSuccessMessage(null)}
-          variant="outlined"
-        >
+        <Alert severity="success" onClose={() => setSuccessMessage(null)} variant="outlined">
           {successMessage}
         </Alert>
       )}
@@ -505,11 +408,7 @@ const HistorialTalleres = () => {
           subheader="Ajusta los criterios para ver solo los talleres que necesitas"
           action={
             <Stack direction="row" spacing={1}>
-              <Button
-                variant="text"
-                startIcon={<RefreshIcon />}
-                onClick={resetFilters}
-              >
+              <Button variant="text" startIcon={<RefreshIcon />} onClick={resetFilters}>
                 Limpiar
               </Button>
               <Button
@@ -560,9 +459,7 @@ const HistorialTalleres = () => {
                 label="Sede"
                 fullWidth
                 value={filters.sede}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, sede: event.target.value }))
-                }
+                onChange={(event) => setFilters((prev) => ({ ...prev, sede: event.target.value }))}
                 SelectProps={{ native: true }}
                 InputLabelProps={{ shrink: true }}
               >
@@ -677,14 +574,8 @@ const HistorialTalleres = () => {
                 <TableRow>
                   <TableCell padding="checkbox">
                     <Checkbox
-                      indeterminate={
-                        selectedIds.length > 0 &&
-                        selectedIds.length < talleres.length
-                      }
-                      checked={
-                        !!talleres.length &&
-                        selectedIds.length === talleres.length
-                      }
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < talleres.length}
+                      checked={!!talleres.length && selectedIds.length === talleres.length}
                       onChange={(event) => {
                         event.stopPropagation();
                         if (selectedIds.length === talleres.length) {
@@ -730,9 +621,7 @@ const HistorialTalleres = () => {
                     <TableCell>{formatDateTime(taller.creado_en)}</TableCell>
                     <TableCell>{taller.nombre_taller}</TableCell>
                     <TableCell>{taller.sede || "—"}</TableCell>
-                    <TableCell sx={{ textTransform: "capitalize" }}>
-                      {taller.especie}
-                    </TableCell>
+                    <TableCell sx={{ textTransform: "capitalize" }}>{taller.especie}</TableCell>
                     <TableCell>{taller.codigo_principal}</TableCell>
                     <TableCell align="center">
                       <Chip
@@ -743,11 +632,7 @@ const HistorialTalleres = () => {
                     </TableCell>
                     <TableCell>{taller.creado_por || "—"}</TableCell>
                     <TableCell align="right">
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="flex-end"
-                      >
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <Tooltip title="Ver detalle">
                           <IconButton
                             size="small"
@@ -900,12 +785,7 @@ const HistorialTalleres = () => {
         </Card>
       )}
 
-      <Dialog
-        open={Boolean(editForm)}
-        onClose={() => setEditForm(null)}
-        fullWidth
-        maxWidth="md"
-      >
+      <Dialog open={Boolean(editForm)} onClose={() => setEditForm(null)} fullWidth maxWidth="md">
         <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <HistoryEduIcon color="primary" />
           Editar taller
@@ -922,9 +802,7 @@ const HistorialTalleres = () => {
                     value={editForm.nombre_taller}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, nombre_taller: event.target.value }
-                          : prev
+                        prev ? { ...prev, nombre_taller: event.target.value } : prev
                       )
                     }
                   />
@@ -936,9 +814,7 @@ const HistorialTalleres = () => {
                     value={editForm.descripcion}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, descripcion: event.target.value }
-                          : prev
+                        prev ? { ...prev, descripcion: event.target.value } : prev
                       )
                     }
                   />
@@ -950,9 +826,7 @@ const HistorialTalleres = () => {
                     fullWidth
                     value={editForm.sede}
                     onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev ? { ...prev, sede: event.target.value } : prev
-                      )
+                      setEditForm((prev) => (prev ? { ...prev, sede: event.target.value } : prev))
                     }
                     SelectProps={{ native: true }}
                   >
@@ -988,9 +862,7 @@ const HistorialTalleres = () => {
                     value={editForm.codigo_principal}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, codigo_principal: event.target.value }
-                          : prev
+                        prev ? { ...prev, codigo_principal: event.target.value } : prev
                       )
                     }
                   />
@@ -1003,9 +875,7 @@ const HistorialTalleres = () => {
                     value={editForm.peso_inicial}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, peso_inicial: event.target.value }
-                          : prev
+                        prev ? { ...prev, peso_inicial: event.target.value } : prev
                       )
                     }
                   />
@@ -1018,9 +888,7 @@ const HistorialTalleres = () => {
                     value={editForm.peso_final}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, peso_final: event.target.value }
-                          : prev
+                        prev ? { ...prev, peso_final: event.target.value } : prev
                       )
                     }
                   />
@@ -1054,24 +922,14 @@ const HistorialTalleres = () => {
                         <Autocomplete
                           freeSolo
                           fullWidth
-                          options={subcortesDisponibles.map(
-                            (opcion) => opcion.nombre
-                          )}
+                          options={subcortesDisponibles.map((opcion) => opcion.nombre)}
                           value={subcorte.nombre_subcorte || ""}
                           onInputChange={(_, inputValue) =>
-                            handleChangeSubcorte(
-                              index,
-                              "nombre_subcorte",
-                              inputValue
-                            )
+                            handleChangeSubcorte(index, "nombre_subcorte", inputValue)
                           }
                           onChange={(_, newValue) => {
                             const nombreSeleccionado = newValue ?? "";
-                            handleChangeSubcorte(
-                              index,
-                              "nombre_subcorte",
-                              nombreSeleccionado
-                            );
+                            handleChangeSubcorte(index, "nombre_subcorte", nombreSeleccionado);
 
                             const coincidencia = subcortesDisponibles.find(
                               (opcion) => opcion.nombre === newValue
@@ -1079,11 +937,7 @@ const HistorialTalleres = () => {
                             if (!nombreSeleccionado) {
                               handleChangeSubcorte(index, "codigo_producto", "");
                             } else if (coincidencia) {
-                              handleChangeSubcorte(
-                                index,
-                                "codigo_producto",
-                                coincidencia.codigo
-                              );
+                              handleChangeSubcorte(index, "codigo_producto", coincidencia.codigo);
                             }
                           }}
                           renderInput={(params) => (
@@ -1103,11 +957,7 @@ const HistorialTalleres = () => {
                           label="Código"
                           value={subcorte.codigo_producto}
                           onChange={(event) =>
-                            handleChangeSubcorte(
-                              index,
-                              "codigo_producto",
-                              event.target.value
-                            )
+                            handleChangeSubcorte(index, "codigo_producto", event.target.value)
                           }
                           fullWidth
                         />
@@ -1119,74 +969,14 @@ const HistorialTalleres = () => {
                           type="number"
                           value={subcorte.peso}
                           onChange={(event) =>
-                            handleChangeSubcorte(
-                              index,
-                              "peso",
-                              event.target.value
-                            )
+                            handleChangeSubcorte(index, "peso", event.target.value)
                           }
                           fullWidth
                           helperText="Usa el valor original de la medición."
                         />
-                        <TextField
-                          select
-                          label="Unidad"
-                          value={subcorte.unidad_medida || DEFAULT_UNIT}
-                          onChange={(event) =>
-                            handleChangeSubcorte(
-                              index,
-                              "unidad_medida",
-                              event.target.value
-                            )
-                          }
-                          SelectProps={{ native: true }}
-                          fullWidth
-                        >
-                          {UNIT_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </TextField>
-                        {requiresFactor(subcorte.unidad_medida || DEFAULT_UNIT) && (
-                          <TextField
-                            label="Factor a kg"
-                            value={subcorte.factor_conversion ?? ""}
-                            onChange={(event) =>
-                              handleChangeSubcorte(
-                                index,
-                                "factor_conversion",
-                                event.target.value
-                              )
-                            }
-                            fullWidth
-                            placeholder="Ej: 12"
-                            helperText="Cuántos kg representa cada unidad/caja."
-                          />
-                        )}
                       </Stack>
 
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField
-                          select
-                          label="Categoría"
-                          value={subcorte.categoria || DEFAULT_CATEGORY}
-                          onChange={(event) =>
-                            handleChangeSubcorte(
-                              index,
-                              "categoria",
-                              event.target.value
-                            )
-                          }
-                          SelectProps={{ native: true }}
-                          fullWidth
-                        >
-                          {CATEGORY_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </TextField>
                         <IconButton
                           aria-label="Eliminar subcorte"
                           color="error"
@@ -1222,13 +1012,8 @@ const HistorialTalleres = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={Boolean(deleteQueue.length)}
-        onClose={() => setDeleteQueue([])}
-      >
-        <DialogTitle>
-          Eliminar taller{deleteQueue.length > 1 ? "es" : ""}
-        </DialogTitle>
+      <Dialog open={Boolean(deleteQueue.length)} onClose={() => setDeleteQueue([])}>
+        <DialogTitle>Eliminar taller{deleteQueue.length > 1 ? "es" : ""}</DialogTitle>
         <DialogContent>
           <Stack spacing={1}>
             <Typography>
@@ -1250,12 +1035,7 @@ const HistorialTalleres = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteQueue([])}>Cancelar</Button>
-          <Button
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDelete}
-            disabled={saving}
-          >
+          <Button color="error" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={saving}>
             {saving ? "Eliminando..." : "Eliminar"}
           </Button>
         </DialogActions>

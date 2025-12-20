@@ -30,27 +30,8 @@ import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
 import { formatKg, parseWeightInput } from "../../utils/weights";
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
-const UNIT_OPTIONS = [
-  { value: "kg", label: "Kilogramos" },
-  { value: "g", label: "Gramos" },
-  { value: "lb", label: "Libras" },
-  { value: "unidad", label: "Unidades (requiere factor)" },
-  { value: "caja", label: "Cajas (requiere factor)" },
-];
-const CATEGORY_OPTIONS = [
-  { value: "corte", label: "Corte" },
-  { value: "subproducto", label: "Subproducto" },
-  { value: "merma", label: "Merma" },
-  { value: "otro", label: "Otro" },
-];
 const DEFAULT_UNIT = "kg";
 const DEFAULT_CATEGORY = "corte";
-const UNIT_FACTORS: Record<string, number | undefined> = {
-  kg: 1,
-  g: 0.001,
-  lb: 0.45359237,
-};
-const requiresFactor = (unit: string) => ["caja", "unidad"].includes(unit);
 
 const CreateTaller = () => {
   const [especie, setEspecie] = useState<Especie | "">("");
@@ -65,24 +46,13 @@ const CreateTaller = () => {
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pesoInicialGuardado, setPesoInicialGuardado] = useState(false);
-  const [subcortesSeleccionados, setSubcortesSeleccionados] = useState<
-    string[]
-  >([]);
-  const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] =
-    useState(false);
-  const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>(
-    {}
-  );
+  const [subcortesSeleccionados, setSubcortesSeleccionados] = useState<string[]>([]);
+  const [seleccionSubcortesGuardada, setSeleccionSubcortesGuardada] = useState(false);
+  const [subcortesPesos, setSubcortesPesos] = useState<Record<string, string>>({});
 
-  const [subcorteUnidades, setSubcorteUnidades] = useState<
-    Record<string, string>
-  >({});
-  const [subcorteFactores, setSubcorteFactores] = useState<
-    Record<string, string>
-  >({});
-  const [subcorteCategorias, setSubcorteCategorias] = useState<
-    Record<string, string>
-  >({});
+  const [subcorteUnidades, setSubcorteUnidades] = useState<Record<string, string>>({});
+  const [subcorteFactores, setSubcorteFactores] = useState<Record<string, string>>({});
+  const [subcorteCategorias, setSubcorteCategorias] = useState<Record<string, string>>({});
   const [sede, setSede] = useState<string>("");
 
   const { user } = useAuth();
@@ -110,45 +80,25 @@ const CreateTaller = () => {
   );
 
   const subcortesActivos = useMemo<SubcorteDefinition[]>(
-    () =>
-      subcortes.filter((subcorte) =>
-        subcortesSeleccionados.includes(subcorte.codigo)
-      ),
+    () => subcortes.filter((subcorte) => subcortesSeleccionados.includes(subcorte.codigo)),
     [subcortes, subcortesSeleccionados]
   );
 
   const pesoInicialNumero = parseWeightInput(pesoInicial);
   const pesoFinalNumero = parseWeightInput(pesoFinal);
-  const resolveFactor = (codigo: string): number => {
-    const unidad = (subcorteUnidades[codigo] ?? DEFAULT_UNIT).toLowerCase();
-    const factorRaw = Number((subcorteFactores[codigo] ?? "").replace(/,/g, "."));
-    if (requiresFactor(unidad)) {
-      return Number.isFinite(factorRaw) && factorRaw > 0 ? factorRaw : 0;
-    }
-    if (Number.isFinite(factorRaw) && factorRaw > 0) {
-      return factorRaw;
-    }
-    return UNIT_FACTORS[unidad] ?? 1;
-  };
   const totalSubcortes = subcortesActivos.reduce((acc, sc) => {
     const peso = parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
-    return acc + peso * resolveFactor(sc.codigo);
+    return acc + peso;
   }, 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
-  const perdida =
-    pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
-  const porcentajePerdida =
-    pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
+  const perdida = pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
+  const porcentajePerdida = pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
 
   const readyForSubcortes =
-    pesoInicialGuardado &&
-    Boolean(materialSeleccionado) &&
-    pesoInicialNumero > 0;
+    pesoInicialGuardado && Boolean(materialSeleccionado) && pesoInicialNumero > 0;
 
   const readyToSubmit =
-    readyForSubcortes &&
-    seleccionSubcortesGuardada &&
-    subcortesActivos.length > 0;
+    readyForSubcortes && seleccionSubcortesGuardada && subcortesActivos.length > 0;
 
   const handleGuardarPesoInicial = () => {
     if (!materialSeleccionado || pesoInicialNumero <= 0) {
@@ -165,9 +115,7 @@ const CreateTaller = () => {
   const handleToggleSubcorte = (codigo: string) => {
     setSeleccionSubcortesGuardada(false);
     setSubcortesSeleccionados((prev) =>
-      prev.includes(codigo)
-        ? prev.filter((item) => item !== codigo)
-        : [...prev, codigo]
+      prev.includes(codigo) ? prev.filter((item) => item !== codigo) : [...prev, codigo]
     );
   };
 
@@ -188,30 +136,6 @@ const CreateTaller = () => {
         if (prev[codigo]) {
           updated[codigo] = prev[codigo];
         }
-      });
-      return updated;
-    });
-    setSubcorteUnidades((prev) => {
-      const updated: Record<string, string> = {};
-      subcortesSeleccionados.forEach((codigo) => {
-        updated[codigo] = prev[codigo] ?? DEFAULT_UNIT;
-      });
-      return updated;
-    });
-    setSubcorteFactores((prev) => {
-      const updated: Record<string, string> = {};
-      subcortesSeleccionados.forEach((codigo) => {
-        const unidadSeleccionada = subcorteUnidades[codigo] ?? DEFAULT_UNIT;
-        const defaultFactor = UNIT_FACTORS[unidadSeleccionada];
-        updated[codigo] =
-          prev[codigo] ?? (defaultFactor != null ? String(defaultFactor) : "");
-      });
-      return updated;
-    });
-    setSubcorteCategorias((prev) => {
-      const updated: Record<string, string> = {};
-      subcortesSeleccionados.forEach((codigo) => {
-        updated[codigo] = prev[codigo] ?? DEFAULT_CATEGORY;
       });
       return updated;
     });
@@ -266,15 +190,6 @@ const CreateTaller = () => {
         return;
       }
 
-      const unidad = (subcorteUnidades[sc.codigo] ?? DEFAULT_UNIT).toLowerCase();
-      const categoria = (subcorteCategorias[sc.codigo] ?? DEFAULT_CATEGORY).trim();
-      const factorValor = subcorteFactores[sc.codigo];
-      const factorParse = Number((factorValor ?? "").replace(/,/g, "."));
-      const factor =
-        requiresFactor(unidad) && Number.isFinite(factorParse)
-          ? factorParse
-          : UNIT_FACTORS[unidad] ?? (Number.isFinite(factorParse) ? factorParse : null);
-
       if (!SKU_PATTERN.test(sc.codigo)) {
         setMensaje({
           tipo: "error",
@@ -292,45 +207,22 @@ const CreateTaller = () => {
       }
       seenSkus.add(sc.codigo.toUpperCase());
 
-      if (!categoria) {
-        setMensaje({
-          tipo: "error",
-          texto: "Completa la categoría de cada subcorte.",
-        });
-        return;
-      }
-
-      if (
-        requiresFactor(unidad) &&
-        (factor == null || !Number.isFinite(factor) || factor <= 0)
-      ) {
-        setMensaje({
-          tipo: "error",
-          texto:
-            "Las unidades tipo caja/unidad requieren un factor de conversión mayor a cero.",
-        });
-        return;
-      }
-
-
       subcortesPayload.push({
         codigo_producto: sc.codigo,
         nombre_subcorte: sc.nombre,
         peso: pesoRaw,
-        categoria,
-        unidad_medida: unidad,
-        factor_conversion: Number.isFinite(factor) ? factor : undefined,
+        categoria: DEFAULT_CATEGORY,
+        unidad_medida: DEFAULT_UNIT,
+        factor_conversion: 1,
       });
     }
-
 
     setSubmitting(true);
     setMensaje(null);
 
     try {
       await createTaller({
-        nombre_taller:
-          nombreTaller.trim() || `Taller de ${materialSeleccionado.nombre}`,
+        nombre_taller: nombreTaller.trim() || `Taller de ${materialSeleccionado.nombre}`,
         descripcion: descripcion || undefined,
         sede: isAdmin ? sede || undefined : undefined,
         peso_inicial: pesoInicialParse,
@@ -346,16 +238,13 @@ const CreateTaller = () => {
       });
       setPesoInicialGuardado(false);
       setSubcortesPesos({});
-      setSubcorteUnidades({});
-      setSubcorteFactores({});
-      setSubcorteCategorias({});
       setSubcortesSeleccionados([]);
       setSeleccionSubcortesGuardada(false);
       setPesoInicial("");
       setPesoFinal("");
       setNombreTaller("");
       setDescripcion("");
-      setSede(isAdmin ? "" : user?.sede ?? "");
+      setSede(isAdmin ? "" : (user?.sede ?? ""));
     } catch (error) {
       setMensaje({
         tipo: "error",
@@ -392,8 +281,8 @@ const CreateTaller = () => {
               Crear taller
             </Typography>
             <Typography color="text.secondary">
-              Configura el taller seleccionando la especie, el corte principal y
-              registra los pesos para calcular la pérdida.
+              Configura el taller seleccionando la especie, el corte principal y registra los pesos
+              para calcular la pérdida.
             </Typography>
           </Box>
 
@@ -421,50 +310,47 @@ const CreateTaller = () => {
           sx={{
             borderRadius: 4,
             borderColor: "rgba(0,0,0,0.04)",
-            boxShadow:
-              "0 20px 80px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)",
+            boxShadow: "0 20px 80px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04)",
           }}
         >
           <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Stack spacing={4}>
               <Grid container spacing={2}>
-                {[
-                  "Define la especie",
-                  "Añade el material",
-                  "Registra los pesos",
-                ].map((step, index) => (
-                  <Grid item xs={12} md={4} key={step}>
-                    <Card
-                      variant="outlined"
-                      sx={{
-                        height: "100%",
-                        borderRadius: 3,
-                        borderColor: "rgba(99, 102, 241, 0.15)",
-                        bgcolor: "rgba(99, 102, 241, 0.04)",
-                      }}
-                    >
-                      <CardContent>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: "50%",
-                              bgcolor: "primary.main",
-                              color: "primary.contrastText",
-                              display: "grid",
-                              placeItems: "center",
-                              fontWeight: 800,
-                            }}
-                          >
-                            {index + 1}
-                          </Box>
-                          <Typography fontWeight={700}>{step}</Typography>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                {["Define la especie", "Añade el material", "Registra los pesos"].map(
+                  (step, index) => (
+                    <Grid item xs={12} md={4} key={step}>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          height: "100%",
+                          borderRadius: 3,
+                          borderColor: "rgba(99, 102, 241, 0.15)",
+                          bgcolor: "rgba(99, 102, 241, 0.04)",
+                        }}
+                      >
+                        <CardContent>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Box
+                              sx={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: "50%",
+                                bgcolor: "primary.main",
+                                color: "primary.contrastText",
+                                display: "grid",
+                                placeItems: "center",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {index + 1}
+                            </Box>
+                            <Typography fontWeight={700}>{step}</Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  )
+                )}
               </Grid>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -585,8 +471,8 @@ const CreateTaller = () => {
                       Subcortes ({materialSeleccionado?.nombre})
                     </Typography>
                     <Typography color="text.secondary">
-                      Selecciona los subcortes disponibles, guarda tu selección
-                      y luego registra los pesos obtenidos.
+                      Selecciona los subcortes disponibles, guarda tu selección y luego registra los
+                      pesos obtenidos.
                     </Typography>
                   </Box>
 
@@ -598,8 +484,7 @@ const CreateTaller = () => {
                     >
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Typography fontWeight={700}>
-                          Selección guardada ({subcortesSeleccionados.length}{" "}
-                          subcorte(s))
+                          Selección guardada ({subcortesSeleccionados.length} subcorte(s))
                         </Typography>
                         <Chip
                           label="Checklist listo"
@@ -623,18 +508,10 @@ const CreateTaller = () => {
                     <Stack spacing={2}>
                       <Grid container spacing={2}>
                         {subcortes.map((subcorte) => (
-                          <Grid
-                            item
-                            xs={12}
-                            md={6}
-                            lg={4}
-                            key={subcorte.codigo}
-                          >
+                          <Grid item xs={12} md={6} lg={4} key={subcorte.codigo}>
                             <SelectableSubcorteCard
                               subcorte={subcorte}
-                              checked={subcortesSeleccionados.includes(
-                                subcorte.codigo
-                              )}
+                              checked={subcortesSeleccionados.includes(subcorte.codigo)}
                               onToggle={handleToggleSubcorte}
                             />
                           </Grid>
@@ -647,8 +524,7 @@ const CreateTaller = () => {
                       >
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography fontWeight={700}>
-                            {subcortesSeleccionados.length} subcorte(s)
-                            seleccionado(s)
+                            {subcortesSeleccionados.length} subcorte(s) seleccionado(s)
                           </Typography>
                           {seleccionSubcortesGuardada && (
                             <Chip
@@ -678,104 +554,28 @@ const CreateTaller = () => {
                   {seleccionSubcortesGuardada ? (
                     <Stack spacing={2}>
                       <Grid container spacing={2}>
-                        {subcortesActivos.map((subcorte) => {
-                          const unidadSeleccionada =
-                            subcorteUnidades[subcorte.codigo] ?? DEFAULT_UNIT;
-                          const necesitaFactor = requiresFactor(unidadSeleccionada);
-
-                          return (
-                            <Grid item xs={12} md={6} key={subcorte.codigo}>
-                              <Stack spacing={1}>
-                                <Typography fontWeight={700}>
-                                  {subcorte.nombre} ({subcorte.codigo})
-                                </Typography>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  inputProps={{ min: 0, step: "0.01" }}
-                                  label="Peso reportado"
-                                  value={subcortesPesos[subcorte.codigo] ?? ""}
-                                  onChange={(e) =>
-                                    setSubcortesPesos((prev) => ({
-                                      ...prev,
-                                      [subcorte.codigo]: e.target.value,
-                                    }))
-                                  }
-                                />
-                                <Stack
-                                  spacing={1}
-                                  direction={{ xs: "column", sm: "row" }}
-                                >
-                                  <TextField
-                                    select
-                                    fullWidth
-                                    label="Unidad de medida"
-                                    value={unidadSeleccionada}
-                                    onChange={(e) => {
-                                      const unidad = e.target.value;
-                                      setSubcorteUnidades((prev) => ({
-                                        ...prev,
-                                        [subcorte.codigo]: unidad,
-                                      }));
-                                      if (!requiresFactor(unidad)) {
-                                        const defaultFactor =
-                                          UNIT_FACTORS[unidad] ?? "";
-                                        setSubcorteFactores((prev) => ({
-                                          ...prev,
-                                          [subcorte.codigo]: defaultFactor
-                                            ? String(defaultFactor)
-                                            : "",
-                                        }));
-                                      }
-                                    }}
-                                  >
-                                    {UNIT_OPTIONS.map((option) => (
-                                      <MenuItem
-                                        key={option.value}
-                                        value={option.value}
-                                      >
-                                        {option.label}
-                                      </MenuItem>
-                                    ))}
-                                  </TextField>
-                                  {necesitaFactor && (
-                                    <TextField
-                                      fullWidth
-                                      label="Factor a kg"
-                                      placeholder="Ej: 12"
-                                      value={subcorteFactores[subcorte.codigo] ?? ""}
-                                      onChange={(e) =>
-                                        setSubcorteFactores((prev) => ({
-                                          ...prev,
-                                          [subcorte.codigo]: e.target.value,
-                                        }))
-                                      }
-                                      helperText="Equivalencia en kg por unidad/caja."
-                                    />
-                                  )}
-                                </Stack>
-                                <TextField
-                                  select
-                                  fullWidth
-                                  label="Categoría"
-                                  value={subcorteCategorias[subcorte.codigo] ?? DEFAULT_CATEGORY}
-                                  onChange={(e) =>
-                                    setSubcorteCategorias((prev) => ({
-                                      ...prev,
-                                      [subcorte.codigo]: e.target.value,
-                                    }))
-                                  }
-                                >
-                                  {CATEGORY_OPTIONS.map((option) => (
-                                    <MenuItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </MenuItem>
-                                  ))}
-                                </TextField>
-                              </Stack>
-                            </Grid>
-                          );
-                        })}
+                        {subcortesActivos.map((subcorte) => (
+                          <Grid item xs={12} md={6} key={subcorte.codigo}>
+                            <Stack spacing={1}>
+                              <Typography fontWeight={700}>
+                                {subcorte.nombre} ({subcorte.codigo})
+                              </Typography>
+                              <TextField
+                                fullWidth
+                                type="number"
+                                inputProps={{ min: 0, step: "0.01" }}
+                                label="Peso reportado (kg)"
+                                value={subcortesPesos[subcorte.codigo] ?? ""}
+                                onChange={(e) =>
+                                  setSubcortesPesos((prev) => ({
+                                    ...prev,
+                                    [subcorte.codigo]: e.target.value,
+                                  }))
+                                }
+                              />
+                            </Stack>
+                          </Grid>
+                        ))}
                       </Grid>
 
                       <Grid container spacing={2}>
@@ -792,24 +592,19 @@ const CreateTaller = () => {
                       </Grid>
 
                       <Box>
-                        <Typography
-                          variant="subtitle1"
-                          fontWeight={700}
-                          color="error"
-                        >
-                          Pérdida: {formatKg(perdida)} kg (
-                          {porcentajePerdida.toFixed(2)}%)
+                        <Typography variant="subtitle1" fontWeight={700} color="error">
+                          Pérdida: {formatKg(perdida)} kg ({porcentajePerdida.toFixed(2)}%)
                         </Typography>
                         <Typography color="text.secondary">
-                          Total subcortes: {formatKg(totalSubcortes)} kg · Peso
-                          final: {formatKg(pesoFinalNumero)} kg
+                          Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}
+                          {formatKg(pesoFinalNumero)} kg
                         </Typography>
                       </Box>
                     </Stack>
                   ) : (
                     <Alert severity="info" sx={{ mt: 1 }}>
-                      Selecciona y guarda los subcortes para habilitar los
-                      campos de registro de peso.
+                      Selecciona y guarda los subcortes para habilitar los campos de registro de
+                      peso.
                     </Alert>
                   )}
                 </Stack>
