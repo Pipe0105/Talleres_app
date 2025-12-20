@@ -281,6 +281,7 @@ const HistorialTalleres = () => {
 
     for (const detalle of editForm.subcortes) {
       const codigo = detalle.codigo_producto.trim();
+      const pesoDetalle = parseNumber(detalle.peso);
       if (!codigo || !SKU_PATTERN.test(codigo)) {
         setEditError(
           "Cada subcorte debe tener un SKU válido (letras, números, guiones o guiones bajos)."
