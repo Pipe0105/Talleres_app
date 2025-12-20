@@ -40,3 +40,33 @@ def apply_startup_migrations(engine: Engine) -> None:
         conn.execute(
             text("ALTER TABLE IF EXISTS talleres ADD COLUMN IF NOT EXISTS sede TEXT")
         )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres_detalle "
+                "ADD COLUMN IF NOT EXISTS unidad_medida TEXT DEFAULT 'kg'"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres_detalle "
+                "ADD COLUMN IF NOT EXISTS factor_conversion NUMERIC(14,4) DEFAULT 1"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres_detalle "
+                "ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT 'sin_categoria'"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres_detalle "
+                "ADD COLUMN IF NOT EXISTS peso_normalizado NUMERIC(14,4)"
+            )
+        )
+        conn.execute(
+            text(
+                "UPDATE talleres_detalle "
+                "SET peso_normalizado = COALESCE(peso_normalizado, peso)"
+            )
+        )

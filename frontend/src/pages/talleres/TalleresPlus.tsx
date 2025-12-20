@@ -283,6 +283,9 @@ const TalleresPlus = () => {
             codigo_producto: sc.codigo,
             nombre_subcorte: sc.nombre,
             peso: sc.peso,
+            categoria: "corte",
+            unidad_medida: "kg",
+            factor_conversion: 1,
           })),
         });
         exitos += 1;

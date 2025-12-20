@@ -51,6 +51,10 @@ interface EditableSubcorte {
   codigo_producto: string;
   nombre_subcorte: string;
   peso: string;
+  categoria: string;
+  unidad_medida: string;
+  factor_conversion?: string;
+  peso_normalizado?: string;
   item_id?: number | null;
 }
 
@@ -102,6 +106,44 @@ const parseNumber = (value: string): number => {
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : NaN;
 };
+
+const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
+const UNIT_OPTIONS = [
+  { value: "kg", label: "Kilogramos" },
+  { value: "g", label: "Gramos" },
+  { value: "lb", label: "Libras" },
+  { value: "unidad", label: "Unidades (requiere factor)" },
+  { value: "caja", label: "Cajas (requiere factor)" },
+];
+const CATEGORY_OPTIONS = [
+  { value: "corte", label: "Corte" },
+  { value: "subproducto", label: "Subproducto" },
+  { value: "merma", label: "Merma" },
+  { value: "otro", label: "Otro" },
+];
+const DEFAULT_UNIT = "kg";
+const DEFAULT_CATEGORY = "corte";
+const UNIT_FACTORS: Record<string, number | undefined> = {
+  kg: 1,
+  g: 0.001,
+  lb: 0.45359237,
+};
+
+const requiresFactor = (unit: string) => ["caja", "unidad"].includes(unit);
+
+const normalizeUnit = (value?: string): string => {
+  const unit = (value || "").toLowerCase();
+  return UNIT_OPTIONS.find((option) => option.value === unit)?.value ?? DEFAULT_UNIT;
+};
+
+const normalizeCategory = (value?: string): string => {
+  const category = (value || "").toLowerCase();
+  return (
+    CATEGORY_OPTIONS.find((option) => option.value === category)?.value ??
+    DEFAULT_CATEGORY
+  );
+};
+
 
 const HistorialTalleres = () => {
   const [filters, setFilters] = useState<FiltersState>(() => ({
@@ -203,7 +245,16 @@ const HistorialTalleres = () => {
         id: detalle.id,
         codigo_producto: detalle.codigo_producto,
         nombre_subcorte: detalle.nombre_subcorte,
-        peso: String(detalle.peso ?? ""),
+        peso: String(detalle.peso ?? detalle.peso_normalizado ?? ""),
+        categoria: normalizeCategory(detalle.categoria),
+        unidad_medida: normalizeUnit(detalle.unidad_medida),
+        factor_conversion:
+          detalle.factor_conversion != null
+            ? String(detalle.factor_conversion)
+            : UNIT_FACTORS[normalizeUnit(detalle.unidad_medida)]?.toString() ?? "",
+        peso_normalizado: detalle.peso_normalizado
+          ? String(detalle.peso_normalizado)
+          : undefined,
         item_id: detalle.item_id ?? undefined,
       })),
     });
@@ -217,7 +268,20 @@ const HistorialTalleres = () => {
     setEditForm((prev) => {
       if (!prev) return prev;
       const updated = [...prev.subcortes];
-      updated[index] = { ...updated[index], [key]: value } as EditableSubcorte;
+      const nextSubcorte = { ...updated[index], [key]: value } as EditableSubcorte;
+
+      if (key === "unidad_medida") {
+        const normalizedUnit = normalizeUnit(value);
+        nextSubcorte.unidad_medida = normalizedUnit;
+        if (!requiresFactor(normalizedUnit)) {
+          nextSubcorte.factor_conversion =
+            UNIT_FACTORS[normalizedUnit]?.toString() ?? "";
+        } else if (!nextSubcorte.factor_conversion) {
+          nextSubcorte.factor_conversion = "";
+        }
+      }
+
+      updated[index] = nextSubcorte;
       return { ...prev, subcortes: updated };
     });
   };
@@ -234,6 +298,9 @@ const HistorialTalleres = () => {
                 codigo_producto: "",
                 nombre_subcorte: "",
                 peso: "",
+                categoria: DEFAULT_CATEGORY,
+                unidad_medida: DEFAULT_UNIT,
+                factor_conversion: UNIT_FACTORS[DEFAULT_UNIT]?.toString() ?? "",
               },
             ],
           }
@@ -259,21 +326,88 @@ const HistorialTalleres = () => {
       setEditError("Revisa los pesos. Deben ser números válidos.");
       return;
     }
+    if (!editForm.codigo_principal.trim()) {
+      setEditError("El SKU principal es obligatorio.");
+      return;
+    }
+
+    if (!SKU_PATTERN.test(editForm.codigo_principal.trim())) {
+      setEditError(
+        "El SKU principal solo puede contener letras, números, guiones o guiones bajos."
+      );
+      return;
+    }
+
+    if (!editForm.subcortes.length) {
+      setEditError("Debes registrar al menos un subcorte con su SKU y unidad.");
+      return;
+    }
 
     const subcortesPayload: CrearTallerPayload["subcortes"] = [];
+    const seenSkus = new Set<string>();
 
     for (const detalle of editForm.subcortes) {
+      const codigo = detalle.codigo_producto.trim();
+      const categoria = detalle.categoria?.trim() || "";
+      const unidad = normalizeUnit(detalle.unidad_medida);
+      const factorParsed = parseNumber(detalle.factor_conversion || "");
+      const factor =
+        requiresFactor(unidad) && Number.isFinite(factorParsed)
+          ? factorParsed
+          : UNIT_FACTORS[unidad] ?? (Number.isFinite(factorParsed) ? factorParsed : NaN);
       const pesoDetalle = parseNumber(detalle.peso || "0");
+      if (!codigo || !SKU_PATTERN.test(codigo)) {
+        setEditError(
+          "Cada subcorte debe tener un SKU válido (letras, números, guiones o guiones bajos)."
+        );
+        return;
+      }
+
+      if (seenSkus.has(codigo.toUpperCase())) {
+        setEditError("Los SKU de los subcortes deben ser únicos.");
+        return;
+      }
+      seenSkus.add(codigo.toUpperCase());
+
+      if (codigo.toUpperCase() === editForm.codigo_principal.trim().toUpperCase()) {
+        setEditError("El SKU principal no puede repetirse en los subcortes.");
+        return;
+      }
+
+      if (!categoria) {
+        setEditError("Asigna una categoría a cada subcorte.");
+        return;
+      }
+
+      if (!UNIT_OPTIONS.some((option) => option.value === unidad)) {
+        setEditError("Selecciona una unidad de medida válida para cada subcorte.");
+        return;
+      }
+
+      if (requiresFactor(unidad)) {
+        if (!Number.isFinite(factor) || factor <= 0) {
+          setEditError(
+            "Las unidades tipo caja/unidad necesitan un factor de conversión mayor a cero."
+          );
+          return;
+        }
+      }
       if (Number.isNaN(pesoDetalle)) {
         setEditError("Hay subcortes con peso inválido.");
         return;
       }
+      if (pesoDetalle < 0) {
+        setEditError("Los pesos no pueden ser negativos.");
+        return;
+      }
       subcortesPayload.push({
-        codigo_producto: detalle.codigo_producto.trim(),
-        nombre_subcorte:
-          detalle.nombre_subcorte.trim() || detalle.codigo_producto.trim(),
+        codigo_producto: codigo,
+        nombre_subcorte: detalle.nombre_subcorte.trim() || codigo,
         peso: pesoDetalle,
         item_id: detalle.item_id ?? undefined,
+        categoria,
+        unidad_medida: unidad,
+        factor_conversion: Number.isFinite(factor) ? factor : undefined,
       });
     }
 
@@ -915,87 +1049,152 @@ const HistorialTalleres = () => {
               <Grid container spacing={2}>
                 {editForm.subcortes.map((subcorte, index) => (
                   <Grid item xs={12} key={subcorte.id ?? index}>
-                    <Stack spacing={1} direction={{ xs: "column", md: "row" }}>
-                      <Autocomplete
-                        freeSolo
-                        fullWidth
-                        options={subcortesDisponibles.map(
-                          (opcion) => opcion.nombre
-                        )}
-                        value={subcorte.nombre_subcorte || ""}
-                        onInputChange={(_, inputValue) =>
-                          handleChangeSubcorte(
-                            index,
-                            "nombre_subcorte",
-                            inputValue
-                          )
-                        }
-                        onChange={(_, newValue) => {
-                          const nombreSeleccionado = newValue ?? "";
-                          handleChangeSubcorte(
-                            index,
-                            "nombre_subcorte",
-                            nombreSeleccionado
-                          );
+                    <Stack spacing={1}>
+                      <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+                        <Autocomplete
+                          freeSolo
+                          fullWidth
+                          options={subcortesDisponibles.map(
+                            (opcion) => opcion.nombre
+                          )}
+                          value={subcorte.nombre_subcorte || ""}
+                          onInputChange={(_, inputValue) =>
+                            handleChangeSubcorte(
+                              index,
+                              "nombre_subcorte",
+                              inputValue
+                            )
+                          }
+                          onChange={(_, newValue) => {
+                            const nombreSeleccionado = newValue ?? "";
+                            handleChangeSubcorte(
+                              index,
+                              "nombre_subcorte",
+                              nombreSeleccionado
+                            );
 
-                          const coincidencia = subcortesDisponibles.find(
-                            (opcion) => opcion.nombre === newValue
-                          );
-                          if (!nombreSeleccionado) {
-                            handleChangeSubcorte(index, "codigo_producto", "");
-                          } else if (coincidencia) {
+                            const coincidencia = subcortesDisponibles.find(
+                              (opcion) => opcion.nombre === newValue
+                            );
+                            if (!nombreSeleccionado) {
+                              handleChangeSubcorte(index, "codigo_producto", "");
+                            } else if (coincidencia) {
+                              handleChangeSubcorte(
+                                index,
+                                "codigo_producto",
+                                coincidencia.codigo
+                              );
+                            }
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Nombre"
+                              placeholder={
+                                subcortesDisponibles.length
+                                  ? "Selecciona un subcorte"
+                                  : "Nombre del subcorte"
+                              }
+                              fullWidth
+                            />
+                          )}
+                        />
+                        <TextField
+                          label="Código"
+                          value={subcorte.codigo_producto}
+                          onChange={(event) =>
                             handleChangeSubcorte(
                               index,
                               "codigo_producto",
-                              coincidencia.codigo
-                            );
+                              event.target.value
+                            )
                           }
-                        }}
-                        renderInput={(params) => (
+                          fullWidth
+                        />
+                      </Stack>
+
+                      <Stack direction={{ xs: "column", md: "row" }} spacing={1}>
+                        <TextField
+                          label="Peso reportado"
+                          type="number"
+                          value={subcorte.peso}
+                          onChange={(event) =>
+                            handleChangeSubcorte(
+                              index,
+                              "peso",
+                              event.target.value
+                            )
+                          }
+                          fullWidth
+                          helperText="Usa el valor original de la medición."
+                        />
+                        <TextField
+                          select
+                          label="Unidad"
+                          value={subcorte.unidad_medida || DEFAULT_UNIT}
+                          onChange={(event) =>
+                            handleChangeSubcorte(
+                              index,
+                              "unidad_medida",
+                              event.target.value
+                            )
+                          }
+                          SelectProps={{ native: true }}
+                          fullWidth
+                        >
+                          {UNIT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </TextField>
+                        {requiresFactor(subcorte.unidad_medida || DEFAULT_UNIT) && (
                           <TextField
-                            {...params}
-                            label="Nombre"
-                            placeholder={
-                              subcortesDisponibles.length
-                                ? "Selecciona un subcorte"
-                                : "Nombre del subcorte"
+                            label="Factor a kg"
+                            value={subcorte.factor_conversion ?? ""}
+                            onChange={(event) =>
+                              handleChangeSubcorte(
+                                index,
+                                "factor_conversion",
+                                event.target.value
+                              )
                             }
                             fullWidth
+                            placeholder="Ej: 12"
+                            helperText="Cuántos kg representa cada unidad/caja."
                           />
                         )}
-                      />
-                      <TextField
-                        label="Código"
-                        value={subcorte.codigo_producto}
-                        onChange={(event) =>
-                          handleChangeSubcorte(
-                            index,
-                            "codigo_producto",
-                            event.target.value
-                          )
-                        }
-                        fullWidth
-                      />
-                      <TextField
-                        label="Peso (kg)"
-                        type="number"
-                        value={subcorte.peso}
-                        onChange={(event) =>
-                          handleChangeSubcorte(
-                            index,
-                            "peso",
-                            event.target.value
-                          )
-                        }
-                        fullWidth
-                      />
-                      <IconButton
-                        aria-label="Eliminar subcorte"
-                        color="error"
-                        onClick={() => removeSubcorte(index)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      </Stack>
+
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <TextField
+                          select
+                          label="Categoría"
+                          value={subcorte.categoria || DEFAULT_CATEGORY}
+                          onChange={(event) =>
+                            handleChangeSubcorte(
+                              index,
+                              "categoria",
+                              event.target.value
+                            )
+                          }
+                          SelectProps={{ native: true }}
+                          fullWidth
+                        >
+                          {CATEGORY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </TextField>
+                        <IconButton
+                          aria-label="Eliminar subcorte"
+                          color="error"
+                          onClick={() => removeSubcorte(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Stack>
                     </Stack>
                   </Grid>
                 ))}

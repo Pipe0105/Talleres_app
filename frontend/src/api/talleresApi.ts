@@ -147,6 +147,27 @@ const resolveItemNombre = (raw: any): string =>
     ""
   );
 
+const DEFAULT_UNIT = "kg";
+const DEFAULT_CATEGORY = "corte";
+const ALLOWED_CATEGORIES = ["corte", "subproducto", "merma", "otro"];
+const VALID_UNITS = ["kg", "g", "lb", "unidad", "caja"];
+
+const normalizeUnit = (raw: any): string => {
+  const unit = toStringOr(raw, DEFAULT_UNIT).toLowerCase();
+  return VALID_UNITS.includes(unit) ? unit : DEFAULT_UNIT;
+};
+
+const normalizeCategory = (raw: any): string => {
+  const category = toStringOr(raw, DEFAULT_CATEGORY).toLowerCase().trim();
+  return ALLOWED_CATEGORIES.includes(category) ? category : DEFAULT_CATEGORY;
+};
+
+const normalizeFactor = (raw: any): number | null => {
+  const value = toNumber(raw, NaN);
+  return Number.isFinite(value) && value > 0 ? value : null;
+};
+
+
 const mapItem = (raw: any): Item => {
   const nombre = resolveItemNombre(raw);
   const precio = raw?.precio == null ? null : toNumber(raw?.precio, 0);
@@ -226,6 +247,15 @@ const mapTaller = (raw: any): TallerResponse => ({
         nombre_subcorte: toStringOr(det?.nombre_subcorte, ""),
         peso: toNumber(det?.peso, 0),
         item_id: det?.item_id ?? null,
+        categoria: normalizeCategory(det?.categoria),
+        unidad_medida: normalizeUnit(det?.unidad_medida),
+        factor_conversion: normalizeFactor(
+          det?.factor_conversion ?? det?.factorConversion
+        ),
+        peso_normalizado: toNumber(
+          det?.peso_normalizado ?? det?.pesoNormalizado ?? det?.peso,
+          0
+        ),
       }))
     : [],
 });
