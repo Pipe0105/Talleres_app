@@ -110,8 +110,6 @@ class TallerDetalle(Base):
     codigo_producto = Column(Text)
     nombre_subcorte = Column(Text)
     peso = Column(Numeric(14, 4))
-    peso_normalizado = Column(Numeric(14, 4))
-    categoria = Column(Text, default="sin_categoria")
     creado_en = Column(DateTime, default=datetime.utcnow)
 
     taller = relationship("Taller", back_populates="detalles")

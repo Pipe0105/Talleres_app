@@ -28,21 +28,6 @@ def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
     )
     return item.id if item else None
 
-def _build_detalle(
-    db: Session, det: schemas.TallerDetalleCreate
-) -> models.TallerDetalle:
-    detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
-    peso = Decimal(det.peso)
-
-    return models.TallerDetalle(
-        codigo_producto=det.codigo_producto,
-        nombre_subcorte=det.nombre_subcorte,
-        peso=peso,
-        peso_normalizado=peso,
-        categoria=det.categoria,
-        item_id=detalle_item_id,
-    )
-
 def _serialize_taller_data(taller: models.Taller) -> dict:
     return {
         "id": taller.id,
@@ -102,10 +87,7 @@ def crear_taller(
     peso_inicial = Decimal(payload.peso_inicial)
     peso_final = Decimal(payload.peso_final)
 
-    total_subcortes = sum(
-        Decimal(det.peso or 0)
-        for det in payload.subcortes
-    )
+    total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
     total_procesado = peso_final + total_subcortes
     perdida = peso_inicial - total_procesado
     porcentaje_perdida = (
@@ -140,7 +122,14 @@ def crear_taller(
 
     detalles: list[models.TallerDetalle] = []
     for det in payload.subcortes:
-        detalles.append(_build_detalle(db, det))
+        detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
+        detalle = models.TallerDetalle(
+            codigo_producto=det.codigo_producto,
+            nombre_subcorte=det.nombre_subcorte,
+            peso=Decimal(det.peso),
+            item_id=detalle_item_id,
+        )
+        detalles.append(detalle)
     taller.detalles = detalles
 
     try:
@@ -271,8 +260,7 @@ def listar_talleres(
 
     for taller in talleres:
         total_detalles = sum(
-            (detalle.peso_normalizado or detalle.peso or Decimal("0"))
-            for detalle in taller.detalles
+            (detalle.peso or Decimal("0")) for detalle in taller.detalles
         )
         total_peso = (taller.peso_final or Decimal("0")) + total_detalles
 
@@ -312,7 +300,7 @@ def obtener_calculo_taller(
 
     calculo: list[schemas.TallerCalculoRow] = []
     for detalle in taller.detalles:
-        peso = Decimal(detalle.peso_normalizado or detalle.peso or Decimal("0"))
+        peso = Decimal(detalle.peso or Decimal("0"))
         porcentaje_real = (
             (peso / peso_inicial * Decimal("100")) if peso_inicial > 0 else Decimal("0")
         )
@@ -504,7 +492,7 @@ def actualizar_taller(
 
     peso_inicial = Decimal(payload.peso_inicial)
     peso_final = Decimal(payload.peso_final)
-    total_subcortes = sum(Decimal(det.peso or 0) for det in payload.subcortes)
+    total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
     total_procesado = peso_final + total_subcortes
     perdida = peso_inicial - total_procesado
     porcentaje_perdida = (
@@ -527,7 +515,14 @@ def actualizar_taller(
 
     nuevos_detalles: list[models.TallerDetalle] = []
     for det in payload.subcortes:
-        nuevos_detalles.append(_build_detalle(db, det))
+        detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
+        detalle = models.TallerDetalle(
+            codigo_producto=det.codigo_producto,
+            nombre_subcorte=det.nombre_subcorte,
+            peso=Decimal(det.peso),
+            item_id=detalle_item_id,
+        )
+        nuevos_detalles.append(detalle)
 
     try:
         taller.detalles = nuevos_detalles

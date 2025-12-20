@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import {
   AuthToken,
@@ -47,7 +47,10 @@ export const api = axios.create({
   baseURL: resolveBaseUrl(),
 });
 
-type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _skipAuthRefresh?: boolean;
+};
 
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number") {
@@ -294,7 +297,9 @@ export const login = async (username: string, password: string): Promise<AuthTok
 };
 
 export const refreshToken = async (): Promise<AuthToken> => {
-  const { data } = await api.post<AuthToken>("/auth/refresh");
+  const { data } = await api.post<AuthToken>("/auth/refresh", undefined, {
+    _skipAuthRefresh: true,
+  } as RetriableRequestConfig);
   setAuthToken(data.access_token);
   return data;
 };
@@ -314,6 +319,51 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
   const { data } = await api.get<unknown>("/auth/me");
   return mapUser(data);
 };
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const originalRequest = error.config as RetriableRequestConfig | undefined;
+
+    if (
+      originalRequest &&
+      !originalRequest._skipAuthRefresh &&
+      (status === 401 || status === 403) &&
+      !originalRequest._retry
+    ) {
+      const token = getAuthToken();
+      if (!token) {
+        logout();
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        refreshPromise = refreshPromise ?? refreshToken();
+        const newToken = await refreshPromise;
+        refreshPromise = null;
+
+        const headers = originalRequest.headers ?? {};
+        if (typeof (headers as any).set === "function") {
+          (headers as any).set("Authorization", `Bearer ${newToken.access_token}`);
+        } else {
+          (headers as Record<string, unknown>).Authorization = `Bearer ${newToken.access_token}`;
+        }
+        originalRequest.headers = headers;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        refreshPromise = null;
+        logout();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export const createTaller = async (payload: CrearTallerPayload): Promise<TallerResponse> => {
   const { data } = await api.post<unknown>("/talleres", payload);

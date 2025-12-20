@@ -1,25 +1,13 @@
 from datetime import date, datetime
 from typing import Annotated, Optional
 from decimal import Decimal
-import re
-
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    condecimal,
-    field_validator,
-    model_validator,
-)
-
+from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 
 MAX_CODE_LENGTH = 120
 MAX_NAME_LENGTH = 120
 MAX_DESCRIPTION_LENGTH = 2000
 MAX_PASSWORD_LENGTH = 128
 MIN_PASSWORD_LENGTH = 8
-SKU_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9_.-]*$", re.IGNORECASE)
-ALLOWED_CATEGORIES = {"corte", "subproducto", "merma", "otro"}
 
 
 def _validate_printable_text(value: str, field_name: str, max_length: int) -> str:
@@ -61,28 +49,6 @@ def _validate_password_strength(value: str) -> str:
         raise ValueError("La contraseña debe incluir números")
     return value
 
-def _validate_sku(value: str, field_name: str) -> str:
-    normalized = value.strip()
-    if not normalized:
-        raise ValueError(f"{field_name} es obligatorio")
-    if len(normalized) > MAX_CODE_LENGTH:
-        raise ValueError(f"{field_name} supera el máximo permitido")
-    if not SKU_PATTERN.fullmatch(normalized):
-        raise ValueError(
-            f"{field_name} debe usar solo letras, números, guiones o guiones bajos"
-        )
-    return normalized.upper()
-
-def _validate_category(value: str) -> str:
-    normalized = value.strip().lower()
-    if not normalized:
-        raise ValueError("La categoría es obligatoria")
-    if normalized not in ALLOWED_CATEGORIES:
-        raise ValueError(
-            f"La categoría no es válida. Usa una de: {', '.join(sorted(ALLOWED_CATEGORIES))}."
-        )
-    return normalized
-
 class ItemIn(BaseModel):
     item_code: str
     descripcion: str
@@ -93,7 +59,7 @@ class ItemIn(BaseModel):
     @field_validator("item_code")
     @classmethod
     def _validate_item_code(cls, value: str) -> str:
-        return _validate_sku(value, "El código del ítem")
+        return _validate_printable_text(value, "El código del ítem", MAX_CODE_LENGTH)
 
     @field_validator("descripcion")
     @classmethod
@@ -286,23 +252,18 @@ class TallerDetalleCreate(BaseModel):
     condecimal(ge=0, max_digits=14, decimal_places=4)
 ]
     item_id: Optional[int] = None
-    categoria: str
     
     model_config = ConfigDict(extra="forbid")
 
     @field_validator("codigo_producto")
     @classmethod
     def _validate_codigo_producto(cls, value: str) -> str:
-        return _validate_sku(value, "El código del producto")
+        return _validate_printable_text(value, "El código del producto", MAX_CODE_LENGTH)
 
     @field_validator("nombre_subcorte")
     @classmethod
     def _validate_nombre_subcorte(cls, value: str) -> str:
         return _validate_printable_text(value, "El nombre del subcorte", MAX_NAME_LENGTH)
-    @field_validator("categoria")
-    @classmethod
-    def _validate_categoria(cls, value: str) -> str:
-        return _validate_category(value)
 
 class TallerCreate(BaseModel):
     nombre_taller: str
@@ -337,7 +298,7 @@ class TallerCreate(BaseModel):
     @field_validator("codigo_principal")
     @classmethod
     def _validate_codigo_principal(cls, value: str) -> str:
-        return _validate_sku(value, "El código principal")
+        return _validate_printable_text(value, "El código principal", MAX_CODE_LENGTH)
 
     @field_validator("especie")
     @classmethod
@@ -364,21 +325,6 @@ class TallerCreate(BaseModel):
 
         return normalized
     
-    @model_validator(mode="after")
-    def _validate_subcortes(self) -> "TallerCreate":
-        if not self.subcortes:
-            raise ValueError("Debes registrar al menos un subcorte.")
-
-        codigos = [detalle.codigo_producto for detalle in self.subcortes]
-        if len(codigos) != len(set(codigos)):
-            raise ValueError("Los SKU de los subcortes deben ser únicos.")
-
-        if self.codigo_principal in codigos:
-            raise ValueError(
-                "El SKU principal no puede repetirse dentro de los subcortes."
-            )
-        return self
-    
 class TallerUpdate(TallerCreate):
     """Payload para actualizar un taller existente."""
 
@@ -388,8 +334,6 @@ class TallerDetalleOut(BaseModel):
     nombre_subcorte: str
     peso: Decimal
     item_id: Optional[int] = None
-    categoria: str
-    peso_normalizado: Decimal
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -454,13 +398,10 @@ class TallerCalculoRow(BaseModel):
     
     
 class InventarioItem(BaseModel):
-    codigo_producto: Optional[str] = None
-    descripcion: Optional[str] = None
+    codigo_producto: str
+    descripcion: str
     total_peso: Decimal
-    sede: Optional[str] = None
-    especie: Optional[str] = None
-    entradas: Decimal = Decimal("0")
-    salidas_pendientes: Decimal = Decimal("0")
-    umbral_minimo: Optional[Decimal] = None
+    sede: str | None = None
+    especie: str | None = None
     
     model_config = ConfigDict(from_attributes=True)
