@@ -255,7 +255,6 @@ const TalleresPlus = () => {
             codigo_producto: sc.codigo,
             nombre_subcorte: sc.nombre,
             peso: sc.peso,
-            categoria: "corte",
           })),
         });
         exitos += 1;
