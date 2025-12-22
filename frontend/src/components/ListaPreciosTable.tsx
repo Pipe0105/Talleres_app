@@ -19,7 +19,6 @@ import { Item } from "../types";
 interface ListaPreciosTableProps {
   loading: boolean;
   error: string | null;
-  items: Item[];
   visibleItems: Item[];
   totalItems: number;
   page: number;
@@ -32,7 +31,6 @@ interface ListaPreciosTableProps {
 const ListaPreciosTable = ({
   loading,
   error,
-  items,
   visibleItems,
   totalItems,
   page,
@@ -94,7 +92,7 @@ const ListaPreciosTable = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <TableRow key={item.id} hover>
               <TableCell sx={{ whiteSpace: "nowrap" }}>{item.codigo_producto}</TableCell>
               <TableCell>

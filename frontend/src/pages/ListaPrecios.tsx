@@ -377,7 +377,7 @@ const ListaPrecios = () => {
           <ListaPreciosTable
             loading={loading}
             error={error}
-            items={items}
+            visibleItems={visibleItems}
             totalItems={totalItems}
             page={page}
             pageSize={pageSize}
@@ -409,7 +409,7 @@ const ListaPrecios = () => {
           <ListaPreciosTable
             loading={loading}
             error={error}
-            items={items}
+            visibleItems={visibleItems}
             totalItems={totalItems}
             page={page}
             pageSize={pageSize}
