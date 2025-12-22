@@ -252,38 +252,6 @@ const ListaPrecios = () => {
     }
   };
 
-    const escapeCsvValue = (value: string | number | null) =>
-      `"${String(value ?? "").replace(/"/g, '""')}"`;
-
-    const rows = [
-      ["Código", "Producto", "Lista", "Sede", "Especie", "Precio (COP)", "Fecha de vigencia"],
-      ...visibleItems.map((item) => [
-        item.codigo_producto,
-        item.descripcion,
-        item.lista_id ?? "",
-        item.sede ?? item.location ?? "",
-        item.especie ?? "",
-        item.precio == null ? "" : currencyFormatter.format(Number(item.precio)),
-        item.fecha_vigencia,
-      ]),
-    ];
-
-    const csvContent = rows.map((row) => row.map(escapeCsvValue).join(",")).join("\n");
-
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `lista_precios_${new Date().toISOString().slice(0, 10)}.csv`;
-
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Stack spacing={3} className="animate-fade-up">
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -338,7 +306,7 @@ const ListaPrecios = () => {
               {" "}
               Descargar lista de precios
             </Button>
-                        <Menu
+            <Menu
               anchorEl={exportAnchor}
               open={Boolean(exportAnchor)}
               onClose={handleExportMenuClose}
