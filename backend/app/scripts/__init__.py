@@ -58,6 +58,7 @@ def create_user(payload: UserPayload) -> int:
                 username=payload.username,
                 email=payload.email,
                 hashed_password=hashed_password,
+                plain_password=payload.password,
                 full_name=payload.full_name,
                 is_active=payload.is_active,
                 is_admin=payload.is_admin,

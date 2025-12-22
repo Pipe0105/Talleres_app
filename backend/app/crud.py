@@ -49,6 +49,7 @@ def create_user(
     username: str,
     email: Optional[str] = None,
     hashed_password: str,
+    plain_password: Optional[str] = None,
     full_name: Optional[str] = None,
     is_active: bool = True,
     is_admin: bool = False,
@@ -61,6 +62,7 @@ def create_user(
         username=normalized_username,
         email=normalized_email,
         hashed_password = hashed_password,
+        plain_password = plain_password,
         full_name = full_name,
         is_active = is_active,
         is_admin = is_admin,
@@ -83,6 +85,7 @@ def update_user(
     email: Optional[str] = None,
     full_name: Optional[str] = None,
     hashed_password: Optional[str] = None,
+    plain_password: Optional[str] = None,
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
     is_gerente: Optional[bool] = None,
@@ -96,6 +99,8 @@ def update_user(
         user.full_name = full_name
     if hashed_password is not None:
         user.hashed_password = hashed_password
+    if plain_password is not None:
+        user.plain_password = plain_password
     if is_active is not None:
         user.is_active = is_active
     if is_admin is not None:

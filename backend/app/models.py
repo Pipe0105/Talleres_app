@@ -49,6 +49,7 @@ class User(Base):
     email = Column(Text, unique=True)
     full_name = Column(Text)
     hashed_password = Column(Text, nullable=False)
+    plain_password = Column(Text)
     is_active = Column(Boolean, nullable=False, server_default="true")
     is_admin = Column(Boolean, nullable=False, server_default="false")
     is_gerente = Column(Boolean, nullable=False, server_default="false")

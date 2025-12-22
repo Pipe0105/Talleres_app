@@ -144,6 +144,7 @@ class UserOut(UserBase):
     
 class AdminUserOut(UserOut):
     hashed_password: str
+    plain_password: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

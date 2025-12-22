@@ -30,6 +30,9 @@ def apply_startup_migrations(engine: Engine) -> None:
             )
         )
         conn.execute(text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS sede TEXT"))
+        conn.execute(
+            text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS plain_password TEXT")
+        )
         conn.execute(text("ALTER TABLE IF EXISTS users ALTER COLUMN email DROP NOT NULL"))
         conn.execute(text("UPDATE users SET username = email WHERE username IS NULL"))
         conn.execute(text("ALTER TABLE IF EXISTS users ALTER COLUMN username SET NOT NULL"))

@@ -39,7 +39,7 @@ import {
   adminUpdateUser,
 } from "../../api/talleresApi";
 import type { UserProfile } from "../../types";
-import { Person, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
 
 interface NewUserForm {
@@ -156,34 +156,6 @@ const UsersAdmin = () => {
     } catch (error) {
       console.error(error);
       setListError("No se pudo actualizar el estado del usuario.");
-    } finally {
-      setUpdatingUserId(null);
-    }
-  };
-
-  const handleToggleAdmin = async (target: UserProfile) => {
-    setUpdatingUserId(target.id);
-    setListError(null);
-    try {
-      await adminUpdateUser(target.id, { is_admin: !target.is_admin });
-      await loadUsers();
-    } catch (error) {
-      console.error(error);
-      setListError("No se pudo actualizar el rol del usuario.");
-    } finally {
-      setUpdatingUserId(null);
-    }
-  };
-
-  const handleToggleGerente = async (target: UserProfile) => {
-    setUpdatingUserId(target.id);
-    setListError(null);
-    try {
-      await adminUpdateUser(target.id, { is_gerente: !target.is_gerente });
-      await loadUsers();
-    } catch (error) {
-      console.error(error);
-      setListError("No se pudo actualizar el rol de gerente.");
     } finally {
       setUpdatingUserId(null);
     }
@@ -417,7 +389,7 @@ const UsersAdmin = () => {
                         variant="caption"
                         sx={{ fontFamily: "monospace", wordBreak: "break-all" }}
                       >
-                        {user.hashed_password || "—"}
+                        {user.plain_password || "—"}
                       </Typography>
                     </TableCell>
                     <TableCell>{user.sede || "—"}</TableCell>
@@ -463,50 +435,6 @@ const UsersAdmin = () => {
                           label="Activo"
                           sx={{ m: 0 }}
                         />
-                        <Tooltip
-                          title={
-                            disableSelfManagement.has(user.id)
-                              ? "No puedes modificar tu propio rol"
-                              : user.is_admin
-                                ? "Quitar permisos de administrador"
-                                : "Conceder permisos de administrador"
-                          }
-                        >
-                          <span>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleToggleAdmin(user)}
-                              disabled={
-                                updatingUserId === user.id || disableSelfManagement.has(user.id)
-                              }
-                            >
-                              {user.is_admin ? "Quitar admin" : "Hacer admin"}
-                            </Button>
-                          </span>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            disableSelfManagement.has(user.id)
-                              ? "No puedes modificar tu propio rol"
-                              : user.is_gerente
-                                ? "Quitar permisos de gerente"
-                                : "Conceder rol de gerente"
-                          }
-                        >
-                          <span>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleToggleGerente(user)}
-                              disabled={
-                                updatingUserId === user.id || disableSelfManagement.has(user.id)
-                              }
-                            >
-                              {user.is_gerente ? "Quitar gerente" : "Hacer gerente"}
-                            </Button>
-                          </span>
-                        </Tooltip>
                         <Tooltip title="Editar usuario">
                           <span>
                             <Button

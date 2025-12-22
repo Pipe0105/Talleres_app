@@ -199,6 +199,7 @@ const mapUser = (raw: any): UserProfile => ({
   email: raw?.email ?? null,
   full_name: raw?.full_name ?? null,
   hashed_password: toStringOr(raw?.hashed_password, ""),
+  plain_password: raw?.plain_password ?? null,
   is_active: toBoolean(raw?.is_active, true),
   is_admin: toBoolean(raw?.is_admin, false),
   is_gerente: toBoolean(raw?.is_gerente, false),
