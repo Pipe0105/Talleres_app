@@ -257,7 +257,7 @@ const ListaPrecios = () => {
 
     const rows = [
       ["Código", "Producto", "Lista", "Sede", "Especie", "Precio (COP)", "Fecha de vigencia"],
-      ...filteredItems.map((item) => [
+      ...visibleItems.map((item) => [
         item.codigo_producto,
         item.descripcion,
         item.lista_id ?? "",
