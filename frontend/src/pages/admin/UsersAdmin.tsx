@@ -31,6 +31,7 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import {
   adminCreateUser,
@@ -99,6 +100,49 @@ const UsersAdmin = () => {
     role: "",
   });
 
+  const resolveErrorMessage = (error: unknown, fallback: string) => {
+    if (!axios.isAxiosError(error)) {
+      return fallback;
+    }
+
+    const detail = error.response?.data?.detail;
+    if (typeof detail === "string") {
+      return detail;
+    }
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((item) => (typeof item?.msg === "string" ? item.msg : null))
+        .filter(Boolean);
+      if (messages.length > 0) {
+        return messages.join(" ");
+      }
+    }
+
+    return fallback;
+  };
+
+  const validatePassword = (value: string) => {
+    if (value.length < 8) {
+      return "La contraseña es demasiado corta.";
+    }
+    if (value.length > 128) {
+      return "La contraseña supera el máximo permitido.";
+    }
+    if (/\s/.test(value)) {
+      return "La contraseña no debe contener espacios.";
+    }
+    if (!/[a-z]/.test(value)) {
+      return "La contraseña debe incluir minúsculas.";
+    }
+    if (!/[A-Z]/.test(value)) {
+      return "La contraseña debe incluir mayúsculas.";
+    }
+    if (!/\d/.test(value)) {
+      return "La contraseña debe incluir números.";
+    }
+    return null;
+  };
+
   const loadUsers = useCallback(async () => {
     setLoading(true);
     setListError(null);
@@ -121,18 +165,35 @@ const UsersAdmin = () => {
     event.preventDefault();
     setFormError(null);
     setFormSuccess(null);
+
+    const normalizedUsername = formState.username.trim();
+    if (!normalizedUsername) {
+      setFormError("El nombre de usuario es obligatorio.");
+      return;
+    }
+
+    const passwordError = validatePassword(formState.password);
+    if (passwordError) {
+      setFormError(passwordError);
+      return;
+    }
+
+    const normalizedEmail = formState.email.trim();
+    const normalizedFullName = formState.fullName.trim();
+    const normalizedSede = formState.sede.trim();
+
     setSubmitting(true);
 
     try {
       await adminCreateUser({
-        username: formState.username,
-        email: formState.email || undefined,
+        username: normalizedUsername,
+        email: normalizedEmail || undefined,
         password: formState.password,
-        full_name: formState.fullName || undefined,
+        full_name: normalizedFullName || undefined,
         is_admin: formState.isAdmin,
         is_active: formState.isActive,
         is_gerente: formState.isGerente,
-        sede: formState.sede || undefined,
+        sede: normalizedSede || undefined,
       });
       setFormSuccess("Usuario creado correctamente.");
       setFormState(INITIAL_FORM_STATE);
@@ -141,7 +202,7 @@ const UsersAdmin = () => {
       await loadUsers();
     } catch (error) {
       console.error(error);
-      setFormError("No se pudo crear el usuario. Verifica los datos.");
+      setFormError(resolveErrorMessage(error, "No se pudo crear el usuario. Verifica los datos."));
     } finally {
       setSubmitting(false);
     }
@@ -188,12 +249,26 @@ const UsersAdmin = () => {
     event.preventDefault();
     if (!editTarget || !editForm) return;
 
+    const normalizedUsername = editForm.username.trim();
+    if (!normalizedUsername) {
+      setEditError("El nombre de usuario es obligatorio.");
+      return;
+    }
+
+    if (editForm.password) {
+      const passwordError = validatePassword(editForm.password);
+      if (passwordError) {
+        setEditError(passwordError);
+        return;
+      }
+    }
+
     setEditSubmitting(true);
     setEditError(null);
 
     try {
       await adminUpdateUser(editTarget.id, {
-        username: editForm.username.trim() || editTarget.username,
+        username: normalizedUsername || editTarget.username,
         email: editForm.email.trim() || undefined,
         full_name: editForm.fullname.trim() || undefined,
         password: editForm.password ? editForm.password : undefined,
@@ -207,7 +282,9 @@ const UsersAdmin = () => {
       await loadUsers();
     } catch (error) {
       console.error(error);
-      setEditError("No se pudo actualizar el usuario, verifica los datos");
+      setEditError(
+        resolveErrorMessage(error, "No se pudo actualizar el usuario, verifica los datos")
+      );
     } finally {
       setEditSubmitting(false);
     }
@@ -522,6 +599,7 @@ const UsersAdmin = () => {
                     username: event.target.value,
                   }))
                 }
+                required
                 fullWidth
               />
               <TextField
@@ -561,6 +639,7 @@ const UsersAdmin = () => {
                     password: event.target.value,
                   }))
                 }
+                helperText="Mínimo 8 caracteres, con mayúsculas, minúsculas y números."
                 required
                 fullWidth
               />
@@ -723,7 +802,7 @@ const UsersAdmin = () => {
               <TextField
                 label="Nueva contraseña"
                 type={showEditPassword ? "text" : "password"}
-                helperText="dejalo en blanco para no cambiarla"
+                helperText="Déjala en blanco para no cambiarla. Mínimo 8 caracteres, con mayúsculas, minúsculas y números."
                 value={editForm?.password ?? ""}
                 InputProps={{
                   endAdornment: (

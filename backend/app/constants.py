@@ -9,4 +9,5 @@ BRANCH_LOCATIONS = [
     "Palmira",
     "Bogotá",
     "Chia",
+    "Planta"
 ]
