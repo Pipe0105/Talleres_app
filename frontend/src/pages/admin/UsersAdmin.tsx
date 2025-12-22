@@ -263,11 +263,7 @@ const UsersAdmin = () => {
   );
 
   const editSedeOptions = useMemo(() => {
-    if (
-      editForm?.sede &&
-      editForm.sede.trim() &&
-      !BRANCH_LOCATIONS.includes(editForm.sede)
-    ) {
+    if (editForm?.sede && editForm.sede.trim() && !BRANCH_LOCATIONS.includes(editForm.sede)) {
       return [editForm.sede, ...BRANCH_LOCATIONS];
     }
 
@@ -283,11 +279,7 @@ const UsersAdmin = () => {
         user.username.toLowerCase().includes(normalizedName) ||
         (user.full_name ?? "").toLowerCase().includes(normalizedName);
       const matchesSede = !filters.sede || user.sede === filters.sede;
-      const role = user.is_admin
-        ? "admin"
-        : user.is_gerente
-        ? "gerente"
-        : "operador";
+      const role = user.is_admin ? "admin" : user.is_gerente ? "gerente" : "operador";
       const matchesRole = !filters.role || role === filters.role;
 
       return matchesName && matchesSede && matchesRole;
@@ -327,16 +319,11 @@ const UsersAdmin = () => {
             Administración de usuarios
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Crea cuentas para tu equipo y controla los permisos de acceso a los
-            talleres.
+            Crea cuentas para tu equipo y controla los permisos de acceso a los talleres.
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button
-            variant="contained"
-            startIcon={<PersonAddAlt1Icon />}
-            onClick={openCreateDialog}
-          >
+          <Button variant="contained" startIcon={<PersonAddAlt1Icon />} onClick={openCreateDialog}>
             Crear usuario
           </Button>
           <Button
@@ -369,9 +356,7 @@ const UsersAdmin = () => {
               <TextField
                 label="Filtrar por nombre"
                 value={filters.name}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, name: event.target.value }))
-                }
+                onChange={(event) => setFilters((prev) => ({ ...prev, name: event.target.value }))}
                 size="small"
                 fullWidth
               />
@@ -379,9 +364,7 @@ const UsersAdmin = () => {
                 select
                 label="Sede"
                 value={filters.sede}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, sede: event.target.value }))
-                }
+                onChange={(event) => setFilters((prev) => ({ ...prev, sede: event.target.value }))}
                 size="small"
                 fullWidth
               >
@@ -396,9 +379,7 @@ const UsersAdmin = () => {
                 select
                 label="Rol"
                 value={filters.role}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, role: event.target.value }))
-                }
+                onChange={(event) => setFilters((prev) => ({ ...prev, role: event.target.value }))}
                 size="small"
                 fullWidth
               >
@@ -407,11 +388,7 @@ const UsersAdmin = () => {
                 <MenuItem value="gerente">Gerente</MenuItem>
                 <MenuItem value="operador">Operador</MenuItem>
               </TextField>
-              <Button
-                variant="outlined"
-                onClick={handleResetFilters}
-                sx={{ flexShrink: 0 }}
-              >
+              <Button variant="outlined" onClick={handleResetFilters} sx={{ flexShrink: 0 }}>
                 Limpiar filtros
               </Button>
             </Stack>
@@ -421,6 +398,7 @@ const UsersAdmin = () => {
                   <TableCell>Usuario</TableCell>
                   <TableCell>Correo</TableCell>
                   <TableCell>Nombre</TableCell>
+                  <TableCell>Contraseña actual</TableCell>
                   <TableCell>Sede</TableCell>
                   <TableCell>Rol</TableCell>
                   <TableCell>Estado</TableCell>
@@ -434,22 +412,22 @@ const UsersAdmin = () => {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email || "—"}</TableCell>
                     <TableCell>{user.full_name || "—"}</TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontFamily: "monospace", wordBreak: "break-all" }}
+                      >
+                        {user.hashed_password || "—"}
+                      </Typography>
+                    </TableCell>
                     <TableCell>{user.sede || "—"}</TableCell>
                     <TableCell>
                       <Chip
                         label={
-                          user.is_admin
-                            ? "Administrador"
-                            : user.is_gerente
-                            ? "Gerente"
-                            : "Operador"
+                          user.is_admin ? "Administrador" : user.is_gerente ? "Gerente" : "Operador"
                         }
                         color={
-                          user.is_admin
-                            ? "primary"
-                            : user.is_gerente
-                            ? "secondary"
-                            : "default"
+                          user.is_admin ? "primary" : user.is_gerente ? "secondary" : "default"
                         }
                         size="small"
                       />
@@ -469,19 +447,14 @@ const UsersAdmin = () => {
                       })}
                     </TableCell>
                     <TableCell align="right">
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="flex-end"
-                      >
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <FormControlLabel
                           control={
                             <Switch
                               checked={user.is_active}
                               onChange={() => handleToggleActive(user)}
                               disabled={
-                                updatingUserId === user.id ||
-                                disableSelfManagement.has(user.id)
+                                updatingUserId === user.id || disableSelfManagement.has(user.id)
                               }
                               size="small"
                             />
@@ -495,8 +468,8 @@ const UsersAdmin = () => {
                             disableSelfManagement.has(user.id)
                               ? "No puedes modificar tu propio rol"
                               : user.is_admin
-                              ? "Quitar permisos de administrador"
-                              : "Conceder permisos de administrador"
+                                ? "Quitar permisos de administrador"
+                                : "Conceder permisos de administrador"
                           }
                         >
                           <span>
@@ -505,8 +478,7 @@ const UsersAdmin = () => {
                               size="small"
                               onClick={() => handleToggleAdmin(user)}
                               disabled={
-                                updatingUserId === user.id ||
-                                disableSelfManagement.has(user.id)
+                                updatingUserId === user.id || disableSelfManagement.has(user.id)
                               }
                             >
                               {user.is_admin ? "Quitar admin" : "Hacer admin"}
@@ -518,8 +490,8 @@ const UsersAdmin = () => {
                             disableSelfManagement.has(user.id)
                               ? "No puedes modificar tu propio rol"
                               : user.is_gerente
-                              ? "Quitar permisos de gerente"
-                              : "Conceder rol de gerente"
+                                ? "Quitar permisos de gerente"
+                                : "Conceder rol de gerente"
                           }
                         >
                           <span>
@@ -528,13 +500,10 @@ const UsersAdmin = () => {
                               size="small"
                               onClick={() => handleToggleGerente(user)}
                               disabled={
-                                updatingUserId === user.id ||
-                                disableSelfManagement.has(user.id)
+                                updatingUserId === user.id || disableSelfManagement.has(user.id)
                               }
                             >
-                              {user.is_gerente
-                                ? "Quitar gerente"
-                                : "Hacer gerente"}
+                              {user.is_gerente ? "Quitar gerente" : "Hacer gerente"}
                             </Button>
                           </span>
                         </Tooltip>
@@ -567,8 +536,7 @@ const UsersAdmin = () => {
                               startIcon={<DeleteOutlineIcon />}
                               onClick={() => setDeleteTarget(user)}
                               disabled={
-                                updatingUserId === user.id ||
-                                disableSelfManagement.has(user.id)
+                                updatingUserId === user.id || disableSelfManagement.has(user.id)
                               }
                             >
                               Borrar
@@ -581,7 +549,7 @@ const UsersAdmin = () => {
                 ))}
                 {!loading && users.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Todavía no hay usuarios registrados.
                       </Typography>
@@ -590,7 +558,7 @@ const UsersAdmin = () => {
                 )}
                 {!loading && users.length > 0 && filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         No hay usuarios que coincidan con los filtros.
                       </Typography>
@@ -599,7 +567,7 @@ const UsersAdmin = () => {
                 )}
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Typography variant="body2" color="text.secondary">
                         Cargando usuarios…
                       </Typography>
@@ -612,12 +580,7 @@ const UsersAdmin = () => {
         </Card>
       </Stack>
 
-      <Dialog
-        open={createDialogOpen}
-        onClose={closeCreateDialog}
-        fullWidth
-        maxWidth="sm"
-      >
+      <Dialog open={createDialogOpen} onClose={closeCreateDialog} fullWidth maxWidth="sm">
         <Box component="form" onSubmit={handleSubmit}>
           <DialogTitle>Crear un nuevo usuario</DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
@@ -654,18 +617,12 @@ const UsersAdmin = () => {
                     <InputAdornment position="end">
                       <IconButton
                         aria-label={
-                          showCreatePassword
-                            ? "Ocultar contraseña"
-                            : "Mostrar contraseña"
+                          showCreatePassword ? "Ocultar contraseña" : "Mostrar contraseña"
                         }
                         onClick={() => setShowCreatePassword((prev) => !prev)}
                         edge="end"
                       >
-                        {showCreatePassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
+                        {showCreatePassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -813,9 +770,7 @@ const UsersAdmin = () => {
                 label="Nombre completo"
                 value={editForm?.fullname ?? ""}
                 onChange={(event) =>
-                  setEditForm((prev) =>
-                    prev ? { ...prev, fullname: event.target.value } : prev
-                  )
+                  setEditForm((prev) => (prev ? { ...prev, fullname: event.target.value } : prev))
                 }
                 fullWidth
               />
@@ -824,9 +779,7 @@ const UsersAdmin = () => {
                 label="Sede"
                 value={editForm?.sede ?? ""}
                 onChange={(event) =>
-                  setEditForm((prev) =>
-                    prev ? { ...prev, sede: event.target.value } : prev
-                  )
+                  setEditForm((prev) => (prev ? { ...prev, sede: event.target.value } : prev))
                 }
                 fullWidth
                 SelectProps={{ displayEmpty: true }}
@@ -848,11 +801,7 @@ const UsersAdmin = () => {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label={
-                          showEditPassword
-                            ? "Ocultar contraseña"
-                            : "Mostrar contraseña"
-                        }
+                        aria-label={showEditPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                         onClick={() => setShowEditPassword((prev) => !prev)}
                         edge="end"
                       >
@@ -862,9 +811,7 @@ const UsersAdmin = () => {
                   ),
                 }}
                 onChange={(event) =>
-                  setEditForm((prev) =>
-                    prev ? { ...prev, password: event.target.value } : prev
-                  )
+                  setEditForm((prev) => (prev ? { ...prev, password: event.target.value } : prev))
                 }
                 fullWidth
               />
@@ -894,9 +841,7 @@ const UsersAdmin = () => {
                     checked={editForm?.isGerente ?? false}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, isGerente: event.target.checked }
-                          : prev
+                        prev ? { ...prev, isGerente: event.target.checked } : prev
                       )
                     }
                     disabled={disableSelfManagement.has(editTarget?.id ?? "")}
@@ -910,9 +855,7 @@ const UsersAdmin = () => {
                     checked={editForm?.isActive ?? false}
                     onChange={(event) =>
                       setEditForm((prev) =>
-                        prev
-                          ? { ...prev, isActive: event.target.checked }
-                          : prev
+                        prev ? { ...prev, isActive: event.target.checked } : prev
                       )
                     }
                     disabled={disableSelfManagement.has(editTarget?.id ?? "")}
@@ -943,15 +886,12 @@ const UsersAdmin = () => {
         <DialogTitle>Eliminar usuario</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            ¿Confirmas que deseas eliminar la cuenta "{deleteTarget?.username}"?
-            Esta accion no se puede deshacer
+            ¿Confirmas que deseas eliminar la cuenta "{deleteTarget?.username}"? Esta accion no se
+            puede deshacer
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteTarget(null)}
-            disabled={updatingUserId !== null}
-          >
+          <Button onClick={() => setDeleteTarget(null)} disabled={updatingUserId !== null}>
             Cancelar
           </Button>
           <Button

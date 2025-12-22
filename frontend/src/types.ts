@@ -36,6 +36,7 @@ export interface UserProfile {
   username: string;
   email: string | null;
   full_name: string | null;
+  hashed_password: string;
   is_active: boolean;
   is_admin: boolean;
   is_gerente: boolean;

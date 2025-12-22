@@ -143,10 +143,9 @@ class UserOut(UserBase):
     model_config = ConfigDict(from_attributes=True)
     
 class AdminUserOut(UserOut):
+    hashed_password: str
 
     model_config = ConfigDict(from_attributes=True)
-
-
 
 
 class UserLogin(BaseModel):
