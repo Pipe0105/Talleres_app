@@ -10,6 +10,8 @@ def upsert_items(db: Session, rows: Iterable[dict]) -> list[models.Item]:
             obj.descripcion = row["descripcion"]
             obj.precio_venta = row["precio_venta"]
             obj.fuente_archivo = row["fuente_archivo"]
+            if row.get("especie"):
+                obj.especie = row["especie"]
         else:
             obj = models.Item(**row)
             db.add(obj)

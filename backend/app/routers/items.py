@@ -4,7 +4,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import ListaPrecios
+from ..models import ListaPrecios, Item
 from ..schemas import ListaPreciosOut, ItemsPageOut
 
 router = APIRouter(
@@ -18,7 +18,7 @@ SORT_OPTIONS = {
     "precio-desc": ListaPrecios.precio.desc().nullslast(),
 }
 
-def _serialize_item(item: ListaPrecios) -> ListaPreciosOut:
+def _serialize_item(item: ListaPrecios, especie: str | None) -> ListaPreciosOut:
     precio_raw = item.precio
     
     if isinstance(precio_raw, Decimal):
@@ -37,7 +37,7 @@ def _serialize_item(item: ListaPrecios) -> ListaPreciosOut:
         sede=item.sede,
         descripcion=item.descripcion,
         precio=precio,
-        especie=None,
+        especie=especie,
         fecha_vigencia=item.fecha_vigencia,
         fecha_activacion=item.fecha_activacion,
         unidad=item.unidad,
@@ -76,9 +76,16 @@ def _apply_filters(
         
     if species and species.lower() != "todas":
         species_normalized = species.strip().lower()
-        query = query.filter(func.lower(ListaPrecios.descripcion).like(f"%{species_normalized}%"))
+    query = query.filter(func.lower(Item.especie) == species_normalized)
     order_by = SORT_OPTIONS.get(sort, SORT_OPTIONS["descripcion"])
     return query.order_by(order_by)
+
+def _base_query(db: Session):
+    return (
+        db.query(ListaPrecios, Item.especie)
+        .outerjoin(Item, func.lower(Item.item_code) == func.lower(ListaPrecios.referencia))
+        .filter(ListaPrecios.activo == True)
+    )
 
 @router.get("", response_model=ItemsPageOut)
 def listar_items(
@@ -90,7 +97,7 @@ def listar_items(
     page: int = Query(1, ge=1),
     page_size: int = Query(25,ge=1, le=200),
 ):
-    base_query = db.query(ListaPrecios).filter(ListaPrecios.activo == True)
+    base_query = _base_query(db)
     filtered_query = _apply_filters(base_query, q, species, branch, sort)
     total = filtered_query.count()
     
@@ -100,7 +107,7 @@ def listar_items(
         .all()
     )
     
-    items = [_serialize_item(item) for item in registros]
+    items = [_serialize_item(item, especie) for item, especie in registros]
     
     return ItemsPageOut(items=items, total=total, page=page, page_size=page_size)
 
@@ -112,6 +119,6 @@ def exportar_items(
     branch: str | None = None,
     sort: str = "descripcion",
 ): 
-    base_query = db.query(ListaPrecios).filter(ListaPrecios.activo == True)
+    base_query = _base_query(db)
     registros = _apply_filters(base_query, q, species, branch, sort).all()
-    return [_serialize_item(item) for item in registros]
+    return [_serialize_item(item, especie) for item, especie in registros]
