@@ -76,7 +76,7 @@ def _apply_filters(
         
     if species and species.lower() != "todas":
         species_normalized = species.strip().lower()
-    query = query.filter(func.lower(Item.especie) == species_normalized)
+        query = query.filter(func.lower(Item.especie) == species_normalized)
     order_by = SORT_OPTIONS.get(sort, SORT_OPTIONS["descripcion"])
     return query.order_by(order_by)
 
