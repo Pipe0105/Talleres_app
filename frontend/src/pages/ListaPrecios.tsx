@@ -252,6 +252,49 @@ const ListaPrecios = () => {
     }
   };
 
+  const hasActiveFilters =
+    Boolean(filter) || species !== "todas" || branch !== "todas" || sortOrder !== "descripcion";
+
+  const handleClearFilters = () => {
+    setFilter("");
+    setSpecies("todas");
+    setBranch("todas");
+    setSortOrder("descripcion");
+  };
+
+  const activeFilterChips = [
+    filter
+      ? {
+          key: "filter",
+          label: `Búsqueda: ${filter}`,
+          onDelete: () => setFilter(""),
+        }
+      : null,
+    species !== "todas"
+      ? {
+          key: "species",
+          label: `Especie: ${species === "res" ? "Res" : "Cerdo"}`,
+          onDelete: () => setSpecies("todas"),
+        }
+      : null,
+    branch !== "todas"
+      ? {
+          key: "branch",
+          label: `Sede: ${branch}`,
+          onDelete: () => setBranch("todas"),
+        }
+      : null,
+    sortOrder !== "descripcion"
+      ? {
+          key: "sort",
+          label:
+            sortOrder === "precio-asc"
+              ? "Orden: Precio (menor a mayor)"
+              : "Orden: Precio (mayor a menor)",
+          onDelete: () => setSortOrder("descripcion"),
+        }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; label: string; onDelete: () => void }>;
   return (
     <Stack spacing={3} className="animate-fade-up">
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -374,6 +417,18 @@ const ListaPrecios = () => {
               </Select>
             </FormControl>
           </Stack>
+          <Stack spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              Mostrando {visibleItems.length} de {totalItems}
+            </Typography>
+            {activeFilterChips.length ? (
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {activeFilterChips.map((chip) => (
+                  <Chip key={chip.key} label={chip.label} onDelete={chip.onDelete} />
+                ))}
+              </Stack>
+            ) : null}
+          </Stack>
           <ListaPreciosTable
             loading={loading}
             error={error}
@@ -387,6 +442,9 @@ const ListaPrecios = () => {
               setPage(1);
             }}
             formatCurrency={(value) => currencyFormatter.format(Number(value))}
+            isCompact
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
           />
         </Stack>
       </Paper>
@@ -419,6 +477,8 @@ const ListaPrecios = () => {
               setPage(1);
             }}
             formatCurrency={(value) => currencyFormatter.format(Number(value))}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
           />
         </DialogContent>
         <DialogActions>

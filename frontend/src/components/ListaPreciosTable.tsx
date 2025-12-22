@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import {
   Alert,
   AlertTitle,
+  Button,
   CircularProgress,
   Stack,
   Table,
@@ -26,6 +27,9 @@ interface ListaPreciosTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   formatCurrency: (value: number | string) => string;
+  isCompact?: boolean;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 const ListaPreciosTable = ({
@@ -38,6 +42,9 @@ const ListaPreciosTable = ({
   onPageChange,
   onPageSizeChange,
   formatCurrency,
+  isCompact = false,
+  hasActiveFilters = false,
+  onClearFilters,
 }: ListaPreciosTableProps): ReactNode => {
   if (loading) {
     return (
@@ -63,9 +70,18 @@ const ListaPreciosTable = ({
 
   if (!totalItems) {
     return (
-      <Typography variant="body2" color="text.secondary">
-        No se encontraron productos para mostrar
-      </Typography>
+      <Stack spacing={2} alignItems="flex-start">
+        <Typography variant="body2" color="text.secondary">
+          {hasActiveFilters
+            ? "No hay resultados para los filtros actuales."
+            : "No se encontraron productos para mostrar."}
+        </Typography>
+        {hasActiveFilters && onClearFilters ? (
+          <Button variant="outlined" size="small" onClick={onClearFilters}>
+            Limpiar filtros
+          </Button>
+        ) : null}
+      </Stack>
     );
   }
 
@@ -84,8 +100,11 @@ const ListaPreciosTable = ({
           <TableRow>
             <TableCell width="20%">Codigo</TableCell>
             <TableCell width="35%">Producto</TableCell>
+            {!isCompact && <TableCell width="10%">Especie</TableCell>}
+            {!isCompact && <TableCell width="10%">Unidad</TableCell>}
             <TableCell width="10%">Lista</TableCell>
             <TableCell width="15%">Sede</TableCell>
+            {!isCompact && <TableCell width="15%">Fecha vigencia</TableCell>}
             <TableCell align="right" width="20%">
               Precio unitario
             </TableCell>
@@ -98,8 +117,11 @@ const ListaPreciosTable = ({
               <TableCell>
                 <Typography variant="body2">{item.descripcion}</Typography>
               </TableCell>
+              {!isCompact && <TableCell>{item.especie ?? "—"}</TableCell>}
+              {!isCompact && <TableCell>{item.unidad ?? "—"}</TableCell>}
               <TableCell>{item.lista_id ?? "—"}</TableCell>
               <TableCell>{item.sede ?? item.location ?? "—"}</TableCell>
+              {!isCompact && <TableCell>{item.fecha_vigencia ?? "—"}</TableCell>}
               <TableCell align="right">
                 {item.precio == null ? "N/D" : formatCurrency(item.precio)}
               </TableCell>
