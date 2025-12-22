@@ -345,6 +345,54 @@ class TallerCreate(BaseModel):
     
 class TallerUpdate(TallerCreate):
     """Payload para actualizar un taller existente."""
+    
+class TallerGrupoCreate(BaseModel):
+    nombre_taller: str
+    descripcion: Optional[str] = None
+    sede: Optional[str] = None
+    especie: Optional[str] = None
+    materiales: list[TallerCreate]
+
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("nombre_taller")
+    @classmethod
+    def _validate_nombre_taller(cls, value: str) -> str:
+        return _validate_printable_text(value, "El nombre del taller", MAX_NAME_LENGTH)
+
+    @field_validator("descripcion")
+    @classmethod
+    def _validate_descripcion(cls, value: Optional[str]) -> Optional[str]:
+        return _validate_optional_text(value, "La descripción", MAX_DESCRIPTION_LENGTH)
+
+    @field_validator("especie")
+    @classmethod
+    def _validate_especie(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+
+        normalized = value.strip().lower()
+        if normalized not in {"res", "cerdo"}:
+            raise ValueError("La especie debe ser 'res' o 'cerdo'.")
+        return normalized
+
+    @field_validator("sede")
+    @classmethod
+    def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+
+        from .constants import BRANCH_LOCATIONS
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        if normalized not in BRANCH_LOCATIONS:
+            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+
+        return normalized
+
 
 class TallerDetalleOut(BaseModel):
     id: int
@@ -367,6 +415,7 @@ class TallerOut(BaseModel):
     especie: str
     codigo_principal: str
     item_principal_id: Optional[int] = None
+    taller_grupo_id: Optional[int] = None
     creado_en: datetime
     subcortes: list[TallerDetalleOut]
 
@@ -375,6 +424,31 @@ class TallerOut(BaseModel):
     
 class TallerWithCreatorOut(TallerOut):
     creado_por: str | None = None
+    
+
+class TallerGrupoOut(BaseModel):
+    id: int
+    nombre_taller: str
+    descripcion: Optional[str]
+    sede: Optional[str]
+    especie: Optional[str]
+    creado_en: datetime
+    materiales: list[TallerOut]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TallerGrupoListItem(BaseModel):
+    id: int
+    nombre_taller: str
+    descripcion: Optional[str] = None
+    sede: Optional[str] = None
+    especie: Optional[str] = None
+    creado_en: datetime
+    total_materiales: int
+
+    model_config = ConfigDict(from_attributes=True)
+    
     
 class TallerActividadDia(BaseModel):
     fecha: date
@@ -397,6 +471,7 @@ class TallerListItem(BaseModel):
     total_peso: Decimal
     especie: str
     codigo_principal: Optional[str] = None
+    taller_grupo_id: Optional[int] = None
     creado_en: datetime
     
     model_config = ConfigDict(from_attributes=True)

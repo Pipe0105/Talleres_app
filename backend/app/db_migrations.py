@@ -42,3 +42,29 @@ def apply_startup_migrations(engine: Engine) -> None:
         conn.execute(
             text("ALTER TABLE IF EXISTS talleres ADD COLUMN IF NOT EXISTS sede TEXT")
         )
+        conn.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS talleres_grupo ("
+                "id SERIAL PRIMARY KEY, "
+                "nombre_taller TEXT, "
+                "descripcion TEXT, "
+                "sede TEXT, "
+                "especie TEXT, "
+                "creado_en TIMESTAMP DEFAULT NOW(), "
+                "creado_por_id INTEGER REFERENCES users(id)"
+                ")"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS talleres "
+                "ADD COLUMN IF NOT EXISTS taller_grupo_id INTEGER "
+                "REFERENCES talleres_grupo(id)"
+            )
+        )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_talleres_taller_grupo_id "
+                "ON talleres(taller_grupo_id)"
+            )
+        )

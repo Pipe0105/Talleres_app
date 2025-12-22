@@ -28,6 +28,63 @@ def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
     )
     return item.id if item else None
 
+def _resolve_sede_registro(
+    payload_sede: Optional[str], current_user: models.User
+) -> Optional[str]:
+    if current_user.is_admin:
+        if payload_sede and payload_sede in BRANCH_LOCATIONS:
+            return payload_sede
+        return current_user.sede
+    return current_user.sede
+
+def _build_taller_from_payload(
+    payload: schemas.TallerCreate,
+    db: Session,
+    current_user: models.User,
+    sede_override: Optional[str] = None,
+) -> models.Taller:
+    peso_inicial = Decimal(payload.peso_inicial)
+    peso_final = Decimal(payload.peso_final)
+
+    total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
+    total_procesado = peso_final + total_subcortes
+    perdida = peso_inicial - total_procesado
+    porcentaje_perdida = (
+        (perdida / peso_inicial * Decimal("100")) if peso_inicial > 0 else None
+    )
+
+    item_principal_id = payload.item_principal_id or _find_item_id_by_code(
+        db, payload.codigo_principal
+    )
+
+    sede_registro = _resolve_sede_registro(sede_override or payload.sede, current_user)
+
+    taller = models.Taller(
+        nombre_taller=payload.nombre_taller,
+        descripcion=payload.descripcion,
+        sede=sede_registro,
+        peso_inicial=peso_inicial,
+        peso_final=peso_final,
+        porcentaje_perdida=porcentaje_perdida,
+        especie=payload.especie.lower(),
+        item_principal_id=item_principal_id,
+        codigo_principal=payload.codigo_principal,
+        creado_por_id=current_user.id,
+    )
+
+    detalles: list[models.TallerDetalle] = []
+    for det in payload.subcortes:
+        detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
+        detalle = models.TallerDetalle(
+            codigo_producto=det.codigo_producto,
+            nombre_subcorte=det.nombre_subcorte,
+            peso=Decimal(det.peso),
+            item_id=detalle_item_id,
+        )
+        detalles.append(detalle)
+    taller.detalles = detalles
+    return taller
+
 def _serialize_taller_data(taller: models.Taller) -> dict:
     return {
         "id": taller.id,
@@ -40,12 +97,13 @@ def _serialize_taller_data(taller: models.Taller) -> dict:
         "especie": taller.especie,
         "codigo_principal": taller.codigo_principal,
         "item_principal_id": taller.item_principal_id,
+        "taller_grupo_id": taller.taller_grupo_id,
         "creado_en": taller.creado_en,
         "subcortes": [
             schemas.TallerDetalleOut.model_validate(det)
             for det in taller.detalles
         ],
-            }
+    }
 
 
 def _serialize_taller(taller: models.Taller) -> schemas.TallerOut:
@@ -84,53 +142,7 @@ def crear_taller(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
-    peso_inicial = Decimal(payload.peso_inicial)
-    peso_final = Decimal(payload.peso_final)
-
-    total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
-    total_procesado = peso_final + total_subcortes
-    perdida = peso_inicial - total_procesado
-    porcentaje_perdida = (
-        (perdida / peso_inicial * Decimal("100")) if peso_inicial > 0 else None
-    )
-
-    item_principal_id = payload.item_principal_id or _find_item_id_by_code(
-        db, payload.codigo_principal
-    )
-    
-    sede_registro: str | None = None
-    if current_user.is_admin:
-        if payload.sede and payload.sede in BRANCH_LOCATIONS:
-            sede_registro = payload.sede
-        else:
-            sede_registro = current_user.sede
-    else:
-        sede_registro = current_user.sede
-
-    taller = models.Taller(
-        nombre_taller=payload.nombre_taller,
-        descripcion=payload.descripcion,
-        sede=sede_registro,
-        peso_inicial=peso_inicial,
-        peso_final=peso_final,
-        porcentaje_perdida=porcentaje_perdida,
-        especie=payload.especie.lower(),
-        item_principal_id=item_principal_id,
-        codigo_principal=payload.codigo_principal,
-        creado_por_id=current_user.id,
-    )
-
-    detalles: list[models.TallerDetalle] = []
-    for det in payload.subcortes:
-        detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
-        detalle = models.TallerDetalle(
-            codigo_producto=det.codigo_producto,
-            nombre_subcorte=det.nombre_subcorte,
-            peso=Decimal(det.peso),
-            item_id=detalle_item_id,
-        )
-        detalles.append(detalle)
-    taller.detalles = detalles
+    taller = _build_taller_from_payload(payload, db, current_user)
 
     try:
         db.add(taller)
@@ -154,6 +166,7 @@ def crear_taller(
         especie=taller.especie,
         codigo_principal=taller.codigo_principal,
         item_principal_id=taller.item_principal_id,
+        taller_grupo_id=taller.taller_grupo_id,
         creado_en=taller.creado_en,
         subcortes=[
             schemas.TallerDetalleOut.model_validate(det)
@@ -161,6 +174,125 @@ def crear_taller(
         ],
     )
     
+@router.post(
+    "/completo",
+    response_model=schemas.TallerGrupoOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def crear_taller_completo(
+    payload: schemas.TallerGrupoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+):
+    if not payload.materiales:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Debes incluir al menos un material en el taller completo.",
+        )
+
+    sede_registro = _resolve_sede_registro(payload.sede, current_user)
+    especies = {material.especie.lower() for material in payload.materiales}
+    especie_grupo = payload.especie or (next(iter(especies)) if len(especies) == 1 else None)
+
+    grupo = models.TallerGrupo(
+        nombre_taller=payload.nombre_taller,
+        descripcion=payload.descripcion,
+        sede=sede_registro,
+        especie=especie_grupo,
+        creado_por_id=current_user.id,
+    )
+
+    materiales: list[models.Taller] = []
+    for material in payload.materiales:
+        taller = _build_taller_from_payload(
+            material,
+            db,
+            current_user,
+            sede_override=material.sede or sede_registro,
+        )
+        taller.grupo = grupo
+        materiales.append(taller)
+
+    grupo.materiales = materiales
+
+    try:
+        db.add(grupo)
+        db.commit()
+        db.refresh(grupo)
+    except Exception as exc:  # pragma: no cover - defensive rollback
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo guardar el taller completo",
+        ) from exc
+
+    return schemas.TallerGrupoOut(
+        id=grupo.id,
+        nombre_taller=grupo.nombre_taller,
+        descripcion=grupo.descripcion,
+        sede=grupo.sede,
+        especie=grupo.especie,
+        creado_en=grupo.creado_en,
+        materiales=[_serialize_taller(taller) for taller in grupo.materiales],
+    )
+
+
+@router.get("/completos", response_model=list[schemas.TallerGrupoListItem])
+def listar_talleres_completos(
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_active_user),
+):
+    grupos = (
+        db.query(models.TallerGrupo)
+        .options(selectinload(models.TallerGrupo.materiales))
+        .order_by(models.TallerGrupo.creado_en.desc())
+        .all()
+    )
+    return [
+        schemas.TallerGrupoListItem(
+            id=grupo.id,
+            nombre_taller=grupo.nombre_taller,
+            descripcion=grupo.descripcion,
+            sede=grupo.sede,
+            especie=grupo.especie,
+            creado_en=grupo.creado_en,
+            total_materiales=len(grupo.materiales),
+        )
+        for grupo in grupos
+    ]
+
+
+@router.get("/completos/{grupo_id}", response_model=schemas.TallerGrupoOut)
+def obtener_taller_completo(
+    grupo_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_active_user),
+):
+    grupo = (
+        db.query(models.TallerGrupo)
+        .options(selectinload(models.TallerGrupo.materiales).selectinload(models.Taller.detalles))
+        .filter(models.TallerGrupo.id == grupo_id)
+        .one_or_none()
+    )
+
+    if grupo is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller completo solicitado no existe",
+        )
+
+    return schemas.TallerGrupoOut(
+        id=grupo.id,
+        nombre_taller=grupo.nombre_taller,
+        descripcion=grupo.descripcion,
+        sede=grupo.sede,
+        especie=grupo.especie,
+        creado_en=grupo.creado_en,
+        materiales=[_serialize_taller(taller) for taller in grupo.materiales],
+    )
+
+    
+
 @router.get("/historial", response_model=list[schemas.TallerWithCreatorOut])
 def listar_historial_talleres(
     *,

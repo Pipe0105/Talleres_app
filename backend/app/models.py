@@ -94,13 +94,32 @@ class Taller(Base):
     especie = Column(String(10))
     item_principal_id = Column(Integer, ForeignKey("items.id"), nullable=True)
     codigo_principal = Column(Text)
+    taller_grupo_id = Column(Integer, ForeignKey("talleres_grupo.id"), nullable=True)
 
     detalles = relationship(
         "TallerDetalle",
         back_populates="taller",
         cascade="all, delete-orphan",
     )
+    grupo = relationship("TallerGrupo", back_populates="materiales")
 
+
+class TallerGrupo(Base):
+    __tablename__ = "talleres_grupo"
+
+    id = Column(Integer, primary_key=True)
+    nombre_taller = Column(String)
+    descripcion = Column(Text)
+    sede = Column(String)
+    especie = Column(String(10))
+    creado_en = Column(DateTime, default=datetime.utcnow)
+    creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    materiales = relationship(
+        "Taller",
+        back_populates="grupo",
+        cascade="all, delete-orphan",
+    )
 
 class TallerDetalle(Base):
     __tablename__ = "talleres_detalle"

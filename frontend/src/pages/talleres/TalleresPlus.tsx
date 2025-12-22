@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { AddCircleOutline, CheckCircle, PlaylistAdd, SaveRounded } from "@mui/icons-material";
 
-import { createTaller } from "../../api/talleresApi";
+import { createTallerCompleto } from "../../api/talleresApi";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
 import {
   Especie,
@@ -236,15 +236,17 @@ const TalleresPlus = () => {
     setSavingBatch(true);
     setMensaje(null);
 
-    let exitos = 0;
-    let errores = 0;
-    const fallidos: TallerPlusMaterial[] = [];
+    const nombreGrupoFinal =
+      nombreGrupo.trim() || `Taller+ (${materialesGuardados.length} materiales)`;
 
-    for (const material of materialesGuardados) {
-      try {
-        await createTaller({
+    try {
+      await createTallerCompleto({
+        nombre_taller: nombreGrupoFinal,
+        descripcion: descripcionGrupo.trim() || undefined,
+        sede: isManager ? sede || undefined : undefined,
+        materiales: materialesGuardados.map((material) => ({
           nombre_taller:
-            material.nombreTaller || nombreGrupo.trim() || `Taller de ${material.materialNombre}`,
+            material.nombreTaller || nombreGrupoFinal || `Taller de ${material.materialNombre}`,
           descripcion: material.descripcion || descripcionGrupo || undefined,
           sede: isManager ? material.sede || undefined : undefined,
           peso_inicial: material.pesoInicial,
@@ -256,29 +258,21 @@ const TalleresPlus = () => {
             nombre_subcorte: sc.nombre,
             peso: sc.peso,
           })),
-        });
-        exitos += 1;
-      } catch (error) {
-        console.error("No se pudo guardar el material", error);
-        errores += 1;
-        fallidos.push(material);
-      }
-    }
-
-    if (errores === 0) {
+        })),
+      });
       setMensaje({
         tipo: "success",
-        texto: `Se guardaron ${exitos} materiales como parte del taller+.`,
+        texto: `Se guardaron ${materialesGuardados.length} materiales como parte del taller+.`,
       });
       setMaterialesGuardados([]);
       setNombreGrupo("");
       setDescripcionGrupo("");
-    } else {
+    } catch (error) {
+      console.error("No se pudo guardar el taller completo", error);
       setMensaje({
         tipo: "error",
-        texto: `Algunos materiales no se pudieron guardar (${errores}). Intenta nuevamente para completarlos.`,
+        texto: "No se pudo guardar el taller completo. Intenta nuevamente.",
       });
-      setMaterialesGuardados(fallidos);
     }
 
     setSavingBatch(false);

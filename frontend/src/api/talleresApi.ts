@@ -2,6 +2,7 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import {
   AuthToken,
+  CrearTallerGrupoPayload,
   CrearTallerPayload,
   Item,
   ItemsPage,
@@ -9,6 +10,8 @@ import {
   TallerActividadUsuario,
   TallerAdminResponse,
   TallerCalculoRow,
+  TallerGrupoListItem,
+  TallerGrupoResponse,
   TallerListItem,
   TallerResponse,
   UserProfile,
@@ -219,6 +222,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   especie: toStringOr(raw?.especie, ""),
   item_principal_id: raw?.item_principal_id ?? null,
   codigo_principal: toStringOr(raw?.codigo_principal, ""),
+  taller_grupo_id: raw?.taller_grupo_id ?? raw?.taller_grupo ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
   subcortes: Array.isArray(raw?.subcortes)
     ? raw.subcortes.map((det: any) => ({
@@ -265,9 +269,30 @@ const mapTallerListItem = (raw: any): TallerListItem => {
     total_peso: toNumber(raw?.total_peso, 0),
     especie: toStringOr(raw?.especie, ""),
     codigo_principal: raw?.codigo_principal ?? null,
+    taller_grupo_id: raw?.taller_grupo_id ?? raw?.taller_grupo ?? null,
     creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
   };
 };
+
+const mapTallerGrupo = (raw: any): TallerGrupoResponse => ({
+  id: toNumber(raw?.id, 0),
+  nombre_taller: toStringOr(raw?.nombre_taller, ""),
+  descripcion: raw?.descripcion ?? null,
+  sede: raw?.sede ?? null,
+  especie: raw?.especie ?? null,
+  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  materiales: Array.isArray(raw?.materiales) ? raw.materiales.map(mapTaller) : [],
+});
+
+const mapTallerGrupoListItem = (raw: any): TallerGrupoListItem => ({
+  id: toNumber(raw?.id, 0),
+  nombre_taller: toStringOr(raw?.nombre_taller, ""),
+  descripcion: raw?.descripcion ?? null,
+  sede: raw?.sede ?? null,
+  especie: raw?.especie ?? null,
+  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  total_materiales: toNumber(raw?.total_materiales, 0),
+});
 
 const mapTallerCalculoRow = (raw: any): TallerCalculoRow => ({
   nombre_corte: toStringOr(raw?.nombre_corte, ""),
@@ -370,6 +395,23 @@ api.interceptors.response.use(
 export const createTaller = async (payload: CrearTallerPayload): Promise<TallerResponse> => {
   const { data } = await api.post<unknown>("/talleres", payload);
   return mapTaller(data);
+};
+
+export const createTallerCompleto = async (
+  payload: CrearTallerGrupoPayload
+): Promise<TallerGrupoResponse> => {
+  const { data } = await api.post<unknown>("/talleres/completo", payload);
+  return mapTallerGrupo(data);
+};
+
+export const getTalleresCompletos = async (): Promise<TallerGrupoListItem[]> => {
+  const { data } = await api.get<unknown[]>("/talleres/completos");
+  return Array.isArray(data) ? data.map(mapTallerGrupoListItem) : [];
+};
+
+export const getTallerCompleto = async (tallerGrupoId: number): Promise<TallerGrupoResponse> => {
+  const { data } = await api.get<unknown>(`/talleres/completos/${tallerGrupoId}`);
+  return mapTallerGrupo(data);
 };
 
 export interface GetItemsParams {

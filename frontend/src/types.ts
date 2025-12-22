@@ -65,6 +65,14 @@ export interface CrearTallerPayload {
   subcortes: TallerDetallePayload[];
 }
 
+export interface CrearTallerGrupoPayload {
+  nombre_taller: string;
+  descripcion?: string;
+  sede?: string;
+  especie?: string;
+  materiales: CrearTallerPayload[];
+}
+
 export interface TallerDetalleResponse extends TallerDetallePayload {
   id: number;
   peso_normalizado?: number;
@@ -81,12 +89,33 @@ export interface TallerResponse {
   especie: string;
   item_principal_id?: number | null;
   codigo_principal: string;
+  taller_grupo_id?: number | null;
   creado_en: string;
   subcortes: TallerDetalleResponse[];
 }
 
 export interface TallerAdminResponse extends TallerResponse {
   creado_por?: string | null;
+}
+
+export interface TallerGrupoResponse {
+  id: number;
+  nombre_taller: string;
+  descripcion?: string | null;
+  sede?: string | null;
+  especie?: string | null;
+  creado_en: string;
+  materiales: TallerResponse[];
+}
+
+export interface TallerGrupoListItem {
+  id: number;
+  nombre_taller: string;
+  descripcion?: string | null;
+  sede?: string | null;
+  especie?: string | null;
+  creado_en: string;
+  total_materiales: number;
 }
 
 export interface TallerActividadDia {
@@ -112,6 +141,7 @@ export interface TallerListItem {
   total_peso: number;
   especie: string;
   codigo_principal?: string | null;
+  taller_grupo_id?: number | null;
   creado_en: string;
 }
 
