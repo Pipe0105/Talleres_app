@@ -5,10 +5,7 @@ export interface SubcorteDefinition {
   nombre: string;
 }
 
-const withUniqueSubcortes = (
-  base: SubcorteDefinition[],
-  nuevos: SubcorteDefinition[]
-) => {
+const withUniqueSubcortes = (base: SubcorteDefinition[], nuevos: SubcorteDefinition[]) => {
   const map = new Map<string, SubcorteDefinition>();
   [...base, ...nuevos].forEach((subcorte) => {
     if (!map.has(subcorte.codigo)) {
@@ -313,6 +310,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
     subcortes: withUniqueSubcortes(
       [
         { codigo: "33647", nombre: "Recorte" },
+        { codigo: "22835", nombre: "Gordana" },
         { codigo: "5800", nombre: "Empella" },
       ],
       [
@@ -330,6 +328,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "70165", nombre: "Costichi" },
         { codigo: "5800", nombre: "Empella" },
+        { codigo: "22835", nombre: "Gordana" },
         { codigo: "7860", nombre: "Garra" },
       ],
       [
@@ -346,6 +345,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
+        { codigo: "22835", nombre: "Gordana" },
       ],
       [{ codigo: "31783", nombre: "Picada" }]
     ),
@@ -358,6 +358,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
+        { codigo: "22835", nombre: "Gordana" },
       ],
       [
         { codigo: "37183", nombre: "Picada" },
@@ -374,6 +375,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
+        { codigo: "22835", nombre: "Gordana" },
       ],
       [
         { codigo: "31783", nombre: "Picada" },
