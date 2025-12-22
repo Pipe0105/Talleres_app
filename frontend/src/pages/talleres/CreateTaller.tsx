@@ -51,13 +51,13 @@ const CreateTaller = () => {
   const [sede, setSede] = useState<string>("");
 
   const { user } = useAuth();
-  const isAdmin = Boolean(user?.is_admin);
+  const isManager = Boolean(user?.is_admin || user?.is_gerente);
 
   useEffect(() => {
-    if (!isAdmin && user?.sede) {
+    if (!isManager && user?.sede) {
       setSede(user.sede);
     }
-  }, [isAdmin, user?.sede]);
+  }, [isManager, user?.sede]);
 
   const materiales = useMemo(() => {
     if (!especie) return [];
@@ -216,7 +216,7 @@ const CreateTaller = () => {
       await createTaller({
         nombre_taller: nombreTaller.trim() || `Taller de ${materialSeleccionado.nombre}`,
         descripcion: descripcion || undefined,
-        sede: isAdmin ? sede || undefined : undefined,
+        sede: isManager ? sede || undefined : undefined,
         peso_inicial: pesoInicialParse,
         peso_final: pesoFinalParse,
         especie,
@@ -236,7 +236,7 @@ const CreateTaller = () => {
       setPesoFinal("");
       setNombreTaller("");
       setDescripcion("");
-      setSede(isAdmin ? "" : (user?.sede ?? ""));
+      setSede(isManager ? "" : (user?.sede ?? ""));
     } catch (error) {
       setMensaje({
         tipo: "error",
@@ -404,7 +404,7 @@ const CreateTaller = () => {
                     onChange={(e) => setDescripcion(e.target.value)}
                   />
                 </Grid>
-                {isAdmin && (
+                {isManager && (
                   <Grid item xs={12} md={6}>
                     <TextField
                       select
@@ -412,7 +412,7 @@ const CreateTaller = () => {
                       label="Sede del taller"
                       value={sede}
                       onChange={(e) => setSede(e.target.value)}
-                      helperText="Solo visible para administradores"
+                      helperText="Visible para administradores y gerentes"
                     >
                       <MenuItem value="">Selecciona la sede</MenuItem>
                       {BRANCH_LOCATIONS.map((branch) => (

@@ -64,6 +64,7 @@ type QuickAction = {
   color: string;
   to: string;
   requiresAdmin?: boolean;
+  requiresManager?: boolean;
 };
 
 const quickActions: QuickAction[] = [
@@ -84,7 +85,7 @@ const quickActions: QuickAction[] = [
     icon: <TrendingFlatRoundedIcon />,
     color: "#ffb020",
     to: navigationPaths.listaPrecios,
-    requiresAdmin: true,
+    requiresManager: true,
   },
   {
     label: "Añadir usuario",
@@ -413,10 +414,17 @@ const Home = () => {
     ];
   }, [activeWorkshopsCount, completadosHoy, dashboardStats, formatTrend]);
 
-  const availableQuickActions = useMemo(
-    () => quickActions.filter((action) => isAdmin || !action.requiresAdmin),
-    [isAdmin]
-  );
+  const availableQuickActions = useMemo(() => {
+    return quickActions.filter((action) => {
+      if (action.requiresAdmin) {
+        return Boolean(user?.is_admin);
+      }
+      if (action.requiresManager) {
+        return Boolean(user?.is_admin || user?.is_gerente);
+      }
+      return true;
+    });
+  }, [user?.is_admin, user?.is_gerente]);
 
   const QuickActionsPanel = ({ actions }: { actions: QuickAction[] }) => (
     <Card

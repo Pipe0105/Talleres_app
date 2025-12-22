@@ -1,13 +1,4 @@
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Grid,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, Button, Chip, Grid, Paper, Stack, Typography } from "@mui/material";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
@@ -23,7 +14,7 @@ const UserProfile = () => {
   if (!user) {
     return null;
   }
-  const roleLabel = user.is_admin ? "Administrador" : "Operador";
+  const roleLabel = user.is_admin ? "Administrador" : user.is_gerente ? "Gerente" : "Operador";
 
   const infoItems = [
     {
@@ -132,13 +123,14 @@ const UserProfile = () => {
           >
             <Chip
               label={roleLabel}
-              color={user.is_admin ? "primary" : "default"}
+              color={user.is_admin || user.is_gerente ? "primary" : "default"}
               sx={(theme) => ({
                 fontWeight: 700,
                 borderRadius: 1.5,
-                bgcolor: user.is_admin
-                  ? undefined
-                  : alpha(theme.palette.text.primary, 0.04),
+                bgcolor:
+                  user.is_admin || user.is_gerente
+                    ? undefined
+                    : alpha(theme.palette.text.primary, 0.04),
               })}
             />
             <Chip
@@ -174,7 +166,7 @@ const UserProfile = () => {
         </Stack>
       </Paper>
 
-      {user.is_admin && (
+      {(user.is_admin || user.is_gerente) && (
         <Paper
           sx={(theme) => ({
             p: { xs: 3, md: 4 },
@@ -197,25 +189,20 @@ const UserProfile = () => {
             >
               <Stack spacing={0.5}>
                 <Typography variant="h6" component="h2">
-                  Acceso de administrador
+                  Acceso de gestión
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Atajos rapidos para las secciones
                 </Typography>
               </Stack>
               <Chip
-                label="Solo administradores"
+                label={user.is_admin ? "Administradores" : "Gerentes"}
                 color="secondary"
                 variant="outlined"
                 sx={{ fontWeight: 700 }}
               />
             </Stack>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1}
-              flexWrap="wrap"
-              useFlexGap
-            >
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} flexWrap="wrap" useFlexGap>
               <Button
                 component={RouterLink}
                 to="/talleres/historial"
@@ -229,19 +216,21 @@ const UserProfile = () => {
               >
                 Historial de talleres
               </Button>
-              <Button
-                component={RouterLink}
-                to="/usuarios"
-                variant="outlined"
-                color="primary"
-                startIcon={<GroupsOutlinedIcon />}
-                sx={{
-                  flex: { xs: "1 1 100%", sm: "0 1 auto" },
-                  borderRadius: 2,
-                }}
-              >
-                Gestión de usuarios
-              </Button>
+              {user.is_admin && (
+                <Button
+                  component={RouterLink}
+                  to="/usuarios"
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<GroupsOutlinedIcon />}
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "0 1 auto" },
+                    borderRadius: 2,
+                  }}
+                >
+                  Gestión de usuarios
+                </Button>
+              )}
             </Stack>
           </Stack>
         </Paper>
@@ -268,14 +257,13 @@ const UserProfile = () => {
                 Datos de la cuenta
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Estos datos se utilizan para iniciar sesion y personalizar tu
-                experiencia
+                Estos datos se utilizan para iniciar sesion y personalizar tu experiencia
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1}>
               <Chip
                 label={roleLabel}
-                color={user.is_admin ? "primary" : "default"}
+                color={user.is_admin || user.is_gerente ? "primary" : "default"}
                 variant="outlined"
                 sx={{ fontWeight: 700 }}
               />
@@ -318,11 +306,7 @@ const UserProfile = () => {
                     {item.value}
                   </Typography>
                   {item.helper && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                       {item.helper}
                     </Typography>
                   )}

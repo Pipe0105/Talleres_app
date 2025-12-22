@@ -94,6 +94,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
   };
 
   const displayName = user?.full_name?.trim() || user?.email || "Invitado";
+  const roleLabel = user?.is_admin ? "Administrador" : user?.is_gerente ? "Gerente" : "Operador";
 
   const navigationContent = (
     <Stack spacing={4} height="100%">
@@ -252,7 +253,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
                   {displayName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Administrador
+                  {roleLabel}
                 </Typography>
               </Box>
               <IconButton size="small" component={RouterLink} to="/perfil">

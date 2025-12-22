@@ -76,13 +76,13 @@ const TalleresPlus = () => {
   const [savingBatch, setSavingBatch] = useState(false);
 
   const { user } = useAuth();
-  const isAdmin = Boolean(user?.is_admin);
+  const isManager = Boolean(user?.is_admin || user?.is_gerente);
 
   useEffect(() => {
-    if (!isAdmin && user?.sede) {
+    if (!isManager && user?.sede) {
       setSede(user.sede);
     }
-  }, [isAdmin, user?.sede]);
+  }, [isManager, user?.sede]);
 
   const materiales = useMemo(() => {
     if (!especie) return [];
@@ -246,7 +246,7 @@ const TalleresPlus = () => {
           nombre_taller:
             material.nombreTaller || nombreGrupo.trim() || `Taller de ${material.materialNombre}`,
           descripcion: material.descripcion || descripcionGrupo || undefined,
-          sede: isAdmin ? material.sede || undefined : undefined,
+          sede: isManager ? material.sede || undefined : undefined,
           peso_inicial: material.pesoInicial,
           peso_final: material.pesoFinal,
           especie: material.especie,
@@ -368,7 +368,7 @@ const TalleresPlus = () => {
                         onChange={(e) => setDescripcionGrupo(e.target.value)}
                       />
                     </Grid>
-                    {isAdmin && (
+                    {isManager && (
                       <Grid item xs={12} md={6}>
                         <TextField
                           select

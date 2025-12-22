@@ -115,15 +115,12 @@ const App = () => {
             <Route
               path="/usuarios"
               element={
-                <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+                <ProtectedRoute requiresManager unauthorizedRedirectTo="/">
                   <UsersAdmin />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/admin/usuarios"
-              element={<Navigate to="/usuarios" replace />}
-            />
+            <Route path="/admin/usuarios" element={<Navigate to="/usuarios" replace />} />
             <Route path="/logout" element={<Logout />}></Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
