@@ -327,9 +327,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
             maxWidth={false}
             sx={(theme) => ({
               width: "100%",
-              maxWidth: theme.layout.contentMaxWidth,
+              maxWidth: { xs: "100%", lg: theme.layout.contentMaxWidth, xl: "100%" },
               mx: 0,
-              px: { xs: 2, md: 4 },
+              px: { xs: 2, md: 4, xl: 6 },
             })}
           >
             <Box>{children}</Box>

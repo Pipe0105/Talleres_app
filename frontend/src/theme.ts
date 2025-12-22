@@ -75,7 +75,7 @@ export const appTheme = createTheme({
       xs: 4,
       md: 6,
     },
-    contentMaxWidth: 1280,
+    contentMaxWidth: 1440,
   },
   gradients: {
     page: "linear-gradient(180deg, #f6f8fc 0%, #f3f6fb 45%, #eef2f7 100% )",
