@@ -254,6 +254,12 @@ class ListaPreciosOut(BaseModel):
     activo: bool | None
     
     model_config = ConfigDict(from_attributes=True)
+    
+class ItemsPageOut(BaseModel):
+    items: list[ListaPreciosOut]
+    total: int
+    page: int
+    page_size: int
 
 
 class TallerDetalleCreate(BaseModel):

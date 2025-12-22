@@ -8,7 +8,10 @@ import {
   DialogTitle,
   FormControl,
   InputLabel,
+  ListItemIcon,
+  ListItemText,
   MenuItem,
+  Menu,
   Paper,
   Select,
   Stack,
@@ -18,7 +21,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { Close, Download, ZoomOutMap } from "@mui/icons-material";
-import { getItems } from "../api/talleresApi";
+import { exportItems, getItems } from "../api/talleresApi";
 import { Item } from "../types";
 import { safeStorage } from "../utils/storage";
 import { sanitizeSearchQuery } from "../utils/security";
@@ -43,6 +46,9 @@ const ListaPrecios = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [filter, setFilter] = useState(() =>
     sanitizeSearchQuery(safeStorage.getItem(STORAGE_KEYS.filter) ?? "")
   );
@@ -58,6 +64,8 @@ const ListaPrecios = () => {
   );
   const [branch, setBranch] = useState<string>(safeStorage.getItem(STORAGE_KEYS.branch) ?? "todas");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
+  const [exporting, setExporting] = useState(false);
 
   const theme = useTheme();
   const fullScreenDialog = useMediaQuery(theme.breakpoints.down("md"));
@@ -68,11 +76,19 @@ const ListaPrecios = () => {
     const fetchItems = async () => {
       try {
         setLoading(true);
-        const response = await getItems();
+        const response = await getItems({
+          q: filter,
+          species: species === "todas" ? undefined : species,
+          branch: branch === "todas" ? undefined : branch,
+          sort: sortOrder,
+          page,
+          page_size: pageSize,
+        });
 
         if (!isMounted) return;
 
-        setItems(response);
+        setItems(response.items);
+        setTotalItems(response.total);
         setError(null);
       } catch (err) {
         console.error(err);
@@ -91,20 +107,24 @@ const ListaPrecios = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [branch, filter, page, pageSize, sortOrder, species]);
 
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEYS.filter, filter);
+    setPage(1);
   }, [filter]);
 
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEYS.sort, sortOrder);
+    setPage(1);
   }, [sortOrder]);
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEYS.species, species);
+    setPage(1);
   }, [species]);
   useEffect(() => {
     safeStorage.setItem(STORAGE_KEYS.branch, branch);
+    setPage(1);
   }, [branch]);
 
   const availableBranches = useMemo(() => {
@@ -120,56 +140,7 @@ const ListaPrecios = () => {
     return Array.from(branches).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
   }, [items]);
 
-  const filteredItems = useMemo(() => {
-    const query = filter.trim().toLowerCase();
-    const normalizedSpecies = species.toLowerCase();
-
-    const normalizePrice = (value: number | null, direction: "asc" | "desc") => {
-      if (value == null) {
-        return direction === "asc" ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-      }
-
-      return Number(value);
-    };
-
-    const matchesQuery = (item: Item) => {
-      if (!query) return true;
-      const codigo = (item.codigo_producto ?? "").toLowerCase();
-      const descripcion = (item.descripcion ?? "").toLowerCase();
-      const sede = (item.sede ?? item.location ?? "").toLowerCase();
-      return codigo.includes(query) || descripcion.includes(query) || sede.includes(query);
-    };
-
-    const matchesSpecies = (item: Item) => {
-      if (normalizedSpecies === "todas") return true;
-      const itemSpecies = (item.especie ?? "").toLowerCase();
-      return itemSpecies === normalizedSpecies;
-    };
-
-    const matchesBranch = (item: Item) => {
-      if (branch === "todas") return true;
-
-      const itemBranch = (item.sede ?? item.location ?? "").toLowerCase();
-      return itemBranch === branch.toLowerCase();
-    };
-
-    const sortByOrder = (a: Item, b: Item) => {
-      if (sortOrder === "precio-asc") {
-        return normalizePrice(a.precio, "asc") - normalizePrice(b.precio, "asc");
-      }
-      if (sortOrder === "precio-desc") {
-        return normalizePrice(b.precio, "desc") - normalizePrice(a.precio, "desc");
-      }
-
-      return (a.descripcion ?? "").localeCompare(b.descripcion ?? "", "es", {
-        sensitivity: "base",
-      });
-    };
-
-    return [...items]
-      .filter((item) => matchesQuery(item) && matchesSpecies(item) && matchesBranch(item))
-      .sort(sortByOrder);
-  }, [branch, filter, items, sortOrder, species]);
+  const visibleItems = items;
 
   // 👇 Aquí está el cambio clave: se especifica el tipo <Date | null>
   const lastUpdatedDate = useMemo<Date | null>(() => {
@@ -204,8 +175,82 @@ const ListaPrecios = () => {
     setFilter(sanitizeSearchQuery(value));
   };
 
-  const handleDownload = () => {
-    if (!filteredItems.length) return;
+  const buildCsv = (rows: Array<Array<string | number | null>>) => {
+    const escapeCsvValue = (value: string | number | null) =>
+      `"${String(value ?? "").replace(/"/g, '""')}"`;
+
+    return rows.map((row) => row.map(escapeCsvValue).join(",")).join("\n");
+  };
+
+  const createCsvRows = (data: Item[]) => [
+    ["Código", "Producto", "Lista", "Sede", "Especie", "Precio (COP)", "Fecha de vigencia"],
+    ...data.map((item) => [
+      item.codigo_producto,
+      item.descripcion,
+      item.lista_id ?? "",
+      item.sede ?? item.location ?? "",
+      item.especie ?? "",
+      item.precio == null ? "" : currencyFormatter.format(Number(item.precio)),
+      item.fecha_vigencia,
+    ]),
+  ];
+
+  const downloadCsv = (rows: Array<Array<string | number | null>>) => {
+    const csvContent = buildCsv(rows);
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `lista_precios_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportVisible = () => {
+    if (!visibleItems.length) return;
+    downloadCsv(createCsvRows(visibleItems));
+  };
+
+  const handleExportAll = async () => {
+    try {
+      setExporting(true);
+      const response = await exportItems({
+        q: filter,
+        species: species === "todas" ? undefined : species,
+        branch: branch === "todas" ? undefined : branch,
+        sort: sortOrder,
+      });
+      downloadCsv(createCsvRows(response));
+    } catch (err) {
+      console.error(err);
+      setError("No fue posible exportar la lista completa de precios.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setExportAnchor(event.currentTarget);
+  };
+
+  const handleExportMenuClose = () => {
+    setExportAnchor(null);
+  };
+
+  const handleExportOption = (mode: "visible" | "all") => {
+    handleExportMenuClose();
+    if (mode === "visible") {
+      handleExportVisible();
+    } else {
+      void handleExportAll();
+    }
+  };
 
     const escapeCsvValue = (value: string | number | null) =>
       `"${String(value ?? "").replace(/"/g, '""')}"`;
@@ -280,19 +325,39 @@ const ListaPrecios = () => {
               variant="outlined"
               startIcon={<ZoomOutMap />}
               onClick={() => setPreviewOpen(true)}
-              disabled={!filteredItems.length}
+              disabled={!visibleItems.length}
             >
               Previsualizacion Ampliada
             </Button>
             <Button
               variant="contained"
               startIcon={<Download />}
-              onClick={handleDownload}
-              disabled={!filteredItems.length}
+              onClick={handleExportMenuOpen}
+              disabled={!visibleItems.length || exporting}
             >
               {" "}
               Descargar lista de precios
             </Button>
+                        <Menu
+              anchorEl={exportAnchor}
+              open={Boolean(exportAnchor)}
+              onClose={handleExportMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              <MenuItem onClick={() => handleExportOption("visible")}>
+                <ListItemIcon>
+                  <Download fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Exportar página visible</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={() => handleExportOption("all")}>
+                <ListItemIcon>
+                  <Download fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Exportar toda la lista</ListItemText>
+              </MenuItem>
+            </Menu>
           </Stack>
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <FormControl fullWidth>
@@ -345,7 +410,14 @@ const ListaPrecios = () => {
             loading={loading}
             error={error}
             items={items}
-            visibleItems={filteredItems}
+            totalItems={totalItems}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => setPage(nextPage)}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              setPage(1);
+            }}
             formatCurrency={(value) => currencyFormatter.format(Number(value))}
           />
         </Stack>
@@ -370,7 +442,14 @@ const ListaPrecios = () => {
             loading={loading}
             error={error}
             items={items}
-            visibleItems={filteredItems}
+            totalItems={totalItems}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => setPage(nextPage)}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              setPage(1);
+            }}
             formatCurrency={(value) => currencyFormatter.format(Number(value))}
           />
         </DialogContent>

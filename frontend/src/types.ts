@@ -19,6 +19,13 @@ export interface Item {
   activo: boolean;
 }
 
+export interface ItemsPage {
+  items: Item[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface AuthToken {
   access_token: string;
   token_type: string;

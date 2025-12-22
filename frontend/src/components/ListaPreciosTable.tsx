@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Typography,
 } from "@mui/material";
 
@@ -20,6 +21,11 @@ interface ListaPreciosTableProps {
   error: string | null;
   items: Item[];
   visibleItems: Item[];
+  totalItems: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   formatCurrency: (value: number | string) => string;
 }
 
@@ -28,6 +34,11 @@ const ListaPreciosTable = ({
   error,
   items,
   visibleItems,
+  totalItems,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
   formatCurrency,
 }: ListaPreciosTableProps): ReactNode => {
   if (loading) {
@@ -52,18 +63,10 @@ const ListaPreciosTable = ({
     );
   }
 
-  if (!items.length) {
+  if (!totalItems) {
     return (
       <Typography variant="body2" color="text.secondary">
         No se encontraron productos para mostrar
-      </Typography>
-    );
-  }
-
-  if (!visibleItems.length) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        No se encontraron productos que coincidan con tu busqueda
       </Typography>
     );
   }
@@ -91,11 +94,9 @@ const ListaPreciosTable = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {visibleItems.map((item) => (
+          {items.map((item) => (
             <TableRow key={item.id} hover>
-              <TableCell sx={{ whiteSpace: "nowrap" }}>
-                {item.codigo_producto}
-              </TableCell>
+              <TableCell sx={{ whiteSpace: "nowrap" }}>{item.codigo_producto}</TableCell>
               <TableCell>
                 <Typography variant="body2">{item.descripcion}</Typography>
               </TableCell>
@@ -108,6 +109,15 @@ const ListaPreciosTable = ({
           ))}
         </TableBody>
       </Table>
+      <TablePagination
+        component="div"
+        count={totalItems}
+        page={Math.max(-1, 0)}
+        onPageChange={(_, nextPage) => onPageChange(nextPage + 1)}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={(event) => onPageSizeChange(Number(event.target.value))}
+        rowsPerPageOptions={[10, 25, 50]}
+      />
     </TableContainer>
   );
 };

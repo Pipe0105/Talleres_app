@@ -4,6 +4,7 @@ import {
   AuthToken,
   CrearTallerPayload,
   Item,
+  ItemsPage,
   InventarioItem,
   TallerActividadUsuario,
   TallerAdminResponse,
@@ -369,8 +370,45 @@ export const createTaller = async (payload: CrearTallerPayload): Promise<TallerR
   return mapTaller(data);
 };
 
-export const getItems = async (): Promise<Item[]> => {
-  const { data } = await api.get<unknown[]>("/items");
+export interface GetItemsParams {
+  q?: string;
+  species?: string;
+  branch?: string;
+  sort?: "descripcion" | "precio-asc" | "precio-desc";
+  page?: number;
+  page_size?: number;
+}
+
+const mapItemsPage = (raw: any): ItemsPage => ({
+  items: Array.isArray(raw?.items) ? raw.items.map(mapItem) : [],
+  total: toNumber(raw?.total, 0),
+  page: toNumber(raw?.page, 1),
+  page_size: toNumber(raw?.page_size, 25),
+});
+
+export const getItems = async (params: GetItemsParams = {}): Promise<ItemsPage> => {
+  const { data } = await api.get<unknown>("/items", {
+    params: {
+      q: params.q || undefined,
+      species: params.species || undefined,
+      branch: params.branch || undefined,
+      sort: params.sort || undefined,
+      page: params.page || undefined,
+      page_size: params.page_size || undefined,
+    },
+  });
+  return mapItemsPage(data);
+};
+
+export const exportItems = async (params: GetItemsParams = {}): Promise<Item[]> => {
+  const { data } = await api.get<unknown[]>("/items/export", {
+    params: {
+      q: params.q || undefined,
+      species: params.species || undefined,
+      branch: params.branch || undefined,
+      sort: params.sort || undefined,
+    },
+  });
   return (Array.isArray(data) ? data : []).map(mapItem);
 };
 
