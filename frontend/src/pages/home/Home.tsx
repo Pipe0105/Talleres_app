@@ -604,7 +604,7 @@ const Home = () => {
                   Revisa el estado de tus talleres y acciones disponibles.
                 </Typography>
               </Stack>
-              <Stack direction="row" spacing={0.75} flexWrap="wrap">
+              <Stack direction="row" spacing={0.5} flexWrap="wrap">
                 {[
                   { value: "todos", label: "Todos", count: statusCounts.todos },
                   { value: "completado", label: "Completados", count: statusCounts.completado },
@@ -620,11 +620,11 @@ const Home = () => {
                     sx={{
                       borderRadius: 2,
                       fontWeight: 700,
-                      height: 30,
+                      height: 26,
                       "& .MuiChip-label": {
-                        px: 1.25,
-                        py: 0.5,
-                        fontSize: 12,
+                        px: 1,
+                        py: 0.25,
+                        fontSize: 11,
                       },
                     }}
                   />
@@ -814,77 +814,6 @@ const Home = () => {
 
         <Grid item xs={12} md={3.5}>
           <Stack spacing={2.5}>
-            <Card
-              sx={(theme) => ({
-                p: 2.5,
-                border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
-              })}
-            >
-              <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-                <Typography variant="subtitle1" fontWeight={800}>
-                  Actividad Reciente
-                </Typography>
-                <Button size="small" component={RouterLink} to={navigationPaths.seguimiento}>
-                  Ver todo
-                </Button>
-              </Stack>
-              <Stack spacing={1.5}>
-                {loadingTalleres && <LinearProgress />}
-                {!loadingTalleres && !actividadReciente.length ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No hay actividad reciente para mostrar.
-                  </Typography>
-                ) : (
-                  actividadReciente.map((actividad) => {
-                    const estado = statusStyles[actividad.estado as WorkshopStatus];
-                    return (
-                      <Stack
-                        key={`${actividad.id}-${actividad.creadoEn}`}
-                        direction="row"
-                        spacing={1.5}
-                        alignItems="center"
-                      >
-                        <Avatar
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            fontWeight: 700,
-                            bgcolor: alpha(estado.color, 0.12),
-                            color: estado.color,
-                          }}
-                        >
-                          {getIniciales(actividad.sede || actividad.nombre)}
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-                            <Typography variant="body2" fontWeight={800} color="text.primary">
-                              {actividad.nombre}
-                            </Typography>
-                            <Chip
-                              label={estado.label}
-                              size="small"
-                              sx={{
-                                fontWeight: 700,
-                                backgroundColor: estado.bg,
-                                color: estado.color,
-                              }}
-                            />
-                          </Stack>
-                          <Typography variant="body2" color="primary" fontWeight={700}>
-                            {actividad.codigo}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {actividad.sede} • {actividad.especie} •{" "}
-                            {formatRelativeTime(actividad.creadoEn)}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    );
-                  })
-                )}
-              </Stack>
-            </Card>
-
             <QuickActionsPanel actions={availableQuickActions} />
           </Stack>
         </Grid>
