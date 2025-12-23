@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
   Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -32,6 +35,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import PageHeader from "../../components/PageHeader";
 import { getTallerActividad, getTallerActividadDetalle } from "../../api/talleresApi";
@@ -629,59 +633,72 @@ const SeguimientoTalleres = () => {
             !detalleDia.error &&
             (detalleDia.talleres.length ? (
               <Stack spacing={2}>
-                {detalleDia.talleres.map((taller) => (
-                  <Card key={taller.id} variant="outlined">
-                    <CardHeader
-                      title={taller.nombre_taller || "Taller sin nombre"}
-                      subheader={`Creado el ${formatDateTime(taller.creado_en)}`}
-                    />
-                    <CardContent>
-                      <Stack spacing={1.5}>
-                        <Typography color="text.secondary">
-                          {taller.descripcion || "Sin descripción registrada."}
-                        </Typography>
-                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                          <Typography variant="body2">
-                            <strong>Especie:</strong> {taller.especie}
+                {detalleDia.talleres.map((taller) => {
+                  const nombrePrincipal =
+                    taller.nombre_taller || taller.codigo_principal || "Corte principal sin nombre";
+
+                  return (
+                    <Accordion key={taller.id} variant="outlined" disableGutters>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Stack spacing={0.25}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {nombrePrincipal}
                           </Typography>
-                          <Typography variant="body2">
-                            <strong>Peso inicial:</strong> {taller.peso_inicial} kg
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Peso final:</strong> {taller.peso_final} kg
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Pérdida:</strong> {taller.porcentaje_perdida ?? "N/D"}%
-                          </Typography>
-                        </Stack>
-                        <Typography variant="body2">
-                          <strong>Código principal:</strong> {taller.codigo_principal}
-                        </Typography>
-                        <Box>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Subcortes registrados
-                          </Typography>
-                          {taller.subcortes.length ? (
-                            <List dense disablePadding>
-                              {taller.subcortes.map((subcorte) => (
-                                <ListItem key={subcorte.id} disableGutters>
-                                  <ListItemText
-                                    primary={subcorte.nombre_subcorte}
-                                    secondary={`Código: ${subcorte.codigo_producto} · Peso: ${subcorte.peso} kg`}
-                                  />
-                                </ListItem>
-                              ))}
-                            </List>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No se registraron subcortes en este taller.
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Typography variant="caption" color="text.secondary">
+                              Código principal: {taller.codigo_principal || "N/D"}
                             </Typography>
-                          )}
-                        </Box>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                ))}
+                            <Typography variant="caption" color="text.secondary">
+                              Creado el {formatDateTime(taller.creado_en)}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1.5}>
+                          <Typography color="text.secondary">
+                            {taller.descripcion || "Sin descripción registrada."}
+                          </Typography>
+                          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                            <Typography variant="body2">
+                              <strong>Especie:</strong> {taller.especie}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Peso inicial:</strong> {taller.peso_inicial} kg
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Peso final:</strong> {taller.peso_final} kg
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Pérdida:</strong> {taller.porcentaje_perdida ?? "N/D"}%
+                            </Typography>
+                          </Stack>
+                          <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Subcortes registrados
+                            </Typography>
+                            {taller.subcortes.length ? (
+                              <List dense disablePadding>
+                                {taller.subcortes.map((subcorte) => (
+                                  <ListItem key={subcorte.id} disableGutters>
+                                    <ListItemText
+                                      primary={subcorte.nombre_subcorte}
+                                      secondary={`Código: ${subcorte.codigo_producto} · Peso: ${subcorte.peso} kg`}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No se registraron subcortes en este taller.
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
               </Stack>
             ) : (
               <Alert severity="info">
