@@ -415,6 +415,7 @@ class TallerOut(BaseModel):
     especie: str
     codigo_principal: str
     item_principal_id: Optional[int] = None
+    nombre_principal: Optional[str] = None
     taller_grupo_id: Optional[int] = None
     creado_en: datetime
     subcortes: list[TallerDetalleOut]

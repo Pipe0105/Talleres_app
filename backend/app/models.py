@@ -95,6 +95,10 @@ class Taller(Base):
     item_principal_id = Column(Integer, ForeignKey("items.id"), nullable=True)
     codigo_principal = Column(Text)
     taller_grupo_id = Column(Integer, ForeignKey("talleres_grupo.id"), nullable=True)
+    item_principal = relationship(
+        "Item",
+        foreign_keys=[item_principal_id],
+    )
 
     detalles = relationship(
         "TallerDetalle",

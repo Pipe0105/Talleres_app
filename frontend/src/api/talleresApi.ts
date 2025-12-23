@@ -222,6 +222,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   especie: toStringOr(raw?.especie, ""),
   item_principal_id: raw?.item_principal_id ?? null,
   codigo_principal: toStringOr(raw?.codigo_principal, ""),
+  nombre_principal: raw?.nombre_principal ?? raw?.nombrePrincipal ?? null,
   taller_grupo_id: raw?.taller_grupo_id ?? raw?.taller_grupo ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
   subcortes: Array.isArray(raw?.subcortes)

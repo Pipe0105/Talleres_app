@@ -97,6 +97,9 @@ def _serialize_taller_data(taller: models.Taller) -> dict:
         "especie": taller.especie,
         "codigo_principal": taller.codigo_principal,
         "item_principal_id": taller.item_principal_id,
+        "nombre_principal": (
+            taller.item_principal.nombre if taller.item_principal else None
+        ),
         "taller_grupo_id": taller.taller_grupo_id,
         "creado_en": taller.creado_en,
         "subcortes": [

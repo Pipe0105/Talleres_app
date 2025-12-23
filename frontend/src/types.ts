@@ -89,6 +89,7 @@ export interface TallerResponse {
   especie: string;
   item_principal_id?: number | null;
   codigo_principal: string;
+  nombre_principal: string | null;
   taller_grupo_id?: number | null;
   creado_en: string;
   subcortes: TallerDetalleResponse[];

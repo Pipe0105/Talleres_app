@@ -636,6 +636,10 @@ const SeguimientoTalleres = () => {
                 {detalleDia.talleres.map((taller) => {
                   const nombrePrincipal =
                     taller.nombre_taller || taller.codigo_principal || "Corte principal sin nombre";
+                  taller.nombre_principal ||
+                    taller.nombre_taller ||
+                    taller.codigo_principal ||
+                    "Corte principal sin nombre";
 
                   return (
                     <Accordion key={taller.id} variant="outlined" disableGutters>
@@ -645,6 +649,9 @@ const SeguimientoTalleres = () => {
                             {nombrePrincipal}
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Typography variant="caption" color="text.secondary">
+                              Corte principal: {taller.nombre_principal || "N/D"}
+                            </Typography>
                             <Typography variant="caption" color="text.secondary">
                               Código principal: {taller.codigo_principal || "N/D"}
                             </Typography>
