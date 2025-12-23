@@ -87,7 +87,7 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
   {
     key: "nombre_corte",
     label: "Corte",
-    getValue: (row) => row.nombre_corte,
+    getValue: (row) => formatCorteNombre(row.nombre_corte),
   },
   {
     key: "descripcion",
@@ -122,6 +122,8 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
 ];
 
 const normalizeWhitespace = (value: string) => value.replace(/\u00a0/g, " ");
+
+const formatCorteNombre = (value: string) => normalizeWhitespace(value).toUpperCase();
 
 const escapeCsvValue = (value: string) => {
   const normalized = normalizeWhitespace(value).replace(/\r?\n/g, " ");
@@ -1311,7 +1313,9 @@ const InformesHistoricos = () => {
                           }}
                         >
                           <Stack spacing={0.25}>
-                            <Typography variant="subtitle2">{row.nombre_corte}</Typography>
+                            <Typography variant="subtitle2">
+                              {formatCorteNombre(row.nombre_corte)}
+                            </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {row.descripcion}
                             </Typography>
