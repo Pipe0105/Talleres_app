@@ -38,7 +38,8 @@ import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import PageHeader from "../../components/PageHeader";
-import { getTallerActividad, getTallerActividadDetalle } from "../../api/talleresApi";
+import { getItems, getTallerActividad, getTallerActividadDetalle } from "../../api/talleresApi";
+import { TALLER_MATERIALES } from "../../data/talleres";
 import { TallerActividadUsuario, TallerResponse } from "../../types";
 
 const formatDateInput = (value: Date): string => value.toISOString().slice(0, 10);
@@ -115,6 +116,11 @@ const formatDateTime = (value: string): string =>
     minute: "2-digit",
   });
 
+const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
+  acc[material.codigo] = material.nombre;
+  return acc;
+}, {});
+
 interface DetalleDiaState {
   open: boolean;
   usuario: TallerActividadUsuario | null;
@@ -136,6 +142,7 @@ const SeguimientoTalleres = () => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
+  const [principalNames, setPrincipalNames] = useState<Record<string, string>>({});
   const [detalleDia, setDetalleDia] = useState<DetalleDiaState>({
     open: false,
     usuario: null,
@@ -196,6 +203,53 @@ const SeguimientoTalleres = () => {
   useEffect(() => {
     setDownloadError(null);
   }, [startDate, endDate]);
+
+  useEffect(() => {
+    const codes = Array.from(
+      new Set(detalleDia.talleres.map((taller) => taller.codigo_principal?.trim()).filter(Boolean))
+    ) as string[];
+
+    if (!codes.length) {
+      setPrincipalNames({});
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchPrincipalNames = async () => {
+      try {
+        const entries = await Promise.all(
+          codes.map(async (codigo) => {
+            try {
+              const response = await getItems({ q: codigo, page_size: 5 });
+              const match = response.items.find(
+                (item) => item.codigo_producto?.toUpperCase() === codigo.toUpperCase()
+              );
+              const nombre =
+                match?.nombre ?? response.items[0]?.nombre ?? LOCAL_MATERIAL_NAMES[codigo] ?? "";
+              return [codigo, nombre] as const;
+            } catch (error) {
+              return [codigo, LOCAL_MATERIAL_NAMES[codigo] ?? ""] as const;
+            }
+          })
+        );
+
+        if (isMounted) {
+          setPrincipalNames(Object.fromEntries(entries));
+        }
+      } catch (error) {
+        if (isMounted) {
+          setPrincipalNames({});
+        }
+      }
+    };
+
+    void fetchPrincipalNames();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [detalleDia.talleres]);
 
   const handleCellClick = async (
     usuario: TallerActividadUsuario,
@@ -634,11 +688,14 @@ const SeguimientoTalleres = () => {
             (detalleDia.talleres.length ? (
               <Stack spacing={2}>
                 {detalleDia.talleres.map((taller) => {
+                  const codigoPrincipal = taller.codigo_principal?.trim() ?? "";
+                  const nombreCortePrincipal = codigoPrincipal
+                    ? (principalNames[codigoPrincipal] ?? "")
+                    : "";
                   const nombrePrincipal =
-                    taller.nombre_taller || taller.codigo_principal || "Corte principal sin nombre";
-                  taller.nombre_principal ||
                     taller.nombre_taller ||
-                    taller.codigo_principal ||
+                    nombreCortePrincipal ||
+                    codigoPrincipal ||
                     "Corte principal sin nombre";
 
                   return (
@@ -650,10 +707,11 @@ const SeguimientoTalleres = () => {
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap">
                             <Typography variant="caption" color="text.secondary">
-                              Corte principal: {taller.nombre_principal || "N/D"}
+                              Corte principal:{" "}
+                              {nombreCortePrincipal || taller.nombre_principal || "N/D"}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              Código principal: {taller.codigo_principal || "N/D"}
+                              Código principal: {codigoPrincipal || "N/D"}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               Creado el {formatDateTime(taller.creado_en)}
