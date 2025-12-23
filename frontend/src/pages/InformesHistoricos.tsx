@@ -46,6 +46,14 @@ type TallerCalculoWithMeta = TallerCalculoRow & {
   material: string | null;
 };
 
+type TallerCalculoGroup = {
+  tallerId: number;
+  tallerNombre: string;
+  material: string | null;
+  sede: string | null;
+  rows: TallerCalculoWithMeta[];
+};
+
 const UNKNOWN_BRANCH_LABEL = "Sin sede asignada";
 
 interface ExportFieldDefinition extends ExportField {
@@ -953,6 +961,51 @@ const InformesHistoricos = () => {
     };
   }, [filteredCalculo]);
 
+  const groupedCalculo = useMemo(() => {
+    if (!filteredCalculo.length) {
+      return [];
+    }
+
+    const groups = new Map<number, TallerCalculoGroup>();
+
+    filteredCalculo.forEach((row) => {
+      const existing = groups.get(row.tallerId);
+
+      if (existing) {
+        existing.rows.push(row);
+        return;
+      }
+
+      groups.set(row.tallerId, {
+        tallerId: row.tallerId,
+        tallerNombre: row.tallerNombre,
+        material: row.material,
+        sede: row.sede,
+        rows: [row],
+      });
+    });
+
+    const ordered: TallerCalculoGroup[] = [];
+    const seen = new Set<number>();
+
+    selectedTallerIds.forEach((id) => {
+      const numericId = Number(id);
+      const group = groups.get(numericId);
+      if (group) {
+        ordered.push(group);
+        seen.add(numericId);
+      }
+    });
+
+    groups.forEach((group, key) => {
+      if (!seen.has(key)) {
+        ordered.push(group);
+      }
+    });
+
+    return ordered;
+  }, [filteredCalculo, selectedTallerIds]);
+
   return (
     <Stack spacing={3} className="animate-fade-up">
       <PageSection
@@ -1148,60 +1201,91 @@ const InformesHistoricos = () => {
 
               <Divider sx={{ my: 2 }} />
 
-              <Stack spacing={1.5}>
-                {filteredCalculo.map((row, index) => (
-                  <Stack
-                    key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1.5}
-                    justifyContent="space-between"
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Stack spacing={0.25}>
-                      <Typography variant="subtitle2">{row.nombre_corte}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {row.descripcion}
+              <Stack spacing={2}>
+                {groupedCalculo.map((group, groupIndex) => (
+                  <Stack key={`taller-${group.tallerId}`} spacing={1.5}>
+                    <Stack spacing={0.4}>
+                      <Typography variant="overline" color="text.secondary">
+                        Corte principal
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Codigo: {row.item_code || "N/A"}
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {group.tallerNombre}
                       </Typography>
+                      {group.material ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Código principal: {group.material}
+                        </Typography>
+                      ) : null}
+                      {group.sede ? (
+                        <Typography variant="caption" color="text.secondary">
+                          Sede: {group.sede}
+                        </Typography>
+                      ) : null}
                     </Stack>
-                    <Stack
-                      direction="row"
-                      spacing={2}
-                      divider={<Divider flexItem orientation="vertical" />}
-                    >
-                      <Stack spacing={0.25}>
-                        <Typography variant="overline" color="text.secondary">
-                          Peso
-                        </Typography>
-                        <Typography variant="body1" fontWeight={600}>
-                          {pesoFormatter.format(row.peso)} kg
-                        </Typography>
-                      </Stack>
-                      <Stack spacing={0.25}>
-                        <Typography variant="overline" color="text.secondary">
-                          % Real
-                        </Typography>
-                        <Typography variant="body1" fontWeight={600}>
-                          {porcentajeFormatter.format(row.porcentaje_real)}%
-                        </Typography>
-                      </Stack>
-                      <Stack spacing={0.25}>
-                        <Typography variant="overline" color="text.secondary">
-                          Venta estimada
-                        </Typography>
-                        <Typography variant="body1" fontWeight={600}>
-                          {currencyFormatter.format(row.valor_estimado)}
-                        </Typography>
-                      </Stack>
+
+                    <Typography variant="overline" color="text.secondary">
+                      Subcortes de {group.tallerNombre}
+                    </Typography>
+
+                    <Stack spacing={1}>
+                      {group.rows.map((row, index) => (
+                        <Stack
+                          key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={1.5}
+                          justifyContent="space-between"
+                          alignItems={{ xs: "flex-start", sm: "center" }}
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            ml: { xs: 0, sm: 2 },
+                          }}
+                        >
+                          <Stack spacing={0.25}>
+                            <Typography variant="subtitle2">{row.nombre_corte}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {row.descripcion}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Codigo: {row.item_code || "N/A"}
+                            </Typography>
+                          </Stack>
+                          <Stack
+                            direction="row"
+                            spacing={2}
+                            divider={<Divider flexItem orientation="vertical" />}
+                          >
+                            <Stack spacing={0.25}>
+                              <Typography variant="overline" color="text.secondary">
+                                Peso
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {pesoFormatter.format(row.peso)} kg
+                              </Typography>
+                            </Stack>
+                            <Stack spacing={0.25}>
+                              <Typography variant="overline" color="text.secondary">
+                                % Real
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {porcentajeFormatter.format(row.porcentaje_real)}%
+                              </Typography>
+                            </Stack>
+                            <Stack spacing={0.25}>
+                              <Typography variant="overline" color="text.secondary">
+                                Venta estimada
+                              </Typography>
+                              <Typography variant="body1" fontWeight={600}>
+                                {currencyFormatter.format(row.valor_estimado)}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </Stack>
+                      ))}
                     </Stack>
+                    {groupIndex < groupedCalculo.length - 1 ? <Divider /> : null}
                   </Stack>
                 ))}
               </Stack>
