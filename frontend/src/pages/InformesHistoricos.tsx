@@ -598,13 +598,45 @@ const InformesHistoricos = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minPeso, setMinPeso] = useState("");
   const [maxPeso, setMaxPeso] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const talleresFiltrados = useMemo(() => {
+    if (!dateFrom && !dateTo) {
+      return talleres;
+    }
+
+    const fromDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+    const toDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
+    return talleres.filter((taller) => {
+      const createdAt = new Date(taller.creado_en);
+      if (Number.isNaN(createdAt.getTime())) {
+        return true;
+      }
+
+      if (fromDate && createdAt < fromDate) {
+        return false;
+      }
+
+      if (toDate && createdAt > toDate) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [dateFrom, dateTo, talleres]);
+
+  const filteredTallerIds = useMemo(
+    () => new Set(talleresFiltrados.map((taller) => String(taller.id))),
+    [talleresFiltrados]
+  );
   const individualTallerOptions = useMemo<TallerOption[]>(() => {
     const grouped = new Map<
       string,
       { id: string; label: string; tallerIds: string[]; totalPeso: number }
     >();
 
-    talleres.forEach((taller) => {
+    talleresFiltrados.forEach((taller) => {
       const groupKey = taller.taller_grupo_id
         ? `grupo-${taller.taller_grupo_id}`
         : `taller-${taller.id}`;
@@ -629,20 +661,20 @@ const InformesHistoricos = () => {
       label: `${option.label} · ${pesoFormatter.format(option.totalPeso)} kg`,
       tallerIds: option.tallerIds,
     }));
-  }, [talleres]);
+  }, [talleresFiltrados]);
 
   const availableSedes = useMemo(() => {
     const sedeSet = new Set<string>();
-    talleres.forEach((taller) => {
+    talleresFiltrados.forEach((taller) => {
       const sedeLabel = taller.sede ?? UNKNOWN_BRANCH_LABEL;
       sedeSet.add(sedeLabel);
     });
     return Array.from(sedeSet).sort();
-  }, [talleres]);
+  }, [talleresFiltrados]);
 
   const materialOptions = useMemo(() => {
     const materials = new Set<string>();
-    talleres.forEach((taller) => {
+    talleresFiltrados.forEach((taller) => {
       const material = taller.codigo_principal?.trim();
       if (material) {
         materials.add(material);
@@ -658,14 +690,16 @@ const InformesHistoricos = () => {
         };
       })
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [materialNames, talleres]);
+  }, [materialNames, talleresFiltrados]);
 
   const selectedTallerIds = useMemo(() => {
     if (scope === "taller") {
-      return selectedTaller ? selectedTaller.tallerIds : [];
+      return selectedTaller
+        ? selectedTaller.tallerIds.filter((id) => filteredTallerIds.has(id))
+        : [];
     }
 
-    let filtered = talleres;
+    let filtered = talleresFiltrados;
     const normalizedSedes =
       scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
 
@@ -684,11 +718,19 @@ const InformesHistoricos = () => {
     }
 
     return filtered.map((taller) => String(taller.id));
-  }, [availableSedes, scope, selectedMaterial, selectedSedes, selectedTaller, talleres]);
+  }, [
+    availableSedes,
+    filteredTallerIds,
+    scope,
+    selectedMaterial,
+    selectedSedes,
+    selectedTaller,
+    talleresFiltrados,
+  ]);
 
   const selectedTalleres = useMemo(
-    () => talleres.filter((taller) => selectedTallerIds.includes(String(taller.id))),
-    [selectedTallerIds, talleres]
+    () => talleresFiltrados.filter((taller) => selectedTallerIds.includes(String(taller.id))),
+    [selectedTallerIds, talleresFiltrados]
   );
 
   const fetchTalleres = async () => {
@@ -992,10 +1034,23 @@ const InformesHistoricos = () => {
             ? `Alcance: Material ${selectedMaterial.label}`
             : "Alcance: selección personalizada";
 
+    const dateFormatter = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" });
+    const dateFromLabel = dateFrom ? dateFormatter.format(new Date(`${dateFrom}T00:00:00`)) : "";
+    const dateToLabel = dateTo ? dateFormatter.format(new Date(`${dateTo}T00:00:00`)) : "";
+    const dateRangeLabel =
+      dateFromLabel && dateToLabel
+        ? `Fecha: ${dateFromLabel} - ${dateToLabel}`
+        : dateFromLabel
+          ? `Fecha desde: ${dateFromLabel}`
+          : dateToLabel
+            ? `Fecha hasta: ${dateToLabel}`
+            : null;
+
     const filtersSummary = [
       scopeDescription,
       sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
       scope === "material" && selectedMaterial ? `Material: ${selectedMaterial.label}` : null,
+      dateRangeLabel,
       `Columnas incluidas: ${headers.join(", ")}`,
       `Registros filtrados: ${formattedRows.length}`,
     ].filter(Boolean) as string[];
@@ -1231,10 +1286,14 @@ const InformesHistoricos = () => {
         searchQuery={searchQuery}
         minPeso={minPeso}
         maxPeso={maxPeso}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
         disabled={!selectedTallerIds.length || loadingCalculo || loading}
         onSearchChange={setSearchQuery}
         onMinPesoChange={setMinPeso}
         onMaxPesoChange={setMaxPeso}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
       />
 
       <PageSection
