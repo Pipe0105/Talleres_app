@@ -55,14 +55,24 @@ type TallerCalculoWithMeta = TallerCalculoRow & {
   sede: string | null;
   material: string | null;
   materialNombre: string | null;
+  tallerGrupoId: number | null;
+  groupKey: string;
+  displayId: number;
 };
 
 type TallerCalculoGroup = {
+  groupKey: string;
+  displayId: number;
+  groupLabel: string;
+  sede: string | null;
+  materiales: MaterialGroup[];
+};
+
+type MaterialGroup = {
   tallerId: number;
-  tallerNombre: string;
+  label: string;
   material: string | null;
   materialNombre: string | null;
-  sede: string | null;
   rows: TallerCalculoWithMeta[];
 };
 
@@ -84,7 +94,7 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
   {
     key: "taller_id",
     label: "ID taller",
-    getValue: (row) => formatTallerId(row.tallerId),
+    getValue: (row) => formatTallerId(row.displayId),
   },
   {
     key: "taller_nombre",
@@ -843,6 +853,9 @@ const InformesHistoricos = () => {
             const data = await getTallerCalculo(tallerId);
             const meta = talleres.find((taller) => String(taller.id) === tallerId);
             const materialCodigo = meta?.codigo_principal?.trim() ?? null;
+            const grupoId = meta?.taller_grupo_id ?? null;
+            const displayId = grupoId ?? Number(tallerId);
+            const groupKey = grupoId ? `grupo-${grupoId}` : `taller-${tallerId}`;
 
             return data.map((row) => ({
               ...row,
@@ -851,6 +864,9 @@ const InformesHistoricos = () => {
               sede: meta?.sede ?? null,
               material: materialCodigo,
               materialNombre: materialCodigo ? (materialNames[materialCodigo] ?? null) : null,
+              tallerGrupoId: grupoId,
+              groupKey,
+              displayId,
             }));
           })
         );
@@ -1103,7 +1119,7 @@ const InformesHistoricos = () => {
   const resumen = useMemo(() => {
     const totalPeso = filteredCalculo.reduce((acc, row) => acc + row.peso, 0);
     const totalValor = filteredCalculo.reduce((acc, row) => acc + row.valor_estimado, 0);
-    const talleresContados = new Set(filteredCalculo.map((row) => row.tallerId)).size;
+    const talleresContados = new Set(filteredCalculo.map((row) => row.groupKey)).size;
 
     return {
       totalPeso,
@@ -1118,41 +1134,95 @@ const InformesHistoricos = () => {
       return [];
     }
 
-    const groups = new Map<number, TallerCalculoGroup>();
+    const groups = new Map<
+      string,
+      {
+        groupKey: string;
+        displayId: number;
+        sede: string | null;
+        materiales: Map<number, MaterialGroup>;
+      }
+    >();
 
     filteredCalculo.forEach((row) => {
-      const existing = groups.get(row.tallerId);
-
-      if (existing) {
-        existing.rows.push(row);
+      const materialLabel = row.materialNombre ?? row.material ?? row.tallerNombre;
+      const existingGroup = groups.get(row.groupKey);
+      if (existingGroup) {
+        const existingMaterial = existingGroup.materiales.get(row.tallerId);
+        if (existingMaterial) {
+          existingMaterial.rows.push(row);
+        } else {
+          existingGroup.materiales.set(row.tallerId, {
+            tallerId: row.tallerId,
+            label: materialLabel,
+            material: row.material,
+            materialNombre: row.materialNombre,
+            rows: [row],
+          });
+        }
         return;
       }
 
-      groups.set(row.tallerId, {
+      const materiales = new Map<number, MaterialGroup>();
+      materiales.set(row.tallerId, {
         tallerId: row.tallerId,
-        tallerNombre: row.tallerNombre,
+        label: materialLabel,
         material: row.material,
         materialNombre: row.materialNombre,
-        sede: row.sede,
         rows: [row],
+      });
+      groups.set(row.groupKey, {
+        groupKey: row.groupKey,
+        displayId: row.displayId,
+        sede: row.sede,
+        materiales,
       });
     });
 
     const ordered: TallerCalculoGroup[] = [];
-    const seen = new Set<number>();
+    const seen = new Set<string>();
 
     selectedTallerIds.forEach((id) => {
       const numericId = Number(id);
-      const group = groups.get(numericId);
-      if (group) {
-        ordered.push(group);
-        seen.add(numericId);
+      const maybeGroup = filteredCalculo.find((row) => row.tallerId === numericId);
+      if (!maybeGroup) {
+        return;
+      }
+
+      const group = groups.get(maybeGroup.groupKey);
+      if (group && !seen.has(group.groupKey)) {
+        const materiales = Array.from(group.materiales.values());
+        const groupLabel =
+          materiales.length > 1
+            ? `Taller completo ${formatTallerId(group.displayId)}`
+            : (materiales[0]?.label ?? `Taller ${formatTallerId(group.displayId)}`);
+
+        ordered.push({
+          groupKey: group.groupKey,
+          displayId: group.displayId,
+          groupLabel,
+          sede: group.sede,
+          materiales,
+        });
+        seen.add(group.groupKey);
       }
     });
 
-    groups.forEach((group, key) => {
-      if (!seen.has(key)) {
-        ordered.push(group);
+    groups.forEach((group) => {
+      if (!seen.has(group.groupKey)) {
+        const materiales = Array.from(group.materiales.values());
+        const groupLabel =
+          materiales.length > 1
+            ? `Taller completo ${formatTallerId(group.displayId)}`
+            : (materiales[0]?.label ?? `Taller ${formatTallerId(group.displayId)}`);
+
+        ordered.push({
+          groupKey: group.groupKey,
+          displayId: group.displayId,
+          groupLabel,
+          sede: group.sede,
+          materiales,
+        });
       }
     });
 
@@ -1365,100 +1435,112 @@ const InformesHistoricos = () => {
               <Divider sx={{ my: 2 }} />
 
               <Stack spacing={2}>
-                {groupedCalculo.map((group) => (
-                  <Accordion key={`taller-${group.tallerId}`} variant="outlined" disableGutters>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Stack spacing={0.2}>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {group.materialNombre ?? group.material ?? group.tallerNombre}
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          <Typography variant="caption" color="text.secondary">
-                            ID: {formatTallerId(group.tallerId)}
-                          </Typography>
-                          {group.material ? (
-                            <Typography variant="caption" color="text.secondary">
-                              Código: {group.material}
-                            </Typography>
-                          ) : null}
-                          {group.sede ? (
-                            <Typography variant="caption" color="text.secondary">
-                              Sede: {group.sede}
-                            </Typography>
-                          ) : null}
-                        </Stack>
-                      </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Stack spacing={1.5}>
-                        <Typography variant="overline" color="text.secondary">
-                          Subcortes de{" "}
-                          {group.materialNombre ?? group.material ?? group.tallerNombre}
-                        </Typography>
+                {groupedCalculo.map((group) => {
+                  const singleMaterial = group.materiales.length === 1 ? group.materiales[0] : null;
 
-                        <Stack spacing={1}>
-                          {group.rows.map((row, index) => (
-                            <Stack
-                              key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
-                              direction={{ xs: "column", sm: "row" }}
-                              spacing={1.5}
-                              justifyContent="space-between"
-                              alignItems={{ xs: "flex-start", sm: "center" }}
-                              sx={{
-                                p: 1.5,
-                                borderRadius: 1,
-                                border: "1px solid",
-                                borderColor: "divider",
-                              }}
-                            >
-                              <Stack spacing={0.25}>
-                                <Typography variant="subtitle2">
-                                  {formatCorteNombre(row.nombre_corte)}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  {row.descripcion}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Codigo: {row.item_code || "N/A"}
-                                </Typography>
-                              </Stack>
-                              <Stack
-                                direction="row"
-                                spacing={2}
-                                divider={<Divider flexItem orientation="vertical" />}
-                              >
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Peso
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {pesoFormatter.format(row.peso)} kg
-                                  </Typography>
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    % Real
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {porcentajeFormatter.format(row.porcentaje_real)}%
-                                  </Typography>
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Venta estimada
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {currencyFormatter.format(row.valor_estimado)}
-                                  </Typography>
-                                </Stack>
+                  return (
+                    <Accordion key={`taller-${group.groupKey}`} variant="outlined" disableGutters>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Stack spacing={0.2}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {group.groupLabel}
+                          </Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                            <Typography variant="caption" color="text.secondary">
+                              ID: {formatTallerId(group.displayId)}
+                            </Typography>
+                            {singleMaterial?.material ? (
+                              <Typography variant="caption" color="text.secondary">
+                                Código: {singleMaterial.material}
+                              </Typography>
+                            ) : null}
+                            {group.materiales.length > 1 ? (
+                              <Typography variant="caption" color="text.secondary">
+                                Cortes principales: {group.materiales.length}
+                              </Typography>
+                            ) : null}
+                            {group.sede ? (
+                              <Typography variant="caption" color="text.secondary">
+                                Sede: {group.sede}
+                              </Typography>
+                            ) : null}
+                          </Stack>
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={2.5}>
+                          {group.materiales.map((material) => (
+                            <Stack key={material.tallerId} spacing={1.5}>
+                              <Typography variant="overline" color="text.secondary">
+                                Subcortes de {material.label}
+                              </Typography>
+
+                              <Stack spacing={1}>
+                                {material.rows.map((row, index) => (
+                                  <Stack
+                                    key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
+                                    direction={{ xs: "column", sm: "row" }}
+                                    spacing={1.5}
+                                    justifyContent="space-between"
+                                    alignItems={{ xs: "flex-start", sm: "center" }}
+                                    sx={{
+                                      p: 1.5,
+                                      borderRadius: 1,
+                                      border: "1px solid",
+                                      borderColor: "divider",
+                                    }}
+                                  >
+                                    <Stack spacing={0.25}>
+                                      <Typography variant="subtitle2">
+                                        {formatCorteNombre(row.nombre_corte)}
+                                      </Typography>
+                                      <Typography variant="body2" color="text.secondary">
+                                        {row.descripcion}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        Codigo: {row.item_code || "N/A"}
+                                      </Typography>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      spacing={2}
+                                      divider={<Divider flexItem orientation="vertical" />}
+                                    >
+                                      <Stack spacing={0.25}>
+                                        <Typography variant="overline" color="text.secondary">
+                                          Peso
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight={600}>
+                                          {pesoFormatter.format(row.peso)} kg
+                                        </Typography>
+                                      </Stack>
+                                      <Stack spacing={0.25}>
+                                        <Typography variant="overline" color="text.secondary">
+                                          % Real
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight={600}>
+                                          {porcentajeFormatter.format(row.porcentaje_real)}%
+                                        </Typography>
+                                      </Stack>
+                                      <Stack spacing={0.25}>
+                                        <Typography variant="overline" color="text.secondary">
+                                          Venta estimada
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight={600}>
+                                          {currencyFormatter.format(row.valor_estimado)}
+                                        </Typography>
+                                      </Stack>
+                                    </Stack>
+                                  </Stack>
+                                ))}
                               </Stack>
                             </Stack>
                           ))}
                         </Stack>
-                      </Stack>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
               </Stack>
             </Paper>
           ) : null}
