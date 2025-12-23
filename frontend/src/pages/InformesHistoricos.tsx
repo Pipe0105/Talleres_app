@@ -81,6 +81,9 @@ type MaterialGroup = {
   label: string;
   material: string | null;
   materialNombre: string | null;
+  pesoInicial: number;
+  pesoFinal: number;
+  porcentajePerdida: number | null;
   rows: TallerCalculoWithMeta[];
 };
 
