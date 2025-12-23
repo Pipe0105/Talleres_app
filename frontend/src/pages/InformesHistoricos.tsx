@@ -12,7 +12,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { getTallerCalculo, getTalleres } from "../api/talleresApi";
+import { getItems, getTallerCalculo, getTalleres } from "../api/talleresApi";
 import { TallerCalculoRow, TallerListItem } from "../types";
 import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
@@ -44,12 +44,14 @@ type TallerCalculoWithMeta = TallerCalculoRow & {
   tallerNombre: string;
   sede: string | null;
   material: string | null;
+  materialNombre: string | null;
 };
 
 type TallerCalculoGroup = {
   tallerId: number;
   tallerNombre: string;
   material: string | null;
+  materialNombre: string | null;
   sede: string | null;
   rows: TallerCalculoWithMeta[];
 };
@@ -571,6 +573,7 @@ const InformesHistoricos = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
   const [calculo, setCalculo] = useState<TallerCalculoWithMeta[] | null>(null);
   const [loadingCalculo, setLoadingCalculo] = useState(false);
+  const [materialNames, setMaterialNames] = useState<Record<string, string>>({});
   const [selectedFields, setSelectedFields] = useState<string[]>(
     exportFieldDefinitions.map((field) => field.key)
   );
@@ -680,6 +683,60 @@ const InformesHistoricos = () => {
   }, []);
 
   useEffect(() => {
+    const materiales = Array.from(
+      new Set(talleres.map((taller) => taller.codigo_principal?.trim()).filter(Boolean))
+    ) as string[];
+
+    if (!materiales.length) {
+      setMaterialNames({});
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchMaterialNames = async () => {
+      try {
+        const entries = await Promise.all(
+          materiales.map(async (codigo) => {
+            try {
+              const response = await getItems({ q: codigo, page_size: 5 });
+              const match = response.items.find(
+                (item) => item.codigo_producto?.toUpperCase() === codigo.toUpperCase()
+              );
+              const nombre = match?.nombre ?? response.items[0]?.nombre ?? "";
+              return [codigo, nombre] as const;
+            } catch (error) {
+              return [codigo, ""] as const;
+            }
+          })
+        );
+
+        if (!isMounted) {
+          return;
+        }
+
+        const resolved: Record<string, string> = {};
+        entries.forEach(([codigo, nombre]) => {
+          if (nombre) {
+            resolved[codigo] = nombre;
+          }
+        });
+        setMaterialNames(resolved);
+      } catch (error) {
+        if (isMounted) {
+          setMaterialNames({});
+        }
+      }
+    };
+
+    void fetchMaterialNames();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [talleres]);
+
+  useEffect(() => {
     if (scope !== "taller") {
       setSelectedTaller(null);
     }
@@ -715,6 +772,9 @@ const InformesHistoricos = () => {
               tallerNombre: meta?.nombre_taller ?? `Taller ${tallerId}`,
               sede: meta?.sede ?? null,
               material: meta?.codigo_principal ?? null,
+              materialNombre: meta?.codigo_principal
+                ? (materialNames[meta.codigo_principal] ?? null)
+                : null,
             }));
           })
         );
@@ -756,7 +816,7 @@ const InformesHistoricos = () => {
     return () => {
       isMounted = false;
     };
-  }, [selectedTallerIds, talleres]);
+  }, [materialNames, selectedTallerIds, talleres]);
 
   useEffect(() => {
     setSelectedFields(exportFieldDefinitions.map((field) => field.key));
@@ -980,6 +1040,7 @@ const InformesHistoricos = () => {
         tallerId: row.tallerId,
         tallerNombre: row.tallerNombre,
         material: row.material,
+        materialNombre: row.materialNombre,
         sede: row.sede,
         rows: [row],
       });
@@ -1209,7 +1270,7 @@ const InformesHistoricos = () => {
                         Corte principal
                       </Typography>
                       <Typography variant="subtitle1" fontWeight={600}>
-                        {group.tallerNombre}
+                        {group.materialNombre ?? group.material ?? group.tallerNombre}
                       </Typography>
                       {group.material ? (
                         <Typography variant="caption" color="text.secondary">
@@ -1224,7 +1285,7 @@ const InformesHistoricos = () => {
                     </Stack>
 
                     <Typography variant="overline" color="text.secondary">
-                      Subcortes de {group.tallerNombre}
+                      Subcortes de {group.materialNombre ?? group.material ?? group.tallerNombre}
                     </Typography>
 
                     <Stack spacing={1}>
