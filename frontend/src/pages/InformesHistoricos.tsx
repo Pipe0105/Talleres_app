@@ -765,16 +765,15 @@ const InformesHistoricos = () => {
           selectedTallerIds.map(async (tallerId) => {
             const data = await getTallerCalculo(tallerId);
             const meta = talleres.find((taller) => String(taller.id) === tallerId);
+            const materialCodigo = meta?.codigo_principal?.trim() ?? null;
 
             return data.map((row) => ({
               ...row,
               tallerId: Number(tallerId),
               tallerNombre: meta?.nombre_taller ?? `Taller ${tallerId}`,
               sede: meta?.sede ?? null,
-              material: meta?.codigo_principal ?? null,
-              materialNombre: meta?.codigo_principal
-                ? (materialNames[meta.codigo_principal] ?? null)
-                : null,
+              material: materialCodigo,
+              materialNombre: materialCodigo ? (materialNames[materialCodigo] ?? null) : null,
             }));
           })
         );
