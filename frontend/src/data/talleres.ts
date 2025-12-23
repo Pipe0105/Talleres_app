@@ -96,7 +96,10 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
     codigo: "33643",
     nombre: "Espaldilla especial",
     subcortes: withUniqueSubcortes(
-      [{ codigo: "5834", nombre: "Espaldilla" }],
+      [
+        { codigo: "5834", nombre: "Espaldilla" },
+        { codigo: "22835", nombre: "Gordana" },
+      ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "31682", nombre: "Desperdicio" },
