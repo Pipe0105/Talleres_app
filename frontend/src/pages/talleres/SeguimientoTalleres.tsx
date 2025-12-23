@@ -20,6 +20,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  MenuItem,
   Paper,
   Stack,
   Table,
@@ -139,6 +140,8 @@ interface DetalleDiaState {
 const resolveActividadKey = (usuario: TallerActividadUsuario): string =>
   `${usuario.user_id}-${resolveSede(usuario)}`;
 
+type ActividadFilter = "todos" | "con" | "sin";
+
 const SeguimientoTalleres = () => {
   const [startDate, setStartDate] = useState<string>(() => formatDateInput(startOfWeek()));
   const [endDate, setEndDate] = useState<string>(() => formatDateInput(endOfWeek(startOfWeek())));
@@ -148,6 +151,7 @@ const SeguimientoTalleres = () => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
+  const [actividadFilter, setActividadFilter] = useState<ActividadFilter>("todos");
   const [principalNames, setPrincipalNames] = useState<Record<string, string>>({});
   const [detalleDia, setDetalleDia] = useState<DetalleDiaState>({
     open: false,
@@ -160,6 +164,8 @@ const SeguimientoTalleres = () => {
 
   const displayedDates = useMemo(() => buildDateRange(startDate, endDate), [startDate, endDate]);
 
+  const displayedDatesSet = useMemo(() => new Set(displayedDates), [displayedDates]);
+
   const availableSedes = useMemo(() => {
     const sedes = new Set<string>();
     actividad.forEach((usuario) => {
@@ -169,11 +175,20 @@ const SeguimientoTalleres = () => {
   }, [actividad]);
 
   const filteredActividad = useMemo(() => {
-    if (!selectedSedes.length) {
-      return actividad;
+    const actividadFiltrada = selectedSedes.length
+      ? actividad.filter((usuario) => selectedSedes.includes(resolveSede(usuario)))
+      : actividad;
+
+    if (actividadFilter === "todos") {
+      return actividadFiltrada;
     }
-    return actividad.filter((usuario) => selectedSedes.includes(resolveSede(usuario)));
-  }, [actividad, selectedSedes]);
+    return actividadFiltrada.filter((usuario) => {
+      const tieneActividad = usuario.dias.some(
+        (dia) => displayedDatesSet.has(dia.fecha) && dia.cantidad > 0
+      );
+      return actividadFilter === "con" ? tieneActividad : !tieneActividad;
+    });
+  }, [actividad, actividadFilter, displayedDatesSet, selectedSedes]);
 
   const detalleAgrupado = useMemo(() => {
     const groups = new Map<
@@ -677,36 +692,51 @@ const SeguimientoTalleres = () => {
           }
         />
         <CardContent>
-          <Autocomplete
-            multiple
-            options={availableSedes}
-            value={selectedSedes}
-            onChange={(_, value) => setSelectedSedes(value)}
-            disableCloseOnSelect
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Filtrar por sedes"
-                placeholder="Selecciona una o varias sedes"
-                inputProps={{
-                  ...params.inputProps,
-                  "aria-label": "Filtrar por sedes a mostrar en la tabla",
-                }}
-                helperText="Si no seleccionas ninguna, se mostrarán todas las sedes."
-              />
-            )}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => {
-                const { key, ...tagProps } = getTagProps({ index });
-                return <Chip key={key ?? option} label={option} size="small" {...tagProps} />;
-              })
-            }
-            sx={{ maxWidth: 520, mb: 2 }}
-            clearText="Limpiar"
-            closeText="Cerrar"
-            openText="Abrir"
-            noOptionsText="No hay sedes disponibles"
-          />
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mb: 2 }}>
+            <Autocomplete
+              multiple
+              options={availableSedes}
+              value={selectedSedes}
+              onChange={(_, value) => setSelectedSedes(value)}
+              disableCloseOnSelect
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Filtrar por sedes"
+                  placeholder="Selecciona una o varias sedes"
+                  inputProps={{
+                    ...params.inputProps,
+                    "aria-label": "Filtrar por sedes a mostrar en la tabla",
+                  }}
+                  helperText="Si no seleccionas ninguna, se mostrarán todas las sedes."
+                />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => {
+                  const { key, ...tagProps } = getTagProps({ index });
+                  return <Chip key={key ?? option} label={option} size="small" {...tagProps} />;
+                })
+              }
+              sx={{ maxWidth: 520, flex: 1 }}
+              clearText="Limpiar"
+              closeText="Cerrar"
+              openText="Abrir"
+              noOptionsText="No hay sedes disponibles"
+            />
+            <TextField
+              select
+              label="Actividad"
+              value={actividadFilter}
+              onChange={(event) => setActividadFilter(event.target.value as ActividadFilter)}
+              helperText="Filtra sedes con o sin talleres en el rango."
+              inputProps={{ "aria-label": "Filtrar por actividad de talleres" }}
+              sx={{ minWidth: 220 }}
+            >
+              <MenuItem value="todos">Todas</MenuItem>
+              <MenuItem value="con">Con talleres</MenuItem>
+              <MenuItem value="sin">Sin talleres</MenuItem>
+            </TextField>
+          </Stack>
           {renderTable()}
           {downloadError && (
             <Alert severity="error" sx={{ mt: 2 }}>
