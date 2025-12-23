@@ -709,8 +709,21 @@ const TalleresPlus = () => {
                               </Stack>
                               <Typography variant="body2" color="text.secondary">
                                 {material.subcortes.length} subcorte(s) · Pérdida:{" "}
-                                {formatKg(material.perdida)} kg
+                                {formatKg(material.perdida)} kg (
+                                {material.porcentajePerdida.toFixed(2)}%)
                               </Typography>
+                              <Stack direction="row" spacing={1} flexWrap="wrap">
+                                <Chip
+                                  size="small"
+                                  label={`Peso inicial: ${formatKg(material.pesoInicial)} kg`}
+                                  variant="outlined"
+                                />
+                                <Chip
+                                  size="small"
+                                  label={`Peso final: ${formatKg(material.pesoFinal)} kg`}
+                                  variant="outlined"
+                                />
+                              </Stack>
                               <Stack direction="row" spacing={1} flexWrap="wrap">
                                 {material.subcortes.map((sc) => (
                                   <Chip
