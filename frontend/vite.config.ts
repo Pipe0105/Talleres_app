@@ -6,16 +6,13 @@ const normalizeUrl = (value: string): string => value.replace(/\/+$/, "");
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const backendFromEnv = env.VITE_BACKEND_ORIGIN
-    ? normalizeUrl(env.VITE_BACKEND_ORIGIN)
-    : null;
+  const backendFromEnv = env.VITE_BACKEND_ORIGIN ? normalizeUrl(env.VITE_BACKEND_ORIGIN) : null;
 
   const derivedFromApiUrl = env.VITE_API_URL
     ? normalizeUrl(env.VITE_API_URL).replace(/\/api$/, "")
     : null;
 
-  const backendTarget =
-    backendFromEnv ?? derivedFromApiUrl ?? "http://localhost:8080";
+  const backendTarget = backendFromEnv ?? derivedFromApiUrl ?? "http://localhost:8080";
 
   return {
     plugins: [react()],
@@ -27,6 +24,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+    },
+    test: {
+      environment: "jsdom",
+      setupFiles: "./src/setupTests.ts",
+      globals: true,
     },
   };
 });

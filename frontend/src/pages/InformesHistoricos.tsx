@@ -78,7 +78,14 @@ interface ExportFieldDefinition extends ExportField {
   getValue: (row: TallerCalculoWithMeta) => string;
 }
 
+const formatTallerId = (id: number) => id.toString().padStart(2, "0");
+
 const exportFieldDefinitions: ExportFieldDefinition[] = [
+  {
+    key: "taller_id",
+    label: "ID taller",
+    getValue: (row) => formatTallerId(row.tallerId),
+  },
   {
     key: "taller_nombre",
     label: "Taller",
@@ -1269,7 +1276,9 @@ const InformesHistoricos = () => {
                   {selectedTalleres.map((taller) => (
                     <Chip
                       key={taller.id}
-                      label={`${taller.nombre_taller}${taller.sede ? ` · ${taller.sede}` : ""}`}
+                      label={`ID ${formatTallerId(taller.id)} · ${taller.nombre_taller}${
+                        taller.sede ? ` · ${taller.sede}` : ""
+                      }`}
                       size="small"
                     />
                   ))}
@@ -1364,6 +1373,9 @@ const InformesHistoricos = () => {
                           {group.materialNombre ?? group.material ?? group.tallerNombre}
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Typography variant="caption" color="text.secondary">
+                            ID: {formatTallerId(group.tallerId)}
+                          </Typography>
                           {group.material ? (
                             <Typography variant="caption" color="text.secondary">
                               Código: {group.material}
