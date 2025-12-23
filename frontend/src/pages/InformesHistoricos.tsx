@@ -19,6 +19,7 @@ import PageHeader from "../components/PageHeader";
 import type { TallerOption } from "../components/informes/TallerSelectionCard";
 import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel, { ExportField } from "../components/informes/InformeExportPanel";
+import { TALLER_MATERIALES } from "../data/talleres";
 
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 3,
@@ -36,6 +37,11 @@ const currencyFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
+
+const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
+  acc[material.codigo] = material.nombre;
+  return acc;
+}, {});
 
 type InformeScope = "taller" | "sede" | "material";
 
@@ -703,10 +709,11 @@ const InformesHistoricos = () => {
               const match = response.items.find(
                 (item) => item.codigo_producto?.toUpperCase() === codigo.toUpperCase()
               );
-              const nombre = match?.nombre ?? response.items[0]?.nombre ?? "";
+              const nombre =
+                match?.nombre ?? response.items[0]?.nombre ?? LOCAL_MATERIAL_NAMES[codigo] ?? "";
               return [codigo, nombre] as const;
             } catch (error) {
-              return [codigo, ""] as const;
+              return [codigo, LOCAL_MATERIAL_NAMES[codigo] ?? ""] as const;
             }
           })
         );
