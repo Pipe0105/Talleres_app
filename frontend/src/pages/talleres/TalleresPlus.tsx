@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Card,
@@ -58,6 +59,7 @@ const TalleresPlus = () => {
   const [descripcionGrupo, setDescripcionGrupo] = useState<string>("");
   const [especie, setEspecie] = useState<Especie | "">("");
   const [codigoMaterial, setCodigoMaterial] = useState<string>("");
+  const [materialSearch, setMaterialSearch] = useState<string>("");
   const [pesoInicial, setPesoInicial] = useState<string>("");
   const [pesoFinal, setPesoFinal] = useState<string>("");
   const [nombreTaller, setNombreTaller] = useState<string>("");
@@ -121,6 +123,7 @@ const TalleresPlus = () => {
 
   const resetFormularioMaterial = () => {
     setCodigoMaterial("");
+    setMaterialSearch("");
     setPesoInicialGuardado(false);
     setSubcortesPesos({});
     setSubcortesSeleccionados([]);
@@ -407,6 +410,7 @@ const TalleresPlus = () => {
                         onChange={(e) => {
                           setEspecie(e.target.value as Especie);
                           setCodigoMaterial("");
+                          setMaterialSearch("");
                           setPesoInicialGuardado(false);
                           setSubcortesPesos({});
                           setSubcortesSeleccionados([]);
@@ -418,26 +422,33 @@ const TalleresPlus = () => {
                       </TextField>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                      <TextField
-                        select
+                      <Autocomplete
                         fullWidth
                         disabled={!especie}
-                        label="Material principal"
-                        value={codigoMaterial}
-                        onChange={(e) => {
-                          setCodigoMaterial(e.target.value);
+                        value={materialSeleccionado ?? null}
+                        inputValue={materialSearch}
+                        options={materiales}
+                        getOptionLabel={(option) => `${option.nombre} (${option.codigo})`}
+                        isOptionEqualToValue={(option, value) => option.codigo === value.codigo}
+                        onInputChange={(_, newValue) => setMaterialSearch(newValue)}
+                        onChange={(_, newValue) => {
+                          setCodigoMaterial(newValue?.codigo ?? "");
+                          setMaterialSearch(
+                            newValue ? `${newValue.nombre} (${newValue.codigo})` : ""
+                          );
                           setPesoInicialGuardado(false);
                           setSubcortesPesos({});
                           setSubcortesSeleccionados([]);
                           setSeleccionSubcortesGuardada(false);
                         }}
-                      >
-                        {materiales.map((material) => (
-                          <MenuItem key={material.codigo} value={material.codigo}>
-                            {material.nombre} ({material.codigo})
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Material principal"
+                            placeholder="Escribe para buscar el material"
+                          />
+                        )}
+                      />
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <TextField
