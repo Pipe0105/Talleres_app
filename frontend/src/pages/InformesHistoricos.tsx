@@ -55,9 +55,17 @@ type TallerCalculoWithMeta = TallerCalculoRow & {
   sede: string | null;
   material: string | null;
   materialNombre: string | null;
+  materialLabel: string;
   tallerGrupoId: number | null;
   groupKey: string;
   displayId: number;
+  peso_inicial: number;
+  peso_final: number;
+  porcentaje_perdida: number | null;
+  peso_subcortes: number;
+  pesoInicial: number;
+  pesoFinal: number;
+  porcentajePerdida: number | null;
 };
 
 type TallerCalculoGroup = {
@@ -90,7 +98,7 @@ interface ExportFieldDefinition extends ExportField {
 
 const formatTallerId = (id: number) => id.toString().padStart(2, "0");
 
-const exportFieldDefinitions: ExportFieldDefinition[] = [
+const baseExportFieldDefinitions: ExportFieldDefinition[] = [
   {
     key: "taller_id",
     label: "ID taller",
@@ -110,6 +118,11 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
     key: "material",
     label: "Material",
     getValue: (row) => row.material ?? "Sin material",
+  },
+  {
+    key: "corte_principal",
+    label: "Corte principal",
+    getValue: (row) => row.materialLabel,
   },
   {
     key: "nombre_corte",
@@ -132,6 +145,29 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
     getValue: (row) => pesoFormatter.format(row.peso),
   },
   {
+    key: "peso_inicial",
+    label: "Peso inicial (KG)",
+    getValue: (row) => pesoFormatter.format(row.peso_inicial),
+  },
+  {
+    key: "peso_subcortes",
+    label: "Peso subcortes (KG)",
+    getValue: (row) => pesoFormatter.format(row.peso_subcortes),
+  },
+  {
+    key: "peso_final",
+    label: "Peso final (KG)",
+    getValue: (row) => pesoFormatter.format(row.peso_final),
+  },
+  {
+    key: "porcentaje_perdida",
+    label: "% pérdida",
+    getValue: (row) =>
+      row.porcentaje_perdida === null || Number.isNaN(row.porcentaje_perdida)
+        ? "N/D"
+        : `${porcentajeFormatter.format(row.porcentaje_perdida)}%`,
+  },
+  {
     key: "porcentaje_real",
     label: "% real",
     getValue: (row) => `${porcentajeFormatter.format(row.porcentaje_real)}%`,
@@ -147,6 +183,8 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
     getValue: (row) => currencyFormatter.format(row.valor_estimado),
   },
 ];
+
+const exportFieldDefinitions = baseExportFieldDefinitions;
 
 const normalizeWhitespace = (value: string) => value.replace(/\u00a0/g, " ");
 
@@ -853,20 +891,31 @@ const InformesHistoricos = () => {
             const data = await getTallerCalculo(tallerId);
             const meta = talleres.find((taller) => String(taller.id) === tallerId);
             const materialCodigo = meta?.codigo_principal?.trim() ?? null;
+            const materialNombre = materialCodigo ? (materialNames[materialCodigo] ?? null) : null;
+            const materialLabel =
+              materialNombre ?? materialCodigo ?? meta?.nombre_taller ?? `Taller ${tallerId}`;
             const grupoId = meta?.taller_grupo_id ?? null;
             const displayId = grupoId ?? Number(tallerId);
             const groupKey = grupoId ? `grupo-${grupoId}` : `taller-${tallerId}`;
+            const pesoInicial = meta?.peso_inicial ?? 0;
+            const pesoFinal = meta?.peso_final ?? 0;
+            const porcentajePerdida = meta?.porcentaje_perdida ?? null;
+            const totalSubcortesPeso = data.reduce((acc, row) => acc + row.peso, 0);
 
             return data.map((row) => ({
               ...row,
               tallerId: Number(tallerId),
               tallerNombre: meta?.nombre_taller ?? `Taller ${tallerId}`,
               sede: meta?.sede ?? null,
-              material: materialCodigo,
-              materialNombre: materialCodigo ? (materialNames[materialCodigo] ?? null) : null,
+              materialNombre,
+              materialLabel,
               tallerGrupoId: grupoId,
               groupKey,
               displayId,
+              peso_inicial: pesoInicial,
+              peso_final: pesoFinal,
+              porcentaje_perdida: porcentajePerdida,
+              peso_subcortes: totalSubcortesPeso,
             }));
           })
         );
@@ -1157,6 +1206,9 @@ const InformesHistoricos = () => {
             label: materialLabel,
             material: row.material,
             materialNombre: row.materialNombre,
+            pesoInicial: row.peso_inicial,
+            pesoFinal: row.peso_final,
+            porcentajePerdida: row.porcentaje_perdida,
             rows: [row],
           });
         }
@@ -1169,6 +1221,9 @@ const InformesHistoricos = () => {
         label: materialLabel,
         material: row.material,
         materialNombre: row.materialNombre,
+        pesoInicial: row.peso_inicial,
+        pesoFinal: row.peso_final,
+        porcentajePerdida: row.porcentaje_perdida,
         rows: [row],
       });
       groups.set(row.groupKey, {
@@ -1471,6 +1526,68 @@ const InformesHistoricos = () => {
                         <Stack spacing={2.5}>
                           {group.materiales.map((material) => (
                             <Stack key={material.tallerId} spacing={1.5}>
+                              <Stack
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={2}
+                                divider={<Divider flexItem orientation="vertical" />}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  border: "1px solid",
+                                  borderColor: "divider",
+                                }}
+                              >
+                                <Stack spacing={0.25}>
+                                  <Typography variant="overline" color="text.secondary">
+                                    Corte principal
+                                  </Typography>
+                                  <Typography variant="subtitle2">{material.label}</Typography>
+                                  {material.material ? (
+                                    <Typography variant="caption" color="text.secondary">
+                                      Código: {material.material}
+                                    </Typography>
+                                  ) : null}
+                                </Stack>
+                                <Stack spacing={0.25}>
+                                  <Typography variant="overline" color="text.secondary">
+                                    Peso inicial
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {pesoFormatter.format(material.pesoInicial)} kg
+                                  </Typography>
+                                </Stack>
+                                <Stack spacing={0.25}>
+                                  <Typography variant="overline" color="text.secondary">
+                                    Subcortes
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {pesoFormatter.format(
+                                      material.rows.reduce((acc, row) => acc + row.peso, 0)
+                                    )}{" "}
+                                    kg
+                                  </Typography>
+                                </Stack>
+                                <Stack spacing={0.25}>
+                                  <Typography variant="overline" color="text.secondary">
+                                    Peso final
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {pesoFormatter.format(material.pesoFinal)} kg
+                                  </Typography>
+                                </Stack>
+                                <Stack spacing={0.25}>
+                                  <Typography variant="overline" color="text.secondary">
+                                    % pérdida
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {material.porcentajePerdida === null
+                                      ? "N/D"
+                                      : `${porcentajeFormatter.format(
+                                          material.porcentajePerdida
+                                        )}%`}
+                                  </Typography>
+                                </Stack>
+                              </Stack>
                               <Typography variant="overline" color="text.secondary">
                                 Subcortes de {material.label}
                               </Typography>

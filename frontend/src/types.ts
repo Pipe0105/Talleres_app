@@ -139,6 +139,7 @@ export interface TallerListItem {
   sede?: string | null;
   peso_inicial: number;
   peso_final: number;
+  porcentaje_perdida?: number | null;
   total_peso: number;
   especie: string;
   codigo_principal?: string | null;

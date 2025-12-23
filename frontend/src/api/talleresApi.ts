@@ -267,6 +267,7 @@ const mapTallerListItem = (raw: any): TallerListItem => {
     sede,
     peso_inicial: toNumber(raw?.peso_inicial, 0),
     peso_final: toNumber(raw?.peso_final, 0),
+    porcentaje_perdida: raw?.porcentaje_perdida ?? null,
     total_peso: toNumber(raw?.total_peso, 0),
     especie: toStringOr(raw?.especie, ""),
     codigo_principal: raw?.codigo_principal ?? null,

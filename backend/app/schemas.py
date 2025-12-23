@@ -469,6 +469,7 @@ class TallerListItem(BaseModel):
     sede: Optional[str] = None
     peso_inicial: Decimal
     peso_final: Decimal
+    porcentaje_perdida: Optional[Decimal] = None
     total_peso: Decimal
     especie: str
     codigo_principal: Optional[str] = None

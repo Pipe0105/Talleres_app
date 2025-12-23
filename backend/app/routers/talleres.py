@@ -407,6 +407,7 @@ def listar_talleres(
                 sede=taller.sede,
                 peso_inicial=taller.peso_inicial or Decimal("0"),
                 peso_final=taller.peso_final or Decimal("0"),
+                porcentaje_perdida=taller.porcentaje_perdida,
                 total_peso=total_peso,
                 especie=taller.especie,
                 codigo_principal=taller.codigo_principal,
