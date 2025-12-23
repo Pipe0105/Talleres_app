@@ -106,7 +106,7 @@ const exportFieldDefinitions: ExportFieldDefinition[] = [
   },
   {
     key: "item_code",
-    label: "Codigo de ítem",
+    label: "Codigo de item",
     getValue: (row) => row.item_code,
   },
   {
