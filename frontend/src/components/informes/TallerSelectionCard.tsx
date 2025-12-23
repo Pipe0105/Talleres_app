@@ -1,10 +1,4 @@
-import {
-  Alert,
-  Autocomplete,
-  CircularProgress,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Alert, Autocomplete, CircularProgress, Stack, TextField } from "@mui/material";
 import ReplayIcon from "@mui/icons-material/Replay";
 import PageSection from "../PageSection";
 import PageHeader from "../PageHeader";
@@ -13,6 +7,7 @@ import { ReactNode } from "react";
 export interface TallerOption {
   id: string;
   label: string;
+  tallerIds: string[];
 }
 
 interface TallerSelectionCardProps {
@@ -51,9 +46,7 @@ const TallerSelectionCard = ({
           loading={loading}
           onChange={(_, selected) => onChange(selected)}
           getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, optionValue) =>
-            option.id === optionValue.id
-          }
+          isOptionEqualToValue={(option, optionValue) => option.id === optionValue.id}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -67,9 +60,7 @@ const TallerSelectionCard = ({
                 ...params.InputProps,
                 endAdornment: (
                   <>
-                    {loading ? (
-                      <CircularProgress color="inherit" size={20} />
-                    ) : null}
+                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
                     {params.InputProps.endAdornment}
                   </>
                 ),
@@ -98,8 +89,8 @@ const TallerSelectionCard = ({
 
         {!loading && !options.length && !error ? (
           <Alert severity="info">
-            No hay talleres registrados aún. Crea uno desde la sección de
-            talleres para visualizarlo aquí.
+            No hay talleres registrados aún. Crea uno desde la sección de talleres para visualizarlo
+            aquí.
           </Alert>
         ) : null}
       </Stack>

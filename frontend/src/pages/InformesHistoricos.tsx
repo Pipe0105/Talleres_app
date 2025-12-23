@@ -570,9 +570,35 @@ const InformesHistoricos = () => {
   const [minPeso, setMinPeso] = useState("");
   const [maxPeso, setMaxPeso] = useState("");
   const individualTallerOptions = useMemo<TallerOption[]>(() => {
-    return talleres.map((taller) => ({
-      id: String(taller.id),
-      label: `${taller.nombre_taller} · ${pesoFormatter.format(taller.total_peso)} kg`,
+    const grouped = new Map<
+      string,
+      { id: string; label: string; tallerIds: string[]; totalPeso: number }
+    >();
+
+    talleres.forEach((taller) => {
+      const groupKey = taller.taller_grupo_id
+        ? `grupo-${taller.taller_grupo_id}`
+        : `taller-${taller.id}`;
+      const existing = grouped.get(groupKey);
+
+      if (existing) {
+        existing.tallerIds.push(String(taller.id));
+        existing.totalPeso += taller.total_peso;
+        return;
+      }
+
+      grouped.set(groupKey, {
+        id: groupKey,
+        label: taller.nombre_taller,
+        tallerIds: [String(taller.id)],
+        totalPeso: taller.total_peso,
+      });
+    });
+
+    return Array.from(grouped.values()).map((option) => ({
+      id: option.id,
+      label: `${option.label} · ${pesoFormatter.format(option.totalPeso)} kg`,
+      tallerIds: option.tallerIds,
     }));
   }, [talleres]);
 
@@ -598,7 +624,7 @@ const InformesHistoricos = () => {
 
   const selectedTallerIds = useMemo(() => {
     if (scope === "taller") {
-      return selectedTaller ? [selectedTaller.id] : [];
+      return selectedTaller ? selectedTaller.tallerIds : [];
     }
 
     let filtered = talleres;
