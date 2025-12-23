@@ -407,6 +407,7 @@ def listar_talleres(
                 total_peso=total_peso,
                 especie=taller.especie,
                 codigo_principal=taller.codigo_principal,
+                taller_grupo_id=taller.taller_grupo_id,
                 creado_en=taller.creado_en,
             )
         )
