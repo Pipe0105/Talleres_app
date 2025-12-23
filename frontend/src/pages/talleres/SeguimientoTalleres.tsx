@@ -175,8 +175,43 @@ const SeguimientoTalleres = () => {
     return actividad.filter((usuario) => selectedSedes.includes(resolveSede(usuario)));
   }, [actividad, selectedSedes]);
 
+  const detalleAgrupado = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        nombre: string;
+        descripcion: string | null;
+        especie: string;
+        sede: string | null;
+        talleres: TallerResponse[];
+      }
+    >();
+
+    detalleDia.talleres.forEach((taller) => {
+      const nombre = (taller.nombre_taller || "").trim();
+      const key = nombre ? nombre.toLowerCase() : `taller-${taller.id}`;
+      const existing = groups.get(key);
+
+      if (existing) {
+        existing.talleres.push(taller);
+      } else {
+        groups.set(key, {
+          key,
+          nombre: nombre || "Taller sin nombre",
+          descripcion: taller.descripcion ?? null,
+          especie: taller.especie,
+          sede: taller.sede ?? null,
+          talleres: [taller],
+        });
+      }
+    });
+
+    return Array.from(groups.values());
+  }, [detalleDia.talleres]);
+
   const resumenDetalle = useMemo(() => {
-    const totalTalleres = detalleDia.talleres.length;
+    const totalTalleres = detalleAgrupado.length;
     const totalSubcortes = detalleDia.talleres.reduce(
       (acc, taller) => acc + (taller.subcortes?.length ?? 0),
       0
@@ -196,7 +231,7 @@ const SeguimientoTalleres = () => {
       totalPesoInicial,
       totalPesoFinal,
     };
-  }, [detalleDia.talleres]);
+  }, [detalleAgrupado.length, detalleDia.talleres]);
 
   const loadActividad = useCallback(async () => {
     setLoading(true);
@@ -714,7 +749,7 @@ const SeguimientoTalleres = () => {
           )}
           {!detalleDia.loading &&
             !detalleDia.error &&
-            (detalleDia.talleres.length ? (
+            (detalleAgrupado.length ? (
               <Stack spacing={2}>
                 <Paper variant="outlined" sx={{ p: 2.5 }}>
                   <Stack
@@ -754,115 +789,149 @@ const SeguimientoTalleres = () => {
                 </Paper>
 
                 <Stack spacing={2}>
-                  {detalleDia.talleres.map((taller) => {
-                    const codigoPrincipal = taller.codigo_principal?.trim() ?? "";
-                    const nombreCortePrincipal = codigoPrincipal
-                      ? (principalNames[codigoPrincipal] ?? "")
-                      : "";
-                    const nombrePrincipal =
-                      taller.nombre_taller ||
-                      nombreCortePrincipal ||
-                      codigoPrincipal ||
-                      "Corte principal sin nombre";
-
-                    return (
-                      <Accordion key={taller.id} variant="outlined" disableGutters>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Stack spacing={0.25}>
-                            <Typography variant="subtitle1" fontWeight={600}>
-                              {nombrePrincipal}
-                              <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {detalleAgrupado.map((grupo) => (
+                    <Accordion key={grupo.key} variant="outlined" disableGutters>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Stack spacing={0.25}>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {grupo.nombre}
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              <Typography variant="caption" color="text.secondary">
+                                Cortes principales: {grupo.talleres.length}
+                              </Typography>
+                              {grupo.especie && (
                                 <Typography variant="caption" color="text.secondary">
-                                  Corte principal:{" "}
-                                  {nombreCortePrincipal || taller.nombre_principal || "N/D"}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Código principal: {codigoPrincipal || "N/D"}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Creado el {formatDateTime(taller.creado_en)}
-                                </Typography>
-                              </Stack>
-                            </Typography>
-                          </Stack>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Stack spacing={1.5}>
-                            <Typography color="text.secondary">
-                              {taller.descripcion || "Sin descripción registrada."}
-                            </Typography>
-                            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                              <Typography variant="body2">
-                                <strong>Especie:</strong> {taller.especie}
-                              </Typography>
-                              <Typography variant="body2">
-                                <strong>Peso inicial:</strong>{" "}
-                                {pesoFormatter.format(taller.peso_inicial)} kg
-                              </Typography>
-                              <Typography variant="body2">
-                                <strong>Peso final:</strong>{" "}
-                                {pesoFormatter.format(taller.peso_final)} kg
-                              </Typography>
-                              <Typography variant="body2">
-                                <strong>Pérdida:</strong> {taller.porcentaje_perdida ?? "N/D"}%
-                              </Typography>
-                            </Stack>
-                            <Box>
-                              <Typography variant="overline" color="text.secondary" gutterBottom>
-                                Subcortes de {nombrePrincipal}
-                              </Typography>
-                              {taller.subcortes.length ? (
-                                <Stack spacing={1}>
-                                  {taller.subcortes.map((subcorte) => (
-                                    <Stack
-                                      key={subcorte.id}
-                                      direction={{ xs: "column", sm: "row" }}
-                                      spacing={1.5}
-                                      justifyContent="space-between"
-                                      alignItems={{ xs: "flex-start", sm: "center" }}
-                                      sx={{
-                                        p: 1.5,
-                                        borderRadius: 1,
-                                        border: "1px solid",
-                                        borderColor: "divider",
-                                      }}
-                                    >
-                                      <Stack spacing={0.25}>
-                                        <Typography variant="subtitle2">
-                                          {subcorte.nombre_subcorte}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Código: {subcorte.codigo_producto || "N/A"}
-                                        </Typography>
-                                      </Stack>
-                                      <Stack
-                                        direction="row"
-                                        spacing={2}
-                                        divider={<Divider flexItem orientation="vertical" />}
-                                      >
-                                        <Stack spacing={0.25}>
-                                          <Typography variant="overline" color="text.secondary">
-                                            Peso
-                                          </Typography>
-                                          <Typography variant="body1" fontWeight={600}>
-                                            {pesoFormatter.format(subcorte.peso)} kg
-                                          </Typography>
-                                        </Stack>
-                                      </Stack>
-                                    </Stack>
-                                  ))}
-                                </Stack>
-                              ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                  No se registraron subcortes en este taller.
+                                  Especie: {grupo.especie}
                                 </Typography>
                               )}
-                            </Box>
+                              {grupo.sede && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Sede: {grupo.sede}
+                                </Typography>
+                              )}
+                            </Stack>
+                          </Typography>
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={2}>
+                          <Typography color="text.secondary">
+                            {grupo.descripcion || "Sin descripción registrada."}
+                          </Typography>
+                          <Stack spacing={2}>
+                            {grupo.talleres.map((taller) => {
+                              const codigoPrincipal = taller.codigo_principal?.trim() ?? "";
+                              const nombreCortePrincipal = codigoPrincipal
+                                ? (principalNames[codigoPrincipal] ?? "")
+                                : "";
+                              const nombrePrincipal =
+                                nombreCortePrincipal ||
+                                taller.nombre_principal ||
+                                codigoPrincipal ||
+                                "Corte principal sin nombre";
+
+                              return (
+                                <Paper key={taller.id} variant="outlined" sx={{ p: 2 }}>
+                                  <Stack spacing={1.5}>
+                                    <Stack spacing={0.25}>
+                                      <Typography variant="subtitle2" fontWeight={600}>
+                                        {nombrePrincipal}
+                                      </Typography>
+                                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                                        <Typography variant="caption" color="text.secondary">
+                                          Código principal: {codigoPrincipal || "N/D"}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          Creado el {formatDateTime(taller.creado_en)}
+                                        </Typography>
+                                      </Stack>
+                                    </Stack>
+                                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                                      <Typography variant="body2">
+                                        <strong>Peso inicial:</strong>{" "}
+                                        {pesoFormatter.format(taller.peso_inicial)} kg
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        <strong>Peso final:</strong>{" "}
+                                        {pesoFormatter.format(taller.peso_final)} kg
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        <strong>Pérdida:</strong>{" "}
+                                        {taller.porcentaje_perdida ?? "N/D"}%
+                                      </Typography>
+                                    </Stack>
+                                    <Box>
+                                      <Typography
+                                        variant="overline"
+                                        color="text.secondary"
+                                        gutterBottom
+                                      >
+                                        Subcortes de {nombrePrincipal}
+                                      </Typography>
+                                      {taller.subcortes.length ? (
+                                        <Stack spacing={1}>
+                                          {taller.subcortes.map((subcorte) => (
+                                            <Stack
+                                              key={subcorte.id}
+                                              direction={{ xs: "column", sm: "row" }}
+                                              spacing={1.5}
+                                              justifyContent="space-between"
+                                              alignItems={{ xs: "flex-start", sm: "center" }}
+                                              sx={{
+                                                p: 1.5,
+                                                borderRadius: 1,
+                                                border: "1px solid",
+                                                borderColor: "divider",
+                                              }}
+                                            >
+                                              <Stack spacing={0.25}>
+                                                <Typography variant="subtitle2">
+                                                  {subcorte.nombre_subcorte}
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                >
+                                                  Código: {subcorte.codigo_producto || "N/A"}
+                                                </Typography>
+                                              </Stack>
+                                              <Stack
+                                                direction="row"
+                                                spacing={2}
+                                                divider={
+                                                  <Divider flexItem orientation="vertical" />
+                                                }
+                                              >
+                                                <Stack spacing={0.25}>
+                                                  <Typography
+                                                    variant="overline"
+                                                    color="text.secondary"
+                                                  >
+                                                    Peso
+                                                  </Typography>
+                                                  <Typography variant="body1" fontWeight={600}>
+                                                    {pesoFormatter.format(subcorte.peso)} kg
+                                                  </Typography>
+                                                </Stack>
+                                              </Stack>
+                                            </Stack>
+                                          ))}
+                                        </Stack>
+                                      ) : (
+                                        <Typography variant="body2" color="text.secondary">
+                                          No se registraron subcortes en este corte principal.
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  </Stack>
+                                </Paper>
+                              );
+                            })}
                           </Stack>
-                        </AccordionDetails>
-                      </Accordion>
-                    );
-                  })}
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
                 </Stack>
               </Stack>
             ) : (
