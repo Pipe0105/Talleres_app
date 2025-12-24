@@ -24,6 +24,10 @@ def _normalize_item_code(codigo: str) -> str:
         return trimmed or "0"
     return normalized
 
+def _normalize_item_lookup(codigo: Optional[str]) -> Optional[str]:
+    if not codigo:
+        return None
+    return _normalize_item_code(codigo).strip().lower() or None
 
 
 def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
@@ -516,7 +520,9 @@ def obtener_calculo_taller(
         if not detalle.item_id and detalle.codigo_producto
     }
     codigos_normalizados = {
-        codigo.strip().lower() for codigo in codigos_producto if codigo and codigo.strip()
+        normalized
+        for codigo in codigos_producto
+        if (normalized := _normalize_item_lookup(codigo))
     }
     nombres_subcorte = {
         detalle.nombre_subcorte.strip()
@@ -526,9 +532,16 @@ def obtener_calculo_taller(
     items_por_codigo = {}
     if codigos_normalizados:
         items_por_codigo = {
-            item.item_code.strip().lower(): item
+            _normalize_item_lookup(item.item_code): item
             for item in db.query(models.Item)
-            .filter(func.lower(func.trim(models.Item.item_code)).in_(codigos_normalizados))
+            .filter(
+                or_(
+                    func.lower(func.trim(models.Item.item_code)).in_(codigos_normalizados),
+                    func.lower(
+                        func.ltrim(func.trim(models.Item.item_code), "0")
+                    ).in_(codigos_normalizados),
+                )
+            )
             .all()
             if item.item_code
         }
@@ -537,12 +550,19 @@ def obtener_calculo_taller(
         lista_precios = (
             db.query(models.ListaPrecios)
             .filter(models.ListaPrecios.activo.is_(True))
-            .filter(func.lower(models.ListaPrecios.referencia).in_(codigos_normalizados))
+            .filter(
+                or_(
+                    func.lower(func.trim(models.ListaPrecios.referencia)).in_(codigos_normalizados),
+                    func.lower(
+                        func.ltrim(func.trim(models.ListaPrecios.referencia), "0")
+                    ).in_(codigos_normalizados),
+                )
+            )
             .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
             .all()
         )
         for registro in lista_precios:
-            key = registro.referencia.strip().lower()
+            key = _normalize_item_lookup(registro.referencia)
             if key not in lista_precios_por_codigo:
                 lista_precios_por_codigo[key] = registro
 
@@ -574,7 +594,7 @@ def obtener_calculo_taller(
             (peso / peso_inicial * Decimal("100")) if peso_inicial > 0 else Decimal("0")
         )
         codigo_detalle = detalle.codigo_producto.strip() if detalle.codigo_producto else ""
-        codigo_normalizado = codigo_detalle.lower()
+        codigo_normalizado = _normalize_item_lookup(codigo_detalle) or ""
         item = (
             db.get(models.Item, detalle.item_id)
             if detalle.item_id

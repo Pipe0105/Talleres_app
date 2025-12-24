@@ -142,6 +142,9 @@ interface DetalleDiaState {
 const resolveActividadKey = (usuario: TallerActividadUsuario): string =>
   `${usuario.user_id}-${resolveSede(usuario)}`;
 
+const normalizeSede = (value: string | null | undefined): string =>
+  (value ?? "").trim().toLowerCase();
+
 type ActividadFilter = "todos" | "con" | "sin";
 
 const SeguimientoTalleres = () => {
@@ -355,7 +358,9 @@ const SeguimientoTalleres = () => {
         userId: usuario.user_id,
         fecha,
       });
-      setDetalleDia((prev) => ({ ...prev, talleres: data }));
+      const usuarioSede = normalizeSede(usuario.sede);
+      const talleresFiltrados = data.filter((taller) => normalizeSede(taller.sede) === usuarioSede);
+      setDetalleDia((prev) => ({ ...prev, talleres: talleresFiltrados }));
     } catch (err) {
       console.error(err);
       setDetalleDia((prev) => ({
