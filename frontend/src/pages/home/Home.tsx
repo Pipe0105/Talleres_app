@@ -501,7 +501,7 @@ const Home = () => {
 
       <Grid container spacing={2}>
         {statCards.map((stat) => (
-          <Grid item xs={12} sm={6} md={3} key={stat.title}>
+          <Grid item xs={12} sm={6} md={4} key={stat.title}>
             <StatCard
               title={stat.title}
               value={stat.value}
