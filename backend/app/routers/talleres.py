@@ -545,6 +545,17 @@ def obtener_calculo_taller(
             .all()
             if item.item_code
         }
+        
+    def _prefer_min_precio(
+        existing: models.ListaPrecios | None, candidate: models.ListaPrecios
+    ) -> models.ListaPrecios:
+        if existing is None:
+            return candidate
+        if existing.precio is None and candidate.precio is not None:
+            return candidate
+        if existing.precio is None or candidate.precio is None:
+            return existing
+        return candidate if Decimal(candidate.precio) < Decimal(existing.precio) else existing
     lista_precios_por_codigo: dict[str, models.ListaPrecios] = {}
     if codigos_normalizados:
         lista_precios = (
@@ -563,8 +574,9 @@ def obtener_calculo_taller(
         )
         for registro in lista_precios:
             key = _normalize_item_lookup(registro.referencia)
-            if key not in lista_precios_por_codigo:
-                lista_precios_por_codigo[key] = registro
+            lista_precios_por_codigo[key] = _prefer_min_precio(
+                lista_precios_por_codigo.get(key), registro
+            )
 
     lista_precios_por_nombre: dict[str, models.ListaPrecios] = {}
     if nombres_subcorte:
@@ -586,8 +598,11 @@ def obtener_calculo_taller(
                 descripcion_key = registro.descripcion.strip().lower() if registro.descripcion else ""
                 referencia_key = registro.referencia.strip().lower() if registro.referencia else ""
                 for key in (descripcion_key, referencia_key):
-                    if key and key not in lista_precios_por_nombre:
-                        lista_precios_por_nombre[key] = registro
+                    if not key:
+                        continue
+                    lista_precios_por_nombre[key] = _prefer_min_precio(
+                        lista_precios_por_nombre.get(key), registro
+                    )
     for detalle in taller.detalles:
         peso = Decimal(detalle.peso or Decimal("0"))
         porcentaje_real = (
