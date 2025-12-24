@@ -515,34 +515,36 @@ def obtener_calculo_taller(
         for detalle in taller.detalles
         if not detalle.item_id and detalle.codigo_producto
     }
+    codigos_normalizados = {
+        codigo.strip().lower() for codigo in codigos_producto if codigo and codigo.strip()
+    }
     nombres_subcorte = {
         detalle.nombre_subcorte.strip()
         for detalle in taller.detalles
         if not detalle.item_id and not detalle.codigo_producto and detalle.nombre_subcorte
     }
     items_por_codigo = {}
-    if codigos_producto:
+    if codigos_normalizados:
         items_por_codigo = {
-            item.item_code: item
+            item.item_code.strip().lower(): item
             for item in db.query(models.Item)
-            .filter(models.Item.item_code.in_(codigos_producto))
+            .filter(func.lower(func.trim(models.Item.item_code)).in_(codigos_normalizados))
             .all()
+            if item.item_code
         }
     lista_precios_por_codigo: dict[str, models.ListaPrecios] = {}
-    if codigos_producto:
-        codigos_normalizados = {codigo.strip().lower() for codigo in codigos_producto if codigo.strip()}
-        if codigos_normalizados:
-            lista_precios = (
-                db.query(models.ListaPrecios)
-                .filter(models.ListaPrecios.activo.is_(True))
-                .filter(func.lower(models.ListaPrecios.referencia).in_(codigos_normalizados))
-                .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
-                .all()
-            )
-            for registro in lista_precios:
-                key = registro.referencia.strip().lower()
-                if key not in lista_precios_por_codigo:
-                    lista_precios_por_codigo[key] = registro
+    if codigos_normalizados:
+        lista_precios = (
+            db.query(models.ListaPrecios)
+            .filter(models.ListaPrecios.activo.is_(True))
+            .filter(func.lower(models.ListaPrecios.referencia).in_(codigos_normalizados))
+            .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
+            .all()
+        )
+        for registro in lista_precios:
+            key = registro.referencia.strip().lower()
+            if key not in lista_precios_por_codigo:
+                lista_precios_por_codigo[key] = registro
 
     lista_precios_por_nombre: dict[str, models.ListaPrecios] = {}
     if nombres_subcorte:
@@ -571,16 +573,16 @@ def obtener_calculo_taller(
         porcentaje_real = (
             (peso / peso_inicial * Decimal("100")) if peso_inicial > 0 else Decimal("0")
         )
-
+        codigo_detalle = detalle.codigo_producto.strip() if detalle.codigo_producto else ""
+        codigo_normalizado = codigo_detalle.lower()
         item = (
             db.get(models.Item, detalle.item_id)
             if detalle.item_id
-            else items_por_codigo.get(detalle.codigo_producto)
+            else items_por_codigo.get(codigo_normalizado)
         )
-        codigo_detalle = detalle.codigo_producto.strip() if detalle.codigo_producto else ""
         lista_precio = None
-        if codigo_detalle:
-            lista_precio = lista_precios_por_codigo.get(codigo_detalle.lower())
+        if codigo_normalizado:
+            lista_precio = lista_precios_por_codigo.get(codigo_normalizado)
         if not lista_precio and detalle.nombre_subcorte:
             lista_precio = lista_precios_por_nombre.get(detalle.nombre_subcorte.strip().lower())
 
