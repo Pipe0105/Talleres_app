@@ -24,6 +24,7 @@ import type { TallerOption } from "../components/informes/TallerSelectionCard";
 import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel, { ExportField } from "../components/informes/InformeExportPanel";
 import { TALLER_MATERIALES } from "../data/talleres";
+import { parseWeightInput } from "../utils/weights";
 
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 3,
@@ -1013,8 +1014,8 @@ const InformesHistoricos = () => {
     }
 
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    const minPesoValue = parseFloat(minPeso);
-    const maxPesoValue = parseFloat(maxPeso);
+    const minPesoValue = minPeso.trim() ? parseWeightInput(minPeso) : Number.NaN;
+    const maxPesoValue = maxPeso.trim() ? parseWeightInput(maxPeso) : Number.NaN;
 
     return calculo.filter((row) => {
       const matchesQuery =

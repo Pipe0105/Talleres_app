@@ -47,20 +47,20 @@ const InformeFilters = ({
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flex={1}>
           <TextField
             label="Peso mínimo (KG)"
-            type="number"
+            type="text"
             value={minPeso}
             onChange={(event) => onMinPesoChange(event.target.value)}
-            inputProps={{ min: 0, step: "0.001" }}
+            inputProps={{ inputMode: "decimal" }}
             helperText="Muestra cortes con peso igual o superior al valor"
             disabled={disabled}
             fullWidth
           />
           <TextField
             label="Peso máximo (KG)"
-            type="number"
+            type="text"
             value={maxPeso}
             onChange={(event) => onMaxPesoChange(event.target.value)}
-            inputProps={{ min: 0, step: "0.001" }}
+            inputProps={{ inputMode: "decimal" }}
             helperText="Muestra cortes con peso igual o inferior al valor"
             disabled={disabled}
             fullWidth
