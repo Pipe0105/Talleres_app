@@ -515,6 +515,11 @@ def obtener_calculo_taller(
         for detalle in taller.detalles
         if not detalle.item_id and detalle.codigo_producto
     }
+    nombres_subcorte = {
+        detalle.nombre_subcorte.strip()
+        for detalle in taller.detalles
+        if not detalle.item_id and not detalle.codigo_producto and detalle.nombre_subcorte
+    }
     items_por_codigo = {}
     if codigos_producto:
         items_por_codigo = {
@@ -523,6 +528,36 @@ def obtener_calculo_taller(
             .filter(models.Item.item_code.in_(codigos_producto))
             .all()
         }
+    lista_precios_por_codigo: dict[str, models.ListaPrecios] = {}
+    if codigos_producto:
+        codigos_normalizados = {codigo.strip().lower() for codigo in codigos_producto if codigo.strip()}
+        if codigos_normalizados:
+            lista_precios = (
+                db.query(models.ListaPrecios)
+                .filter(models.ListaPrecios.activo.is_(True))
+                .filter(func.lower(models.ListaPrecios.referencia).in_(codigos_normalizados))
+                .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
+                .all()
+            )
+            for registro in lista_precios:
+                key = registro.referencia.strip().lower()
+                if key not in lista_precios_por_codigo:
+                    lista_precios_por_codigo[key] = registro
+
+    lista_precios_por_nombre: dict[str, models.ListaPrecios] = {}
+    if nombres_subcorte:
+        nombres_normalizados = {nombre.strip().lower() for nombre in nombres_subcorte if nombre.strip()}
+        if nombres_normalizados:
+            lista_precios_por_nombre = {
+                registro.descripcion.strip().lower(): registro
+                for registro in (
+                    db.query(models.ListaPrecios)
+                    .filter(models.ListaPrecios.activo.is_(True))
+                    .filter(func.lower(models.ListaPrecios.descripcion).in_(nombres_normalizados))
+                    .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
+                    .all()
+                )
+            }
     for detalle in taller.detalles:
         peso = Decimal(detalle.peso or Decimal("0"))
         porcentaje_real = (
@@ -534,17 +569,31 @@ def obtener_calculo_taller(
             if detalle.item_id
             else items_por_codigo.get(detalle.codigo_producto)
         )
-        precio_venta = Decimal(item.precio_venta or Decimal("0")) if item else Decimal("0")
+        codigo_detalle = detalle.codigo_producto.strip() if detalle.codigo_producto else ""
+        lista_precio = None
+        if codigo_detalle:
+            lista_precio = lista_precios_por_codigo.get(codigo_detalle.lower())
+        if not lista_precio and detalle.nombre_subcorte:
+            lista_precio = lista_precios_por_nombre.get(detalle.nombre_subcorte.strip().lower())
+
+        if item and item.precio_venta is not None:
+            precio_venta = Decimal(item.precio_venta)
+        elif lista_precio and lista_precio.precio is not None:
+            precio_venta = Decimal(lista_precio.precio)
+        else:
+            precio_venta = Decimal("0")
 
         porcentaje_default = Decimal("0")
         delta_pct = porcentaje_real - porcentaje_default
         valor_estimado = peso * precio_venta
 
+        descripcion = (item.nombre if item else None) or (lista_precio.descripcion if lista_precio else None)
+
         calculo.append(
             schemas.TallerCalculoRow(
                 nombre_corte=detalle.nombre_subcorte,
-                descripcion=(item.nombre if item else detalle.nombre_subcorte) or "",
-                item_code=(item.item_code if item else detalle.codigo_producto) or "",
+                descripcion=descripcion or detalle.nombre_subcorte or "",
+                item_code=(item.item_code if item else codigo_detalle or (lista_precio.referencia if lista_precio else "")),
                 peso=peso,
                 porcentaje_real=porcentaje_real,
                 porcentaje_default=porcentaje_default,
