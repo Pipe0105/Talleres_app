@@ -1526,7 +1526,20 @@ const InformesHistoricos = () => {
                         </Stack>
                       </AccordionSummary>
                       <AccordionDetails>
-                        <Stack spacing={2.5}>
+                        <Stack
+                          spacing={2.5}
+                          divider={
+                            <Divider
+                              flexItem
+                              sx={{
+                                border: "none",
+                                height: 1.5,
+                                backgroundImage:
+                                  "repeating-linear-gradient(to right, #C7C7C7 0 8px, transparent 8px 18px)",
+                              }}
+                            />
+                          }
+                        >
                           {group.materiales.map((material) => (
                             <Stack key={material.tallerId} spacing={1.5}>
                               <Stack
