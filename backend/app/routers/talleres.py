@@ -548,16 +548,24 @@ def obtener_calculo_taller(
     if nombres_subcorte:
         nombres_normalizados = {nombre.strip().lower() for nombre in nombres_subcorte if nombre.strip()}
         if nombres_normalizados:
-            lista_precios_por_nombre = {
-                registro.descripcion.strip().lower(): registro
-                for registro in (
-                    db.query(models.ListaPrecios)
-                    .filter(models.ListaPrecios.activo.is_(True))
-                    .filter(func.lower(models.ListaPrecios.descripcion).in_(nombres_normalizados))
-                    .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
-                    .all()
+            lista_precios = (
+                db.query(models.ListaPrecios)
+                .filter(models.ListaPrecios.activo.is_(True))
+                .filter(
+                    or_(
+                        func.lower(models.ListaPrecios.descripcion).in_(nombres_normalizados),
+                        func.lower(models.ListaPrecios.referencia).in_(nombres_normalizados),
+                    )
                 )
-            }
+                .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
+                .all()
+            )
+            for registro in lista_precios:
+                descripcion_key = registro.descripcion.strip().lower() if registro.descripcion else ""
+                referencia_key = registro.referencia.strip().lower() if registro.referencia else ""
+                for key in (descripcion_key, referencia_key):
+                    if key and key not in lista_precios_por_nombre:
+                        lista_precios_por_nombre[key] = registro
     for detalle in taller.detalles:
         peso = Decimal(detalle.peso or Decimal("0"))
         porcentaje_real = (
