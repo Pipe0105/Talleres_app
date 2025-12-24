@@ -241,9 +241,46 @@ const Home = () => {
     }));
   }, [talleres]);
 
+  const talleresAgrupados = useMemo(() => {
+    const grupos = new Map<
+      string,
+      {
+        items: TallerConEstado[];
+        createdAt: Date | null;
+      }
+    >();
+
+    talleresConEstado.forEach((taller) => {
+      const groupKey = String(
+        taller.taller_grupo_id ?? taller.codigo_principal ?? `taller-${taller.id}`
+      );
+      const createdAt = new Date(taller.creado_en);
+      const entry = grupos.get(groupKey);
+      const validDate = Number.isNaN(createdAt.getTime()) ? null : createdAt;
+
+      if (!entry) {
+        grupos.set(groupKey, {
+          items: [taller],
+          createdAt: validDate,
+        });
+        return;
+      }
+
+      entry.items.push(taller);
+      if (validDate && (!entry.createdAt || validDate < entry.createdAt)) {
+        entry.createdAt = validDate;
+      }
+    });
+
+    return Array.from(grupos.values());
+  }, [talleresConEstado]);
+
   const completedWorkshopsCount = useMemo(
-    () => talleresConEstado.filter((taller) => taller.estado === "completado").length,
-    [talleresConEstado]
+    () =>
+      talleresAgrupados.filter((grupo) =>
+        grupo.items.every((taller) => taller.estado === "completado")
+      ).length,
+    [talleresAgrupados]
   );
 
   const completadosHoy = useMemo(() => {
@@ -252,12 +289,12 @@ const Home = () => {
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(todayStart.getDate() + 1);
 
-    return talleresConEstado.filter((taller) => {
-      const createdAt = new Date(taller.creado_en);
-      if (Number.isNaN(createdAt.getTime())) return false;
-      return createdAt >= todayStart && createdAt < tomorrowStart && taller.estado === "completado";
+    return talleresAgrupados.filter((grupo) => {
+      if (!grupo.createdAt) return false;
+      if (grupo.createdAt < todayStart || grupo.createdAt >= tomorrowStart) return false;
+      return grupo.items.every((taller) => taller.estado === "completado");
     }).length;
-  }, [talleresConEstado]);
+  }, [talleresAgrupados]);
 
   const formatDate = useCallback((value?: string | null) => {
     if (!value) return "Sin fecha";
