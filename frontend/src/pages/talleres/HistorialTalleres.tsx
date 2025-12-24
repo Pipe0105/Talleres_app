@@ -429,6 +429,7 @@ const HistorialTalleres = () => {
                       <TableCell sx={{ textTransform: "capitalize" }}>
                         {taller.especie || "—"}
                       </TableCell>
+                      <TableCell>{taller.id}</TableCell>
                       <TableCell>
                         <Tooltip
                           title={
@@ -481,7 +482,7 @@ const HistorialTalleres = () => {
                 })}
                 {!talleres.length && !loading && (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={10} align="center">
                       <Typography color="text.secondary">
                         No hay talleres con los filtros aplicados.
                       </Typography>
