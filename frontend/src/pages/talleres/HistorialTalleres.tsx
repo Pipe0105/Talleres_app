@@ -407,7 +407,6 @@ const HistorialTalleres = () => {
                   <TableCell>Código</TableCell>
                   <TableCell>Materiales</TableCell>
                   <TableCell align="center">Subcortes</TableCell>
-                  <TableCell>Creador</TableCell>
                   <TableCell align="right">Acciones</TableCell>
                 </TableRow>
               </TableHead>
@@ -462,7 +461,6 @@ const HistorialTalleres = () => {
                       <TableCell align="center">
                         <Chip label={`${totalSubcortes} cortes`} size="small" color="default" />
                       </TableCell>
-                      <TableCell>{taller.creado_por || "—"}</TableCell>
                       <TableCell align="right">
                         <Stack direction="row" spacing={1} justifyContent="flex-end">
                           <Tooltip title="Ver detalle">
