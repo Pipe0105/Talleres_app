@@ -70,6 +70,20 @@ const formatDateTime = (value: string): string =>
     minute: "2-digit",
   });
 
+const weightFormatter = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const percentFormatter = new Intl.NumberFormat("es-CO", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const formatKg = (value: number): string => `${weightFormatter.format(value)} kg`;
+
+const formatPercent = (value: number): string => `${percentFormatter.format(value)}%`;
+
 const getMaterialCodes = (taller: TallerGrupoAdminResponse): string[] =>
   taller.materiales
     .map((material) => material.codigo_principal?.trim())
@@ -529,51 +543,80 @@ const HistorialTalleres = () => {
                   Materiales del taller
                 </Typography>
                 <Stack spacing={2}>
-                  {selected.materiales.map((material) => (
-                    <Card key={material.id} variant="outlined">
-                      <CardHeader
-                        title={material.nombre_taller || material.codigo_principal || "Material"}
-                        subheader={`Código: ${material.codigo_principal} · Peso inicial: ${
-                          material.peso_inicial
-                        } kg · Peso final: ${material.peso_final} kg`}
-                      />
-                      <Divider />
-                      <CardContent>
-                        <Stack spacing={1.5}>
-                          <Typography color="text.secondary">
-                            {material.descripcion || "Sin descripción registrada."}
-                          </Typography>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Nombre</TableCell>
-                                <TableCell>Código</TableCell>
-                                <TableCell>Peso</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {material.subcortes.map((subcorte) => (
-                                <TableRow key={subcorte.id}>
-                                  <TableCell>{subcorte.nombre_subcorte}</TableCell>
-                                  <TableCell>{subcorte.codigo_producto}</TableCell>
-                                  <TableCell>{subcorte.peso} kg</TableCell>
-                                </TableRow>
-                              ))}
-                              {!material.subcortes.length && (
+                  {selected.materiales.map((material) => {
+                    const totalSubcortesPeso = material.subcortes.reduce(
+                      (acc, subcorte) => acc + subcorte.peso,
+                      0
+                    );
+                    const totalProcesado = material.peso_final + totalSubcortesPeso;
+                    const perdida = material.peso_inicial - totalProcesado;
+                    const porcentajePerdida =
+                      material.porcentaje_perdida ??
+                      (material.peso_inicial > 0 ? (perdida / material.peso_inicial) * 100 : 0);
+
+                    return (
+                      <Card key={material.id} variant="outlined">
+                        <CardHeader
+                          title={material.nombre_taller || material.codigo_principal || "Material"}
+                          subheader={`Código: ${material.codigo_principal} · Peso inicial: ${formatKg(
+                            material.peso_inicial
+                          )} · Peso final: ${formatKg(material.peso_final)}`}
+                        />
+                        <Divider />
+                        <CardContent>
+                          <Stack spacing={1.5}>
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              <Chip label={`Peso inicial: ${formatKg(material.peso_inicial)}`} />
+                              <Chip label={`Peso final: ${formatKg(material.peso_final)}`} />
+                              <Chip label={`Total subcortes: ${formatKg(totalSubcortesPeso)}`} />
+                              <Chip label={`Total procesado: ${formatKg(totalProcesado)}`} />
+                              <Chip label={`Pérdida: ${formatKg(perdida)}`} />
+                              <Chip label={`% pérdida: ${formatPercent(porcentajePerdida)}`} />
+                            </Stack>
+                            <Typography color="text.secondary">
+                              {material.descripcion || "Sin descripción registrada."}
+                            </Typography>
+                            <Table size="small">
+                              <TableHead>
                                 <TableRow>
-                                  <TableCell colSpan={3} align="center">
-                                    <Typography color="text.secondary">
-                                      No hay subcortes registrados para este material.
-                                    </Typography>
-                                  </TableCell>
+                                  <TableCell>Nombre</TableCell>
+                                  <TableCell>Código</TableCell>
+                                  <TableCell>Peso</TableCell>
+                                  <TableCell>% peso inicial</TableCell>
                                 </TableRow>
-                              )}
-                            </TableBody>
-                          </Table>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  ))}
+                              </TableHead>
+                              <TableBody>
+                                {material.subcortes.map((subcorte) => {
+                                  const porcentajeSubcorte =
+                                    material.peso_inicial > 0
+                                      ? (subcorte.peso / material.peso_inicial) * 100
+                                      : 0;
+
+                                  return (
+                                    <TableRow key={subcorte.id}>
+                                      <TableCell>{subcorte.nombre_subcorte}</TableCell>
+                                      <TableCell>{subcorte.codigo_producto}</TableCell>
+                                      <TableCell>{formatKg(subcorte.peso)}</TableCell>
+                                      <TableCell>{formatPercent(porcentajeSubcorte)}</TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                                {!material.subcortes.length && (
+                                  <TableRow>
+                                    <TableCell colSpan={4} align="center">
+                                      <Typography color="text.secondary">
+                                        No hay subcortes registrados para este material.
+                                      </Typography>
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                   {!selected.materiales.length && (
                     <Alert severity="info">
                       No hay materiales registrados para este taller completo.
