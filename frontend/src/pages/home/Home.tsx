@@ -595,7 +595,13 @@ const Home = () => {
 
             <Box>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1, px: 1.25 }}>
+                <Grid
+                  container
+                  alignItems="center"
+                  spacing={1.5}
+                  sx={{ fontWeight: 700, color: "text.secondary", mb: 1, px: 1.25 }}
+                >
+                  {" "}
                   <Grid item xs={6} md={7}>
                     <Typography variant="caption">ID / Taller</Typography>
                   </Grid>
