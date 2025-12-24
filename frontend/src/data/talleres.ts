@@ -316,6 +316,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "22835", nombre: "Gordana" },
         { codigo: "5800", nombre: "Empella" },
+        { codigo: "7860", nombre: "Garra" },
       ],
       [
         { codigo: "45978", nombre: "Bondiola" },
