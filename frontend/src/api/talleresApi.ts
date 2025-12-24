@@ -10,6 +10,7 @@ import {
   TallerActividadUsuario,
   TallerAdminResponse,
   TallerCalculoRow,
+  TallerGrupoAdminResponse,
   TallerGrupoListItem,
   TallerGrupoResponse,
   TallerListItem,
@@ -286,6 +287,11 @@ const mapTallerGrupo = (raw: any): TallerGrupoResponse => ({
   materiales: Array.isArray(raw?.materiales) ? raw.materiales.map(mapTaller) : [],
 });
 
+const mapTallerGrupoAdmin = (raw: any): TallerGrupoAdminResponse => ({
+  ...mapTallerGrupo(raw),
+  creado_por: raw?.creado_por ?? raw?.creadoPor ?? raw?.creador ?? raw?.creado_por_nombre ?? null,
+});
+
 const mapTallerGrupoListItem = (raw: any): TallerGrupoListItem => ({
   id: toNumber(raw?.id, 0),
   nombre_taller: toStringOr(raw?.nombre_taller, ""),
@@ -540,7 +546,7 @@ export interface GetTallerHistorialParams {
 
 export const adminGetTallerHistorial = async (
   params: GetTallerHistorialParams = {}
-): Promise<TallerAdminResponse[]> => {
+): Promise<TallerGrupoAdminResponse[]> => {
   const { data } = await api.get<unknown[]>("/talleres/historial", {
     params: {
       search: params.search || undefined,
@@ -552,7 +558,7 @@ export const adminGetTallerHistorial = async (
     },
   });
 
-  return (Array.isArray(data) ? data : []).map(mapTallerAdmin);
+  return (Array.isArray(data) ? data : []).map(mapTallerGrupoAdmin);
 };
 
 export const adminGetTaller = async (tallerId: string | number): Promise<TallerAdminResponse> => {
@@ -570,6 +576,10 @@ export const adminUpdateTaller = async (
 
 export const adminDeleteTaller = async (tallerId: string | number): Promise<void> => {
   await api.delete(`/talleres/${tallerId}`);
+};
+
+export const adminDeleteTallerGrupo = async (tallerGrupoId: string | number): Promise<void> => {
+  await api.delete(`/talleres/completos/${tallerGrupoId}`);
 };
 
 export interface GetTallerActividadParams {

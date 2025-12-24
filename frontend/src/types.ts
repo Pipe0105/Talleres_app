@@ -132,6 +132,10 @@ export interface TallerActividadUsuario {
   dias: TallerActividadDia[];
 }
 
+export interface TallerGrupoAdminResponse extends TallerGrupoResponse {
+  creado_por?: string | null;
+}
+
 export interface TallerListItem {
   id: number;
   nombre_taller: string;

@@ -119,12 +119,27 @@ def _serialize_taller_with_creator(
     return schemas.TallerWithCreatorOut(
         **_serialize_taller_data(taller), creado_por=creador
     )
-def _map_creadores(
-    db: Session, talleres: list[models.Taller]
+
+
+def _serialize_taller_grupo_with_creator(
+    grupo: models.TallerGrupo,
+    creador: Optional[str],
+) -> schemas.TallerGrupoWithCreatorOut:
+    return schemas.TallerGrupoWithCreatorOut(
+        id=grupo.id,
+        nombre_taller=grupo.nombre_taller,
+        descripcion=grupo.descripcion,
+        sede=grupo.sede,
+        especie=grupo.especie,
+        creado_en=grupo.creado_en,
+        materiales=[_serialize_taller(taller) for taller in grupo.materiales],
+        creado_por=creador,
+    )
+
+
+def _map_creadores_ids(
+    db: Session, creador_ids: set[int]
 ) -> dict[int, str]:
-    creador_ids = {
-        taller.creado_por_id for taller in talleres if taller.creado_por_id
-    }
     if not creador_ids:
         return {}
 
@@ -137,6 +152,16 @@ def _map_creadores(
         usuario.id: (usuario.full_name or usuario.username or "").strip()
         for usuario in usuarios
     }
+    
+def _map_creadores(
+    db: Session, talleres: list[models.Taller]
+) -> dict[int, str]:
+    creador_ids = {
+        taller.creado_por_id for taller in talleres if taller.creado_por_id
+    }
+    return _map_creadores_ids(db, creador_ids)
+
+
 
 
 @router.post("", response_model=schemas.TallerOut, status_code=status.HTTP_201_CREATED)
@@ -239,6 +264,31 @@ def crear_taller_completo(
         materiales=[_serialize_taller(taller) for taller in grupo.materiales],
     )
 
+@router.delete("/completos/{grupo_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_taller_completo(
+    grupo_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(get_current_admin_user),
+):
+    grupo = db.get(models.TallerGrupo, grupo_id)
+    if grupo is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El taller completo solicitado no existe",
+        )
+
+    try:
+        db.delete(grupo)
+        db.commit()
+    except Exception as exc:  # pragma: no cover - defensive rollback
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo eliminar el taller completo",
+        ) from exc
+
+    return None
+
 
 @router.get("/completos", response_model=list[schemas.TallerGrupoListItem])
 def listar_talleres_completos(
@@ -296,7 +346,7 @@ def obtener_taller_completo(
 
     
 
-@router.get("/historial", response_model=list[schemas.TallerWithCreatorOut])
+@router.get("/historial", response_model=list[schemas.TallerGrupoWithCreatorOut])
 def listar_historial_talleres(
     *,
     search: Optional[str] = None,
@@ -315,18 +365,27 @@ def listar_historial_talleres(
         )
 
     query = (
-        db.query(models.Taller)
-        .outerjoin(models.TallerDetalle)
+        db.query(models.TallerGrupo)
+        .outerjoin(models.TallerGrupo.materiales)
+        .outerjoin(models.Taller.detalles)
     )
 
     if sede:
+        normalized = sede.strip().lower()
         query = query.filter(
-            func.lower(models.Taller.sede) == sede.strip().lower()
+            or_(
+                func.lower(models.TallerGrupo.sede) == normalized,
+                func.lower(models.Taller.sede) == normalized,
+            )
         )
 
     if especie:
+        normalized = especie.strip().lower()
         query = query.filter(
-            func.lower(models.Taller.especie) == especie.strip().lower()
+            or_(
+                func.lower(models.TallerGrupo.especie) == normalized,
+                func.lower(models.Taller.especie) == normalized,
+            )
         )
 
     if codigo_item:
@@ -342,6 +401,8 @@ def listar_historial_talleres(
         pattern = f"%{search.strip().lower()}%"
         query = query.filter(
             or_(
+                func.lower(models.TallerGrupo.nombre_taller).like(pattern),
+                func.lower(models.TallerGrupo.descripcion).like(pattern),
                 func.lower(models.Taller.nombre_taller).like(pattern),
                 func.lower(models.Taller.descripcion).like(pattern),
                 func.lower(models.Taller.codigo_principal).like(pattern),
@@ -360,21 +421,26 @@ def listar_historial_talleres(
     )
 
     if start_dt:
-        query = query.filter(models.Taller.creado_en >= start_dt)
+        query = query.filter(models.TallerGrupo.creado_en >= start_dt)
     if end_dt:
-        query = query.filter(models.Taller.creado_en < end_dt)
+        query = query.filter(models.TallerGrupo.creado_en < end_dt)
 
-    talleres = (
-        query.options(selectinload(models.Taller.detalles))
-        .order_by(models.Taller.creado_en.desc())
+    grupos = (
+        query.options(
+            selectinload(models.TallerGrupo.materiales).selectinload(models.Taller.detalles)
+        )
+        .order_by(models.TallerGrupo.creado_en.desc())
         .distinct()
         .all()
     )
 
-    creador_map = _map_creadores(db, talleres)
+    creador_ids = {
+        grupo.creado_por_id for grupo in grupos if grupo.creado_por_id
+    }
+    creador_map = _map_creadores_ids(db, creador_ids)
     return [
-        _serialize_taller_with_creator(taller, creador_map.get(taller.creado_por_id))
-        for taller in talleres
+        _serialize_taller_grupo_with_creator(grupo, creador_map.get(grupo.creado_por_id))
+        for grupo in grupos
     ]
     
 @router.get("", response_model=list[schemas.TallerListItem])

@@ -437,6 +437,11 @@ class TallerGrupoOut(BaseModel):
     materiales: list[TallerOut]
 
     model_config = ConfigDict(from_attributes=True)
+    
+class TallerGrupoWithCreatorOut(TallerGrupoOut):
+    creado_por: str | None = None
+
+
 
 
 class TallerGrupoListItem(BaseModel):
