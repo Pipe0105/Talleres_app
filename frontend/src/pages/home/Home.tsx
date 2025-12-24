@@ -595,7 +595,7 @@ const Home = () => {
 
             <Box>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>
+                <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1, px: 1.25 }}>
                   <Grid item xs={6} md={7}>
                     <Typography variant="caption">ID / Taller</Typography>
                   </Grid>
@@ -603,7 +603,9 @@ const Home = () => {
                     <Typography variant="caption">Fecha</Typography>
                   </Grid>
                   <Grid item xs={3} md={3}>
-                    <Typography variant="caption">Acciones</Typography>
+                    <Typography variant="caption" textAlign="right">
+                      Acciones
+                    </Typography>
                   </Grid>
                 </Grid>
                 <Divider />
