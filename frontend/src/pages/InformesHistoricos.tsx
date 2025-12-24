@@ -791,6 +791,22 @@ const InformesHistoricos = () => {
     [selectedTallerIds, talleresFiltrados]
   );
 
+  const selectedTalleresCompletos = useMemo(() => {
+    const grupos = new Map<number, TallerListItem>();
+    selectedTalleres.forEach((taller) => {
+      if (taller.taller_grupo_id) {
+        grupos.set(taller.taller_grupo_id, taller);
+      }
+    });
+    return Array.from(grupos.entries())
+      .map(([grupoId, taller]) => ({
+        id: grupoId,
+        nombre: taller.nombre_taller,
+        sede: taller.sede ?? null,
+      }))
+      .sort((a, b) => a.id - b.id);
+  }, [selectedTalleres]);
+
   const fetchTalleres = async () => {
     try {
       setLoading(true);
@@ -1398,19 +1414,22 @@ const InformesHistoricos = () => {
                     ? `Se incluirán ${selectedTallerIds.length} talleres en el informe.`
                     : "Ajusta los filtros de alcance para incluir talleres en el informe."}
               </Typography>
-
-              {selectedTalleres.length ? (
+              {selectedTalleresCompletos.length ? (
                 <Stack direction="row" flexWrap="wrap" gap={1}>
-                  {selectedTalleres.map((taller) => (
+                  {selectedTalleresCompletos.map((taller) => (
                     <Chip
                       key={taller.id}
-                      label={`ID ${formatTallerId(taller.id)} · ${taller.nombre_taller}${
+                      label={`Taller completo ${formatTallerId(taller.id)} · ${taller.nombre}${
                         taller.sede ? ` · ${taller.sede}` : ""
                       }`}
                       size="small"
                     />
                   ))}
                 </Stack>
+              ) : selectedTallerIds.length ? (
+                <Typography variant="body2" color="text.secondary">
+                  No hay talleres completos disponibles en el alcance seleccionado.
+                </Typography>
               ) : null}
             </Stack>
           )}

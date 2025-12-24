@@ -118,6 +118,8 @@ const formatDateTime = (value: string): string =>
     minute: "2-digit",
   });
 
+const formatTallerId = (id: number): string => id.toString().padStart(2, "0");
+
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
@@ -870,6 +872,10 @@ const SeguimientoTalleres = () => {
                                       <Stack direction="row" spacing={1} flexWrap="wrap">
                                         <Typography variant="caption" color="text.secondary">
                                           Código principal: {codigoPrincipal || "N/D"}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          Taller completo:{" "}
+                                          {formatTallerId(taller.taller_grupo_id ?? taller.id)}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                           Creado el {formatDateTime(taller.creado_en)}
