@@ -608,10 +608,8 @@ const Home = () => {
                   <Grid item xs={3} md={2}>
                     <Typography variant="caption">Fecha</Typography>
                   </Grid>
-                  <Grid item xs={3} md={3}>
-                    <Typography variant="caption" textAlign="right">
-                      Acciones
-                    </Typography>
+                  <Grid item xs={3} md={3} sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Typography variant="caption">Acciones</Typography>
                   </Grid>
                 </Grid>
                 <Divider />
