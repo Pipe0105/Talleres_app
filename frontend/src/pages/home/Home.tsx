@@ -132,7 +132,9 @@ const StatCard = ({
               fontWeight: 700,
             })}
           />
-        ) : null}
+        ) : (
+          <Box sx={{ alignSelf: "flex-end", height: 24 }} />
+        )}
         <Typography variant="h4" fontWeight={800} color="text.primary">
           {loading ? "…" : value}
         </Typography>
@@ -258,11 +260,6 @@ const Home = () => {
     [talleresConEstado]
   );
 
-  const pendingWorkshopsCount = useMemo(
-    () => talleresConEstado.filter((taller) => taller.estado === "pendiente").length,
-    [talleresConEstado]
-  );
-
   const completadosHoy = useMemo(() => {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -275,6 +272,17 @@ const Home = () => {
       return createdAt >= todayStart && createdAt < tomorrowStart && taller.estado === "completado";
     }).length;
   }, [talleresConEstado]);
+
+  const formatDate = useCallback((value?: string | null) => {
+    if (!value) return "Sin fecha";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Sin fecha";
+    return date.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  }, []);
 
   const filteredWorkshops = useMemo<TallerConEstado[]>(() => {
     const query = searcTerm.trim().toLowerCase();
@@ -327,11 +335,10 @@ const Home = () => {
     return [
       buildStat("Talleres Realizados", undefined, completedWorkshopsCount),
       buildStat("Completados Hoy", dashboardStats?.completados_hoy, completadosHoy),
-      buildStat("Talleres Pendientes", undefined, pendingWorkshopsCount),
+
       buildStat("Usuarios Activos", dashboardStats?.usuarios_activos),
     ];
-  }, [completedWorkshopsCount, completadosHoy, dashboardStats, formatTrend, pendingWorkshopsCount]);
-
+  }, [completedWorkshopsCount, completadosHoy, dashboardStats, formatTrend]);
   const availableQuickActions = useMemo(() => {
     return quickActions.filter((action) => {
       if (action.requiresAdmin) {
@@ -589,10 +596,13 @@ const Home = () => {
             <Box>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
                 <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>
-                  <Grid item xs={8} md={9}>
+                  <Grid item xs={6} md={7}>
                     <Typography variant="caption">ID / Taller</Typography>
                   </Grid>
-                  <Grid item xs={4} md={3}>
+                  <Grid item xs={3} md={2}>
+                    <Typography variant="caption">Fecha</Typography>
+                  </Grid>
+                  <Grid item xs={3} md={3}>
                     <Typography variant="caption">Acciones</Typography>
                   </Grid>
                 </Grid>
@@ -627,7 +637,7 @@ const Home = () => {
                         alignItems={isSmallScreen ? "flex-start" : "center"}
                         spacing={isSmallScreen ? 1 : 1.5}
                       >
-                        <Grid item xs={12} sm={8} md={9}>
+                        <Grid item xs={12} sm={6} md={7}>
                           <Typography variant="subtitle2" fontWeight={800}>
                             {taller.codigo_principal ?? `TL-${taller.id}`}
                           </Typography>
@@ -638,10 +648,16 @@ const Home = () => {
                             {taller.descripcion || "Sin descripción"}
                           </Typography>
                         </Grid>
+
+                        <Grid item xs={12} sm={3} md={2}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            {formatDate(taller.creado_en)}
+                          </Typography>
+                        </Grid>
                         <Grid
                           item
                           xs={12}
-                          sm={4}
+                          sm={3}
                           md={3}
                           sx={{
                             display: "flex",
