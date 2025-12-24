@@ -42,6 +42,10 @@ const currencyFormatter = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
+const dateFormatter = new Intl.DateTimeFormat("es-CO", {
+  dateStyle: "medium",
+});
+
 const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
   acc[material.codigo] = material.nombre;
   return acc;
@@ -691,7 +695,13 @@ const InformesHistoricos = () => {
   const individualTallerOptions = useMemo<TallerOption[]>(() => {
     const grouped = new Map<
       string,
-      { id: string; label: string; tallerIds: string[]; totalPeso: number }
+      {
+        id: string;
+        label: string;
+        tallerIds: string[];
+        totalPeso: number;
+        createdAt: Date | null;
+      }
     >();
 
     talleresFiltrados.forEach((taller) => {
@@ -699,10 +709,15 @@ const InformesHistoricos = () => {
         ? `grupo-${taller.taller_grupo_id}`
         : `taller-${taller.id}`;
       const existing = grouped.get(groupKey);
+      const createdAt = new Date(taller.creado_en);
+      const validCreatedAt = Number.isNaN(createdAt.getTime()) ? null : createdAt;
 
       if (existing) {
         existing.tallerIds.push(String(taller.id));
         existing.totalPeso += taller.total_peso;
+        if (validCreatedAt && (!existing.createdAt || validCreatedAt < existing.createdAt)) {
+          existing.createdAt = validCreatedAt;
+        }
         return;
       }
 
@@ -711,12 +726,19 @@ const InformesHistoricos = () => {
         label: taller.nombre_taller,
         tallerIds: [String(taller.id)],
         totalPeso: taller.total_peso,
+        createdAt: validCreatedAt,
       });
     });
 
     return Array.from(grouped.values()).map((option) => ({
       id: option.id,
-      label: `${option.label} · ${pesoFormatter.format(option.totalPeso)} kg`,
+      label: [
+        option.label,
+        option.createdAt ? dateFormatter.format(option.createdAt) : null,
+        `${pesoFormatter.format(option.totalPeso)} kg`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       tallerIds: option.tallerIds,
     }));
   }, [talleresFiltrados]);
@@ -1124,8 +1146,6 @@ const InformesHistoricos = () => {
           : scope === "material" && selectedMaterial
             ? `Alcance: Material ${selectedMaterial.label}`
             : "Alcance: selección personalizada";
-
-    const dateFormatter = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" });
     const dateFromLabel = dateFrom ? dateFormatter.format(new Date(`${dateFrom}T00:00:00`)) : "";
     const dateToLabel = dateTo ? dateFormatter.format(new Date(`${dateTo}T00:00:00`)) : "";
     const dateRangeLabel =
