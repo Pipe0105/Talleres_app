@@ -6,28 +6,20 @@ interface InformeFiltersProps {
   searchQuery: string;
   minPeso: string;
   maxPeso: string;
-  dateFrom: string;
-  dateTo: string;
   disabled?: boolean;
   onSearchChange: (value: string) => void;
   onMinPesoChange: (value: string) => void;
   onMaxPesoChange: (value: string) => void;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
 }
 
 const InformeFilters = ({
   searchQuery,
   minPeso,
   maxPeso,
-  dateFrom,
-  dateTo,
   disabled = false,
   onSearchChange,
   onMinPesoChange,
   onMaxPesoChange,
-  onDateFromChange,
-  onDateToChange,
 }: InformeFiltersProps) => (
   <PageSection
     title="Filtros y búsqueda"
@@ -74,29 +66,6 @@ const InformeFilters = ({
             fullWidth
           />
         </Stack>
-      </Stack>
-
-      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-        <TextField
-          label="Fecha desde"
-          type="date"
-          value={dateFrom}
-          onChange={(event) => onDateFromChange(event.target.value)}
-          helperText="Filtra por fecha"
-          disabled={disabled}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-        />
-        <TextField
-          label="Fecha hasta"
-          type="date"
-          value={dateTo}
-          onChange={(event) => onDateToChange(event.target.value)}
-          helperText="Filtra por fecha"
-          disabled={disabled}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-        />
       </Stack>
     </Stack>
   </PageSection>

@@ -1341,6 +1341,35 @@ const InformesHistoricos = () => {
       </PageSection>
 
       <PageSection
+        title="Filtrar talleres por fecha"
+        description="Acota la lista de talleres antes de seleccionar el informe."
+        padding="compact"
+      >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          <TextField
+            label="Fecha desde"
+            type="date"
+            value={dateFrom}
+            onChange={(event) => setDateFrom(event.target.value)}
+            helperText="Filtra por fecha"
+            disabled={loading}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+          <TextField
+            label="Fecha hasta"
+            type="date"
+            value={dateTo}
+            onChange={(event) => setDateTo(event.target.value)}
+            helperText="Filtra por fecha"
+            disabled={loading}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+        </Stack>
+      </PageSection>
+
+      <PageSection
         title="Alcance del informe"
         description="Elige si quieres analizar un taller individual, todas las operaciones de una sede o comparar un material entre sedes."
         spacing={2.5}
@@ -1462,14 +1491,10 @@ const InformesHistoricos = () => {
         searchQuery={searchQuery}
         minPeso={minPeso}
         maxPeso={maxPeso}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
         disabled={!selectedTallerIds.length || loadingCalculo || loading}
         onSearchChange={setSearchQuery}
         onMinPesoChange={setMinPeso}
         onMaxPesoChange={setMaxPeso}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
       />
 
       <PageSection
