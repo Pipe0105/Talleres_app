@@ -159,7 +159,6 @@ const Home = () => {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [errorStats, setErrorStats] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<WorkshopStatus | "todos">("todos");
   const [searcTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -242,19 +241,6 @@ const Home = () => {
     }));
   }, [talleres]);
 
-  const statusCounts = useMemo(
-    () =>
-      talleresConEstado.reduce<Record<WorkshopStatus | "todos", number>>(
-        (acc, taller) => {
-          acc.todos += 1;
-          acc[taller.estado] += 1;
-          return acc;
-        },
-        { todos: 0, completado: 0, pendiente: 0 }
-      ),
-    [talleresConEstado]
-  );
-
   const completedWorkshopsCount = useMemo(
     () => talleresConEstado.filter((taller) => taller.estado === "completado").length,
     [talleresConEstado]
@@ -293,10 +279,9 @@ const Home = () => {
         .some((field) => field.toLowerCase().includes(query));
 
     return talleresConEstado.filter(
-      (taller) =>
-        (statusFilter === "todos" || taller.estado === statusFilter) && matchesQuery(taller)
+      (taller) => taller.estado === "completado" && matchesQuery(taller)
     );
-  }, [statusFilter, searcTerm, talleresConEstado]);
+  }, [searcTerm, talleresConEstado]);
 
   const formatTrend = useCallback((trend?: number | null): string | null => {
     if (trend === null || trend === undefined || Number.isNaN(trend)) {
@@ -537,31 +522,6 @@ const Home = () => {
                   Revisa los talleres recientes y acciones disponibles.
                 </Typography>
               </Stack>
-              <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                {[
-                  { value: "todos", label: "Todos", count: statusCounts.todos },
-                  { value: "completado", label: "Completados", count: statusCounts.completado },
-                  { value: "pendiente", label: "Pendientes", count: statusCounts.pendiente },
-                ].map((tab) => (
-                  <Chip
-                    key={tab.value}
-                    label={`${tab.label} (${tab.count})`}
-                    color={statusFilter === tab.value ? "primary" : "default"}
-                    onClick={() => setStatusFilter(tab.value as WorkshopStatus | "todos")}
-                    size="small"
-                    sx={{
-                      borderRadius: 2,
-                      fontWeight: 700,
-                      height: 26,
-                      "& .MuiChip-label": {
-                        px: 1,
-                        py: 0.25,
-                        fontSize: 11,
-                      },
-                    }}
-                  />
-                ))}
-              </Stack>
             </Stack>
 
             <Paper
@@ -624,7 +584,7 @@ const Home = () => {
                 {loadingTalleres && <LinearProgress />}
                 {!loadingTalleres && !filteredWorkshops.length ? (
                   <Typography variant="body2" color="text.secondary">
-                    No hay talleres que coincidan con los filtros seleccionados.
+                    No hay talleres completados que coincidan con la búsqueda.
                   </Typography>
                 ) : (
                   filteredWorkshops.map((taller) => (
