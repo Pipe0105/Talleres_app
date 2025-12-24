@@ -17,15 +17,23 @@ router = APIRouter(
     tags=["talleres"],
 )
 
+def _normalize_item_code(codigo: str) -> str:
+    normalized = codigo.strip()
+    if normalized.isdigit():
+        trimmed = normalized.lstrip("0")
+        return trimmed or "0"
+    return normalized
+
+
 
 def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
     if not codigo:
         return None
-    item = (
-        db.query(models.Item)
-        .filter(models.Item.item_code == codigo)
-        .one_or_none()
-    )
+    normalized = _normalize_item_code(codigo)
+    filters = [models.Item.item_code == codigo]
+    if normalized != codigo:
+        filters.append(func.ltrim(models.Item.item_code, "0") == normalized)
+    item = db.query(models.Item).filter(or_(*filters)).one_or_none()
     return item.id if item else None
 
 def _resolve_sede_registro(
