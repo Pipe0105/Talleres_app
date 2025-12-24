@@ -510,13 +510,30 @@ def obtener_calculo_taller(
         peso_inicial = Decimal("0")
 
     calculo: list[schemas.TallerCalculoRow] = []
+    codigos_producto = {
+        detalle.codigo_producto
+        for detalle in taller.detalles
+        if not detalle.item_id and detalle.codigo_producto
+    }
+    items_por_codigo = {}
+    if codigos_producto:
+        items_por_codigo = {
+            item.item_code: item
+            for item in db.query(models.Item)
+            .filter(models.Item.item_code.in_(codigos_producto))
+            .all()
+        }
     for detalle in taller.detalles:
         peso = Decimal(detalle.peso or Decimal("0"))
         porcentaje_real = (
             (peso / peso_inicial * Decimal("100")) if peso_inicial > 0 else Decimal("0")
         )
 
-        item = db.get(models.Item, detalle.item_id) if detalle.item_id else None
+        item = (
+            db.get(models.Item, detalle.item_id)
+            if detalle.item_id
+            else items_por_codigo.get(detalle.codigo_producto)
+        )
         precio_venta = Decimal(item.precio_venta or Decimal("0")) if item else Decimal("0")
 
         porcentaje_default = Decimal("0")
