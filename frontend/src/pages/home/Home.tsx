@@ -593,7 +593,7 @@ const Home = () => {
                       variant="outlined"
                       sx={(theme) => ({
                         p: 1.25,
-                        borderRadius: 12,
+                        borderRadius: 2,
                         border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
                         boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
                       })}
