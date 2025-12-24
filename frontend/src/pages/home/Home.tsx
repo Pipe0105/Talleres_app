@@ -2,7 +2,6 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Card,
@@ -32,21 +31,10 @@ import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import { getDashboardStats, getTalleres } from "../../api/talleresApi";
 import { DashboardStats, TallerListItem } from "../../types";
-import { formatKg } from "../../utils/weights";
 import { useAuth } from "../../context/AuthContext";
 
-type WorkshopStatus = "completado" | "en-proceso" | "pendiente";
+type WorkshopStatus = "completado" | "pendiente";
 type TallerConEstado = TallerListItem & { estado: WorkshopStatus; progreso: number };
-
-type RecentActivityItem = {
-  id: number;
-  nombre: string;
-  codigo: string;
-  sede: string;
-  especie: string;
-  estado: WorkshopStatus;
-  creadoEn: string;
-};
 
 const navigationPaths = {
   talleres: "/talleres",
@@ -95,24 +83,6 @@ const quickActions: QuickAction[] = [
     requiresAdmin: true,
   },
 ];
-
-const statusStyles: Record<WorkshopStatus, { label: string; color: string; bg: string }> = {
-  completado: {
-    label: "Completado",
-    color: "#16a34a",
-    bg: "rgba(22,163,74,0.12)",
-  },
-  "en-proceso": {
-    label: "En Proceso",
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.15)",
-  },
-  pendiente: {
-    label: "Pendiente",
-    color: "#06b6d4",
-    bg: "rgba(6,182,212,0.14)",
-  },
-};
 
 const StatCard = ({
   title,
@@ -254,7 +224,6 @@ const Home = () => {
       const ratio = taller.peso_inicial > 0 ? processed / taller.peso_inicial : 0;
 
       if (ratio >= 0.99) return "completado";
-      if (ratio > 0) return "en-proceso";
       return "pendiente";
     };
 
@@ -279,13 +248,18 @@ const Home = () => {
           acc[taller.estado] += 1;
           return acc;
         },
-        { todos: 0, completado: 0, "en-proceso": 0, pendiente: 0 }
+        { todos: 0, completado: 0, pendiente: 0 }
       ),
     [talleresConEstado]
   );
 
-  const activeWorkshopsCount = useMemo(
-    () => talleresConEstado.filter((taller) => taller.estado !== "completado").length,
+  const completedWorkshopsCount = useMemo(
+    () => talleresConEstado.filter((taller) => taller.estado === "completado").length,
+    [talleresConEstado]
+  );
+
+  const pendingWorkshopsCount = useMemo(
+    () => talleresConEstado.filter((taller) => taller.estado === "pendiente").length,
     [talleresConEstado]
   );
 
@@ -315,62 +289,6 @@ const Home = () => {
         (statusFilter === "todos" || taller.estado === statusFilter) && matchesQuery(taller)
     );
   }, [statusFilter, searcTerm, talleresConEstado]);
-
-  const formatFecha = (fecha: string) => {
-    const date = new Date(fecha);
-    if (Number.isNaN(date.getTime())) return "—";
-    return date.toISOString().slice(0, 10);
-  };
-
-  const getIniciales = (label?: string | null) => {
-    if (!label) return "??";
-    return label
-      .split(/\s+/)
-      .map((part) => part[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-  };
-
-  const formatRelativeTime = (value: string): string => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Fecha no disponible";
-
-    const diffMs = Date.now() - date.getTime();
-    const minutes = Math.floor(diffMs / (1000 * 60));
-    if (minutes < 1) return "Hace instantes";
-    if (minutes < 60) return `Hace ${minutes} min`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Hace ${hours} h`;
-
-    const days = Math.floor(hours / 24);
-    if (days < 14) {
-      return `Hace ${days} día${days === 1 ? "" : "s"}`;
-    }
-
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const actividadReciente = useMemo<RecentActivityItem[]>(() => {
-    const sorted = [...talleresConEstado].sort(
-      (a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
-    );
-
-    return sorted.slice(0, 5).map((taller) => ({
-      id: taller.id,
-      nombre: taller.nombre_taller,
-      codigo: taller.codigo_principal ?? `TL-${taller.id}`,
-      sede: taller.sede?.trim() || "Sede no registrada",
-      especie: taller.especie || "Especie no definida",
-      estado: taller.estado,
-      creadoEn: taller.creado_en,
-    }));
-  }, [talleresConEstado]);
 
   const formatTrend = useCallback((trend?: number | null): string | null => {
     if (trend === null || trend === undefined || Number.isNaN(trend)) {
@@ -407,12 +325,12 @@ const Home = () => {
     };
 
     return [
-      buildStat("Talleres Activos", dashboardStats?.talleres_activos, activeWorkshopsCount),
+      buildStat("Talleres Realizados", undefined, completedWorkshopsCount),
       buildStat("Completados Hoy", dashboardStats?.completados_hoy, completadosHoy),
-      buildStat("Inventario Bajo", dashboardStats?.inventario_bajo),
+      buildStat("Talleres Pendientes", undefined, pendingWorkshopsCount),
       buildStat("Usuarios Activos", dashboardStats?.usuarios_activos),
     ];
-  }, [activeWorkshopsCount, completadosHoy, dashboardStats, formatTrend]);
+  }, [completedWorkshopsCount, completadosHoy, dashboardStats, formatTrend, pendingWorkshopsCount]);
 
   const availableQuickActions = useMemo(() => {
     return quickActions.filter((action) => {
@@ -609,14 +527,13 @@ const Home = () => {
                   Talleres Recientes
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Revisa el estado de tus talleres y acciones disponibles.
+                  Revisa los talleres recientes y acciones disponibles.
                 </Typography>
               </Stack>
               <Stack direction="row" spacing={0.5} flexWrap="wrap">
                 {[
                   { value: "todos", label: "Todos", count: statusCounts.todos },
                   { value: "completado", label: "Completados", count: statusCounts.completado },
-                  { value: "en-proceso", label: "En Proceso", count: statusCounts["en-proceso"] },
                   { value: "pendiente", label: "Pendientes", count: statusCounts.pendiente },
                 ].map((tab) => (
                   <Chip
@@ -672,13 +589,10 @@ const Home = () => {
             <Box>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
                 <Grid container sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>
-                  <Grid item xs={4} md={3.5}>
+                  <Grid item xs={8} md={9}>
                     <Typography variant="caption">ID / Taller</Typography>
                   </Grid>
-                  <Grid item xs={5} md={6.5}>
-                    <Typography variant="caption">Estado y detalles</Typography>
-                  </Grid>
-                  <Grid item xs={3} md={2}>
+                  <Grid item xs={4} md={3}>
                     <Typography variant="caption">Acciones</Typography>
                   </Grid>
                 </Grid>
@@ -713,7 +627,7 @@ const Home = () => {
                         alignItems={isSmallScreen ? "flex-start" : "center"}
                         spacing={isSmallScreen ? 1 : 1.5}
                       >
-                        <Grid item xs={12} sm={4} md={3.5}>
+                        <Grid item xs={12} sm={8} md={9}>
                           <Typography variant="subtitle2" fontWeight={800}>
                             {taller.codigo_principal ?? `TL-${taller.id}`}
                           </Typography>
@@ -724,57 +638,11 @@ const Home = () => {
                             {taller.descripcion || "Sin descripción"}
                           </Typography>
                         </Grid>
-                        <Grid item xs={12} sm={5} md={6.5}>
-                          <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            spacing={{ xs: 1, sm: 1.5 }}
-                            alignItems={{ xs: "flex-start", sm: "center" }}
-                            flexWrap="wrap"
-                            rowGap={0.75}
-                          >
-                            <Chip
-                              label={statusStyles[taller.estado as WorkshopStatus].label}
-                              size="small"
-                              sx={{
-                                fontWeight: 700,
-                                backgroundColor: statusStyles[taller.estado as WorkshopStatus].bg,
-                                color: statusStyles[taller.estado as WorkshopStatus].color,
-                              }}
-                            />
-                            <Typography variant="body2" fontWeight={600}>
-                              {formatFecha(taller.creado_en)}
-                            </Typography>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Avatar
-                                sx={(theme) => ({
-                                  width: 32,
-                                  height: 32,
-                                  backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                                  color: theme.palette.primary.main,
-                                  fontWeight: 700,
-                                })}
-                              >
-                                {getIniciales(taller.sede)}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="body2" fontWeight={700}>
-                                  {taller.sede ?? "Sin sede"}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {taller.especie || "Especie no definida"}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                            <Typography variant="body2" fontWeight={700}>
-                              {formatKg(Math.max(taller.total_peso, taller.peso_final || 0))} kg
-                            </Typography>
-                          </Stack>
-                        </Grid>
                         <Grid
                           item
                           xs={12}
-                          sm={3}
-                          md={2}
+                          sm={4}
+                          md={3}
                           sx={{
                             display: "flex",
                             justifyContent: { xs: "flex-start", sm: "flex-end" },
