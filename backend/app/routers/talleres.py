@@ -521,7 +521,7 @@ def obtener_calculo_taller(
     nombres_subcorte = {
         detalle.nombre_subcorte.strip()
         for detalle in taller.detalles
-        if not detalle.item_id and not detalle.codigo_producto and detalle.nombre_subcorte
+        if detalle.nombre_subcorte and detalle.nombre_subcorte.strip()
     }
     items_por_codigo = {}
     if codigos_normalizados:
