@@ -1274,14 +1274,16 @@ const InformesHistoricos = () => {
     csvRows.push(["Filtros"]);
     filtersSummary.forEach((filter) => csvRows.push([filter]));
     csvRows.push([""]);
-    csvRows.push(["Resumen"]);
-    csvRows.push(["Talleres incluidos", resumen.talleres.toString()]);
-    csvRows.push([
+    const pushShiftedRow = (row: string[]) => csvRows.push(["", ...row]);
+
+    pushShiftedRow(["Resumen"]);
+    pushShiftedRow(["Talleres incluidos", resumen.talleres.toString()]);
+    pushShiftedRow([
       scope === "sede" ? "Total talleres" : "Total cortes",
       scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
     ]);
-    csvRows.push(["Peso filtrado", `${pesoFormatter.format(resumen.totalPeso)} kg`]);
-    csvRows.push(["Valor estimado", currencyFormatter.format(resumen.totalValor)]);
+    pushShiftedRow(["Peso filtrado", `${pesoFormatter.format(resumen.totalPeso)} kg`]);
+    pushShiftedRow(["Valor estimado", currencyFormatter.format(resumen.totalValor)]);
     csvRows.push([""]);
 
     const principalSummaryHeaders = [
@@ -1295,14 +1297,14 @@ const InformesHistoricos = () => {
         : [];
 
       if (principalSummaryFields.length) {
-        csvRows.push(principalSummaryHeaders);
-        csvRows.push([principalLabel, ...principalSummaryValues]);
+        pushShiftedRow(principalSummaryHeaders);
+        pushShiftedRow([principalLabel, ...principalSummaryValues]);
       } else {
-        csvRows.push(["Corte principal", principalLabel]);
+        pushShiftedRow(["Corte principal", principalLabel]);
       }
-      csvRows.push(detailHeaders);
+      pushShiftedRow(detailHeaders);
       rows.forEach((row) => {
-        csvRows.push(detailFields.map((field) => normalizeWhitespace(field.getValue(row))));
+        pushShiftedRow(detailFields.map((field) => normalizeWhitespace(field.getValue(row))));
       });
       csvRows.push([""]);
     });
