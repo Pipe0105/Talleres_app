@@ -310,8 +310,8 @@ const mapTallerCalculoRow = (raw: any): TallerCalculoRow => ({
   porcentaje_real: toNumber(raw?.porcentaje_real, 0),
   porcentaje_default: toNumber(raw?.porcentaje_default, 0),
   delta_pct: toNumber(raw?.delta_pct, 0),
-  precio_venta: toNumber(raw?.precio_venta, 0),
-  valor_estimado: toNumber(raw?.valor_estimado, 0),
+  precio_venta: raw?.precio_venta == null ? null : toNumber(raw?.precio_venta, 0),
+  valor_estimado: raw?.valor_estimado == null ? null : toNumber(raw?.valor_estimado, 0),
 });
 
 export const login = async (username: string, password: string): Promise<AuthToken> => {

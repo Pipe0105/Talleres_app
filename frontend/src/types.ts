@@ -159,8 +159,8 @@ export interface TallerCalculoRow {
   porcentaje_real: number;
   porcentaje_default: number;
   delta_pct: number;
-  precio_venta: number;
-  valor_estimado: number;
+  precio_venta: number | null;
+  valor_estimado: number | null;
 }
 
 export interface InventarioItem {

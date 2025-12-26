@@ -47,6 +47,9 @@ const dateFormatter = new Intl.DateTimeFormat("es-CO", {
   dateStyle: "medium",
 });
 
+const formatCurrencyOrNA = (value: number | null) =>
+  value == null ? "N/D" : currencyFormatter.format(value);
+
 const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
   acc[material.codigo] = material.nombre;
   return acc;
@@ -183,12 +186,12 @@ const baseExportFieldDefinitions: ExportFieldDefinition[] = [
   {
     key: "precio_venta",
     label: "Precio de venta",
-    getValue: (row) => currencyFormatter.format(row.precio_venta),
+    getValue: (row) => formatCurrencyOrNA(row.precio_venta),
   },
   {
     key: "valor_estimado",
     label: "Valor estimado",
-    getValue: (row) => currencyFormatter.format(row.valor_estimado),
+    getValue: (row) => formatCurrencyOrNA(row.valor_estimado),
   },
 ];
 
@@ -1207,7 +1210,7 @@ const InformesHistoricos = () => {
 
   const resumen = useMemo(() => {
     const totalPeso = filteredCalculo.reduce((acc, row) => acc + row.peso, 0);
-    const totalValor = filteredCalculo.reduce((acc, row) => acc + row.valor_estimado, 0);
+    const totalValor = filteredCalculo.reduce((acc, row) => acc + (row.valor_estimado ?? 0), 0);
     const talleresContados = new Set(filteredCalculo.map((row) => row.groupKey)).size;
 
     return {
@@ -1725,7 +1728,7 @@ const InformesHistoricos = () => {
                                           Venta estimada
                                         </Typography>
                                         <Typography variant="body1" fontWeight={600}>
-                                          {currencyFormatter.format(row.valor_estimado)}
+                                          {formatCurrencyOrNA(row.valor_estimado)}
                                         </Typography>
                                       </Stack>
                                     </Stack>
