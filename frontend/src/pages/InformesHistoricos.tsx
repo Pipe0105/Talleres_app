@@ -149,11 +149,6 @@ const baseExportFieldDefinitions: ExportFieldDefinition[] = [
     getValue: (row) => formatCorteNombre(row.nombre_corte),
   },
   {
-    key: "descripcion",
-    label: "Descripcion",
-    getValue: (row) => row.descripcion,
-  },
-  {
     key: "item_code",
     label: "Codigo de item",
     getValue: (row) => row.item_code,
