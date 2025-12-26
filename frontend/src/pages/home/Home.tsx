@@ -247,7 +247,7 @@ const Home = () => {
     const matchesQuery = (taller: TallerGrupoListItem) =>
       !query ||
       [taller.nombre_taller, String(taller.id), taller.especie, taller.sede ?? ""]
-        .filter(Boolean)
+        .filter((field): field is string => Boolean(field))
         .some((field) => field.toLowerCase().includes(query));
 
     return talleres.filter((taller) => matchesQuery(taller));
