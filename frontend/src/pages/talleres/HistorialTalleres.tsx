@@ -507,125 +507,131 @@ const HistorialTalleres = () => {
         </CardContent>
       </Card>
 
-      {selected && (
-        <Card>
-          <CardHeader
-            title={selected.nombre_taller || "Taller sin nombre"}
-            subheader={`Creado el ${formatDateTime(selected.creado_en)} · ${
-              selected.especie || "Especie no indicada"
-            } · ${selected.sede || "Sede no indicada"}`}
-          />
-          <Divider />
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography color="text.secondary">
-                {selected.descripcion || "Sin descripción registrada."}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Chip
-                  label={`${selected.materiales.length} materiales`}
-                  color="primary"
-                  variant="outlined"
-                />
-                <Chip
-                  label={`${getTotalSubcortes(selected)} cortes`}
-                  color="primary"
-                  variant="outlined"
-                />
-                {selected.creado_por && (
-                  <Chip label={`Creador: ${selected.creado_por}`} variant="outlined" />
-                )}
-              </Stack>
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Materiales del taller
+      <Dialog open={Boolean(selected)} onClose={() => setSelected(null)} fullWidth maxWidth="lg">
+        {selected && (
+          <>
+            <DialogTitle>{selected.nombre_taller || "Taller sin nombre"}</DialogTitle>
+            <DialogContent dividers>
+              <Stack spacing={2}>
+                <Typography color="text.secondary">
+                  Creado el {formatDateTime(selected.creado_en)} ·{" "}
+                  {selected.especie || "Especie no indicada"} ·{" "}
+                  {selected.sede || "Sede no indicada"}
                 </Typography>
-                <Stack spacing={2}>
-                  {selected.materiales.map((material) => {
-                    const totalSubcortesPeso = material.subcortes.reduce(
-                      (acc, subcorte) => acc + subcorte.peso,
-                      0
-                    );
-                    const totalProcesado = material.peso_final + totalSubcortesPeso;
-                    const perdida = material.peso_inicial - totalProcesado;
-                    const porcentajePerdida =
-                      material.porcentaje_perdida ??
-                      (material.peso_inicial > 0 ? (perdida / material.peso_inicial) * 100 : 0);
-
-                    return (
-                      <Card key={material.id} variant="outlined">
-                        <CardHeader
-                          title={material.nombre_taller || material.codigo_principal || "Material"}
-                          subheader={`Código: ${material.codigo_principal} · Peso inicial: ${formatKg(
-                            material.peso_inicial
-                          )} · Peso final: ${formatKg(material.peso_final)}`}
-                        />
-                        <Divider />
-                        <CardContent>
-                          <Stack spacing={1.5}>
-                            <Stack direction="row" spacing={1} flexWrap="wrap">
-                              <Chip label={`Peso inicial: ${formatKg(material.peso_inicial)}`} />
-                              <Chip label={`Peso final: ${formatKg(material.peso_final)}`} />
-                              <Chip label={`Total subcortes: ${formatKg(totalSubcortesPeso)}`} />
-                              <Chip label={`Total procesado: ${formatKg(totalProcesado)}`} />
-                              <Chip label={`Pérdida: ${formatKg(perdida)}`} />
-                              <Chip label={`% pérdida: ${formatPercent(porcentajePerdida)}`} />
-                            </Stack>
-                            <Typography color="text.secondary">
-                              {material.descripcion || "Sin descripción registrada."}
-                            </Typography>
-                            <Table size="small">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Nombre</TableCell>
-                                  <TableCell>Código</TableCell>
-                                  <TableCell>Peso</TableCell>
-                                  <TableCell>% peso inicial</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {material.subcortes.map((subcorte) => {
-                                  const porcentajeSubcorte =
-                                    material.peso_inicial > 0
-                                      ? (subcorte.peso / material.peso_inicial) * 100
-                                      : 0;
-
-                                  return (
-                                    <TableRow key={subcorte.id}>
-                                      <TableCell>{subcorte.nombre_subcorte}</TableCell>
-                                      <TableCell>{subcorte.codigo_producto}</TableCell>
-                                      <TableCell>{formatKg(subcorte.peso)}</TableCell>
-                                      <TableCell>{formatPercent(porcentajeSubcorte)}</TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                                {!material.subcortes.length && (
-                                  <TableRow>
-                                    <TableCell colSpan={4} align="center">
-                                      <Typography color="text.secondary">
-                                        No hay subcortes registrados para este material.
-                                      </Typography>
-                                    </TableCell>
-                                  </TableRow>
-                                )}
-                              </TableBody>
-                            </Table>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                  {!selected.materiales.length && (
-                    <Alert severity="info">
-                      No hay materiales registrados para este taller completo.
-                    </Alert>
+                <Typography color="text.secondary">
+                  {selected.descripcion || "Sin descripción registrada."}
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  <Chip
+                    label={`${selected.materiales.length} materiales`}
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`${getTotalSubcortes(selected)} cortes`}
+                    color="primary"
+                    variant="outlined"
+                  />
+                  {selected.creado_por && (
+                    <Chip label={`Creador: ${selected.creado_por}`} variant="outlined" />
                   )}
                 </Stack>
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    Materiales del taller
+                  </Typography>
+                  <Stack spacing={2}>
+                    {selected.materiales.map((material) => {
+                      const totalSubcortesPeso = material.subcortes.reduce(
+                        (acc, subcorte) => acc + subcorte.peso,
+                        0
+                      );
+                      const totalProcesado = material.peso_final + totalSubcortesPeso;
+                      const perdida = material.peso_inicial - totalProcesado;
+                      const porcentajePerdida =
+                        material.porcentaje_perdida ??
+                        (material.peso_inicial > 0 ? (perdida / material.peso_inicial) * 100 : 0);
+
+                      return (
+                        <Card key={material.id} variant="outlined">
+                          <CardHeader
+                            title={
+                              material.nombre_taller || material.codigo_principal || "Material"
+                            }
+                            subheader={`Código: ${material.codigo_principal} · Peso inicial: ${formatKg(
+                              material.peso_inicial
+                            )} · Peso final: ${formatKg(material.peso_final)}`}
+                          />
+                          <Divider />
+                          <CardContent>
+                            <Stack spacing={1.5}>
+                              <Stack direction="row" spacing={1} flexWrap="wrap">
+                                <Chip label={`Peso inicial: ${formatKg(material.peso_inicial)}`} />
+                                <Chip label={`Peso final: ${formatKg(material.peso_final)}`} />
+                                <Chip label={`Total subcortes: ${formatKg(totalSubcortesPeso)}`} />
+                                <Chip label={`Total procesado: ${formatKg(totalProcesado)}`} />
+                                <Chip label={`Pérdida: ${formatKg(perdida)}`} />
+                                <Chip label={`% pérdida: ${formatPercent(porcentajePerdida)}`} />
+                              </Stack>
+                              <Typography color="text.secondary">
+                                {material.descripcion || "Sin descripción registrada."}
+                              </Typography>
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Nombre</TableCell>
+                                    <TableCell>Código</TableCell>
+                                    <TableCell>Peso</TableCell>
+                                    <TableCell>% peso inicial</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {material.subcortes.map((subcorte) => {
+                                    const porcentajeSubcorte =
+                                      material.peso_inicial > 0
+                                        ? (subcorte.peso / material.peso_inicial) * 100
+                                        : 0;
+
+                                    return (
+                                      <TableRow key={subcorte.id}>
+                                        <TableCell>{subcorte.nombre_subcorte}</TableCell>
+                                        <TableCell>{subcorte.codigo_producto}</TableCell>
+                                        <TableCell>{formatKg(subcorte.peso)}</TableCell>
+                                        <TableCell>{formatPercent(porcentajeSubcorte)}</TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                  {!material.subcortes.length && (
+                                    <TableRow>
+                                      <TableCell colSpan={4} align="center">
+                                        <Typography color="text.secondary">
+                                          No hay subcortes registrados para este material.
+                                        </Typography>
+                                      </TableCell>
+                                    </TableRow>
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                    {!selected.materiales.length && (
+                      <Alert severity="info">
+                        No hay materiales registrados para este taller completo.
+                      </Alert>
+                    )}
+                  </Stack>
+                </Box>
+              </Stack>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelected(null)}>Cerrar</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
       <Dialog open={Boolean(deleteQueue.length)} onClose={() => setDeleteQueue([])}>
         <DialogTitle>
           Eliminar taller{deleteQueue.length > 1 ? "es completos" : " completo"}
