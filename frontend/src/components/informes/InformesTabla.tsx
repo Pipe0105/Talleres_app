@@ -157,6 +157,12 @@ const InformesTabla = ({
                         </Stack>
                         <Stack spacing={0.25}>
                           <Typography variant="overline" color="text.secondary">
+                            Venta estimada
+                          </Typography>
+                          <Typography variant="body1" fontWeight={600}>
+                            {formatCurrencyOrNA(row.valor_estimado)}
+                          </Typography>
+                        </Stack>
                       </Stack>
                     </Stack>
                   ))}
