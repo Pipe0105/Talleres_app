@@ -394,9 +394,10 @@ const InformesHistoricos = () => {
               ["meta", "summary-row", "group-summary-row"].includes(rowType) &&
               cellIndex === 0 &&
               trimmedValue;
+            const isEmptyCell = trimmedValue.length === 0;
             const cellStyle = [
               isSpacerRow ? "border:none;padding:4px;" : baseCellStyle,
-              rowStyle,
+              isEmptyCell ? "background-color:#ffffff;" : rowStyle,
               emphasizedFirstCell ? "font-weight:bold;" : "",
             ]
               .filter(Boolean)
