@@ -219,8 +219,36 @@ const escapeCsvValue = (value: string) => {
 const escapeHtmlValue = (value: string) =>
   normalizeWhitespace(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const escapePdfText = (value: string) =>
-  normalizeWhitespace(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+const escapePdfText = (value: string) => {
+  const normalized = normalizeWhitespace(value);
+  let escaped = "";
+
+  for (const char of normalized) {
+    if (char === "\\") {
+      escaped += "\\\\";
+      continue;
+    }
+    if (char === "(") {
+      escaped += "\\(";
+      continue;
+    }
+    if (char === ")") {
+      escaped += "\\)";
+      continue;
+    }
+
+    const code = char.charCodeAt(0);
+    if (code >= 0x20 && code <= 0x7e) {
+      escaped += char;
+      continue;
+    }
+    if (code <= 0xff) {
+      escaped += `\\${code.toString(8).padStart(3, "0")}`;
+    }
+  }
+
+  return escaped;
+};
 
 type PdfHighlight = { label: string; value: string };
 
@@ -541,7 +569,7 @@ const createSimplePdf = (
   if (metadata.filters?.length) {
     addTextLine("Filtros", 12, margin, undefined, "F2", color.primaryDark);
     metadata.filters.forEach((filter) =>
-      addWrappedText(`• ${filter}`, 10, margin + 8, contentWidth, "F1", color.textMuted)
+      addWrappedText(`- ${filter}`, 10, margin + 8, contentWidth, "F1", color.textMuted)
     );
     addSeparator();
   }
@@ -1218,7 +1246,7 @@ const InformesHistoricos = () => {
     const pdfFieldDefinitions = selectedFieldDefinitions.filter(
       (field) => field.key !== "descripcion"
     );
-    const pdfDetailFields = pdfFieldDefinitions.filter((field) => field.key !== "corte principal");
+    const pdfDetailFields = pdfFieldDefinitions.filter((field) => field.key !== "corte_principal");
     if (!pdfDetailFields) {
       return;
     }
