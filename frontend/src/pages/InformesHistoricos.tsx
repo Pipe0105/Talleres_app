@@ -1196,18 +1196,116 @@ const InformesHistoricos = () => {
   };
 
   const handleExportCsv = () => {
-    if (!formattedRows.length) {
+    if (!filteredCalculo.length) {
       return;
     }
-    const csvRows = [
-      ...(selectedSpeciesLabel
-        ? [`${escapeCsvValue("Especie")};${escapeCsvValue(selectedSpeciesLabel)}`]
-        : []),
-      headers.map((header) => escapeCsvValue(header)).join(";"),
-      ...formattedRows.map((row) => row.map((value) => escapeCsvValue(value)).join(";")),
-    ];
+    const principalSummaryKeys = new Set(["peso_inicial", "peso_final", "porcentaje_perdida"]);
+    const principalSummaryFields = exportFieldDefinitions.filter((field) =>
+      principalSummaryKeys.has(field.key)
+    );
+    const detailFields = selectedFieldDefinitions.filter(
+      (field) => field.key !== "corte_principal" && !principalSummaryKeys.has(field.key)
+    );
 
-    const csvContent = `\ufeff${csvRows.join("\n")}`;
+    if (!detailFields.length) {
+      return;
+    }
+
+    const detailHeaders = detailFields.map((field) => field.label);
+    const groupedByPrincipal = new Map<string, TallerCalculoWithMeta[]>();
+    filteredCalculo.forEach((row) => {
+      const principalLabel = row.materialLabel?.trim() || "Sin corte principal";
+      const group = groupedByPrincipal.get(principalLabel);
+      if (group) {
+        group.push(row);
+      } else {
+        groupedByPrincipal.set(principalLabel, [row]);
+      }
+    });
+
+    const sedesSeleccionadas =
+      scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
+
+    const scopeDescription =
+      scope === "taller" && selectedTaller
+        ? `Alcance: Taller ${selectedTaller.label}`
+        : scope === "sede"
+          ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
+          : scope === "material" && selectedMaterial
+            ? `Alcance: Material ${selectedMaterial.label}`
+            : "Alcance: selección personalizada";
+    const dateFromLabel = dateFrom ? dateFormatter.format(new Date(`${dateFrom}T00:00:00`)) : "";
+    const dateToLabel = dateTo ? dateFormatter.format(new Date(`${dateTo}T00:00:00`)) : "";
+    const dateRangeLabel =
+      dateFromLabel && dateToLabel
+        ? `Fecha: ${dateFromLabel} - ${dateToLabel}`
+        : dateFromLabel
+          ? `Fecha desde: ${dateFromLabel}`
+          : dateToLabel
+            ? `Fecha hasta: ${dateToLabel}`
+            : null;
+
+    const filtersSummary = [
+      scopeDescription,
+      selectedSpeciesLabel ? `Especie: ${selectedSpeciesLabel}` : null,
+      sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
+      scope === "material" && selectedMaterial ? `Material: ${selectedMaterial.label}` : null,
+      dateRangeLabel,
+      `Columnas incluidas: ${detailHeaders.join(", ")}`,
+      `Registros filtrados: ${filteredCalculo.length}`,
+    ].filter(Boolean) as string[];
+
+    const csvRows: string[][] = [];
+
+    const csvTitle =
+      scope === "taller" && selectedTaller
+        ? `Detalle del taller ${selectedTaller.label}`
+        : "Detalle consolidado";
+
+    csvRows.push(["Informe", csvTitle]);
+    csvRows.push([
+      "Generado",
+      new Intl.DateTimeFormat("es-CO", {
+        dateStyle: "full",
+        timeStyle: "short",
+      }).format(new Date()),
+    ]);
+    csvRows.push([""]);
+    csvRows.push(["Filtros"]);
+    filtersSummary.forEach((filter) => csvRows.push([filter]));
+    csvRows.push([""]);
+    csvRows.push(["Resumen"]);
+    csvRows.push(["Talleres incluidos", resumen.talleres.toString()]);
+    csvRows.push([
+      scope === "sede" ? "Total talleres" : "Total cortes",
+      scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
+    ]);
+    csvRows.push(["Peso filtrado", `${pesoFormatter.format(resumen.totalPeso)} kg`]);
+    csvRows.push(["Valor estimado", currencyFormatter.format(resumen.totalValor)]);
+    csvRows.push([""]);
+
+    groupedByPrincipal.forEach((rows, principalLabel) => {
+      const principalSummary = rows.length
+        ? principalSummaryFields.map(
+            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
+          )
+        : [];
+      const sectionLabel = principalSummary.length
+        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
+        : `Corte principal: ${principalLabel}`;
+
+      csvRows.push([sectionLabel]);
+      csvRows.push(detailHeaders);
+      rows.forEach((row) => {
+        csvRows.push(detailFields.map((field) => normalizeWhitespace(field.getValue(row))));
+      });
+      csvRows.push([""]);
+    });
+
+    const csvContent = `\ufeff${csvRows
+      .map((row) => row.map((value) => escapeCsvValue(value)).join(";"))
+      .join("\n")}`;
+
     const blob = new Blob([csvContent], {
       type: "text/csv;charset=utf-8;",
     });
