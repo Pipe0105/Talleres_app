@@ -220,8 +220,13 @@ const escapeCsvValue = (value: string) => {
 const escapeHtmlValue = (value: string) =>
   normalizeWhitespace(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+const stripPdfAccents = (value: string) =>
+  normalizeWhitespace(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 const escapePdfText = (value: string) => {
-  const normalized = normalizeWhitespace(value);
+  const normalized = stripPdfAccents(value);
   let escaped = "";
 
   for (const char of normalized) {
@@ -596,8 +601,6 @@ const createSimplePdf = (
     if (currentY < margin + 60) {
       addSeparator();
       startPage(false);
-      addTextLine("Detalle (continuación)", 12, margin, undefined, "F2", color.primaryDark);
-      addSeparator();
       addTableRow(header, 11, 0, true);
     }
     if (row.type === "section") {
