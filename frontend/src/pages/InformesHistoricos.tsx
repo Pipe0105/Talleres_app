@@ -231,6 +231,16 @@ type PdfReportMetadata = {
   highlights?: PdfHighlight[];
 };
 
+type PdfRow =
+  | {
+      type: "section";
+      label: string;
+    }
+  | {
+      type: "row";
+      cells: string[];
+    };
+
 const slugify = (value: string) =>
   normalizeWhitespace(value)
     .normalize("NFD")
@@ -243,7 +253,7 @@ const slugify = (value: string) =>
 const createSimplePdf = (
   title: string,
   header: string[],
-  rows: string[][],
+  rows: PdfRow[],
   metadata: PdfReportMetadata = {}
 ) => {
   const encoder = new TextEncoder();
@@ -509,6 +519,13 @@ const createSimplePdf = (
     currentY = separatorY - 6;
   };
 
+  const addSectionRow = (label: string) => {
+    ensureSpace(26);
+    addRoundedRect(margin, currentY - 20, contentWidth, 20, color.primaryDark);
+    addTextLine(label, 10, margin + 8, currentY - 15, "F2", "1 1 1");
+    currentY -= 26;
+  };
+
   startPage(true);
 
   if (metadata.filters?.length) {
@@ -535,7 +552,8 @@ const createSimplePdf = (
   addSeparator();
 
   addTableRow(header, 11, 0, true);
-  rows.forEach((row, index) => {
+  let dataRowIndex = 0;
+  rows.forEach((row) => {
     if (currentY < margin + 60) {
       addSeparator();
       startPage(false);
@@ -543,7 +561,12 @@ const createSimplePdf = (
       addSeparator();
       addTableRow(header, 11, 0, true);
     }
-    addTableRow(row, 10, index);
+    if (row.type === "section") {
+      addSectionRow(row.label);
+      return;
+    }
+    addTableRow(row.cells, 10, dataRowIndex);
+    dataRowIndex += 1;
   });
 
   if (currentLines.length) {
@@ -1179,14 +1202,33 @@ const InformesHistoricos = () => {
     const pdfFieldDefinitions = selectedFieldDefinitions.filter(
       (field) => field.key !== "descripcion"
     );
-    if (!pdfFieldDefinitions.length) {
+    const pdfDetailFields = pdfFieldDefinitions.filter((field) => field.key !== "corte principal");
+    if (!pdfDetailFields) {
       return;
     }
 
-    const pdfHeaders = pdfFieldDefinitions.map((field) => field.label);
-    const pdfRows = filteredCalculo.map((row) =>
-      pdfFieldDefinitions.map((field) => normalizeWhitespace(field.getValue(row)))
-    );
+    const pdfHeaders = pdfDetailFields.map((field) => field.label);
+    const groupedByPrincipal = new Map<string, TallerCalculoWithMeta[]>();
+    filteredCalculo.forEach((row) => {
+      const principalLabel = row.materialLabel?.trim() || "Sin corte principal";
+      const group = groupedByPrincipal.get(principalLabel);
+      if (group) {
+        group.push(row);
+      } else {
+        groupedByPrincipal.set(principalLabel, [row]);
+      }
+    });
+
+    const pdfRows: PdfRow[] = [];
+    groupedByPrincipal.forEach((rows, principalLabel) => {
+      pdfRows.push({ type: "section", label: `Corte principal: ${principalLabel}` });
+      rows.forEach((row) => {
+        pdfRows.push({
+          type: "row",
+          cells: pdfDetailFields.map((field) => normalizeWhitespace(field.getValue(row))),
+        });
+      });
+    });
 
     const sedesSeleccionadas =
       scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
