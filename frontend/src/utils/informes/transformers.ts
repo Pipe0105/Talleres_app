@@ -121,7 +121,7 @@ export const groupCalculoByTaller = (
         existingGroup.materiales.set(row.tallerId, {
           tallerId: row.tallerId,
           label: materialLabel,
-          material: row.material,
+          material: row.material ?? null,
           materialNombre: row.materialNombre,
           pesoInicial: row.peso_inicial,
           pesoFinal: row.peso_final,
@@ -136,7 +136,7 @@ export const groupCalculoByTaller = (
     materiales.set(row.tallerId, {
       tallerId: row.tallerId,
       label: materialLabel,
-      material: row.material,
+      material: row.material ?? null,
       materialNombre: row.materialNombre,
       pesoInicial: row.peso_inicial,
       pesoFinal: row.peso_final,
