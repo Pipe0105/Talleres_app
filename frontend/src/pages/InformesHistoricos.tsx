@@ -204,6 +204,7 @@ const baseExportFieldDefinitions: ExportFieldDefinition[] = [
 ];
 
 const exportFieldDefinitions = baseExportFieldDefinitions;
+const pdfFieldDefinitions: ExportFieldDefinition[] = exportFieldDefinitions;
 
 const normalizeWhitespace = (value: string) => value.replace(/\u00a0/g, " ");
 
