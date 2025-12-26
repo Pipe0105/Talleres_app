@@ -1,25 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Autocomplete,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Chip,
-  CircularProgress,
-  Divider,
-  Paper,
-  Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Stack, Typography } from "@mui/material";
 import { useInformesHistoricos, UNKNOWN_BRANCH_LABEL } from "../hooks/useInformesHistoricos";
 import { TallerListItem } from "../types";
 import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
+import InformesDateFilterSection from "../components/informes/InformesDateFilterSection";
+import InformesScopeSection from "../components/informes/InformesScopeSection";
+import InformesDetalleSection from "../components/informes/InformesDetalleSection";
 import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel from "../components/informes/InformeExportPanel";
 import { exportFieldDefinitions, pdfFieldDefinitions } from "../components/informes/exportFields";
@@ -501,152 +488,32 @@ const InformesHistoricos = () => {
         </Typography>
       </PageSection>
 
-      <PageSection
-        title="Filtrar talleres por fecha"
-        description="Acota la lista de talleres antes de seleccionar el informe."
-        padding="compact"
-      >
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-          <TextField
-            label="Fecha desde"
-            type="date"
-            value={dateFrom}
-            onChange={(event) => setDateFrom(event.target.value)}
-            helperText="Filtra por fecha"
-            disabled={loading}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-          <TextField
-            label="Fecha hasta"
-            type="date"
-            value={dateTo}
-            onChange={(event) => setDateTo(event.target.value)}
-            helperText="Filtra por fecha"
-            disabled={loading}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-        </Stack>
-      </PageSection>
+      <InformesDateFilterSection
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        loading={loading}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+      />
 
-      <PageSection
-        title="Alcance del informe"
-        description="Elige si quieres analizar un taller individual, todas las operaciones de una sede o comparar un material entre sedes."
-        spacing={2.5}
-      >
-        <Stack spacing={2.5}>
-          <ToggleButtonGroup
-            value={scope}
-            exclusive
-            onChange={(_, value) => {
-              if (value) {
-                setScope(value);
-              }
-            }}
-            aria-label="Alcance del informe"
-            size="small"
-          >
-            <ToggleButton value="taller">Taller individual</ToggleButton>
-            <ToggleButton value="sede">Sede</ToggleButton>
-            <ToggleButton value="material">Material</ToggleButton>
-          </ToggleButtonGroup>
-
-          {scope === "taller" ? (
-            <Autocomplete
-              value={selectedTaller}
-              options={individualTallerOptions}
-              loading={loading}
-              onChange={(_, selected) => setSelectedTaller(selected)}
-              getOptionLabel={(option) => option.label}
-              isOptionEqualToValue={(option, optionValue) => option.id === optionValue.id}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Taller"
-                  placeholder="Ej: Material o rango de fechas"
-                  helperText="Selecciona un taller específico o cambia el alcance para comparar varios."
-                />
-              )}
-            />
-          ) : (
-            <Stack spacing={1.5}>
-              {scope === "material" ? (
-                <Autocomplete
-                  value={selectedMaterial}
-                  options={materialOptions}
-                  onChange={(_, value) => setSelectedMaterial(value)}
-                  getOptionLabel={(option) => option.label}
-                  isOptionEqualToValue={(option, value) => option.codigo === value.codigo}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Material principal"
-                      placeholder="Ej: codigo o nombre del ítem"
-                      helperText="Elige el material que deseas comparar entre sedes."
-                    />
-                  )}
-                />
-              ) : null}
-
-              <Autocomplete
-                multiple
-                disableCloseOnSelect
-                value={
-                  scope === "sede" && selectedSedes.length === 0 ? availableSedes : selectedSedes
-                }
-                options={availableSedes}
-                onChange={(_, values) => setSelectedSedes(values)}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => {
-                    const { key, ...tagProps } = getTagProps({ index });
-                    return <Chip key={key ?? option} label={option} size="small" {...tagProps} />;
-                  })
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Sedes"
-                    placeholder="Selecciona una o más sedes"
-                    helperText={
-                      scope === "sede"
-                        ? "Si no eliges sedes se incluirán todas."
-                        : "Usa sedes para acotar la comparacion del material."
-                    }
-                  />
-                )}
-              />
-
-              <Typography variant="body2" color="text.secondary">
-                {scope === "material" && !selectedMaterial
-                  ? "Selecciona un material para ver los talleres disponibles."
-                  : selectedTallerIds.length
-                    ? `Se incluirán ${selectedTallerIds.length} talleres en el informe.`
-                    : "Ajusta los filtros de alcance para incluir talleres en el informe."}
-              </Typography>
-              {selectedTalleresCompletos.length ? (
-                <Stack direction="row" flexWrap="wrap" gap={1}>
-                  {selectedTalleresCompletos.map((taller) => (
-                    <Chip
-                      key={taller.id}
-                      label={`Taller completo ${formatTallerId(taller.id)} · ${taller.nombre}${
-                        taller.sede ? ` · ${taller.sede}` : ""
-                      }`}
-                      size="small"
-                    />
-                  ))}
-                </Stack>
-              ) : selectedTallerIds.length ? (
-                <Typography variant="body2" color="text.secondary">
-                  No hay talleres completos disponibles en el alcance seleccionado.
-                </Typography>
-              ) : null}
-            </Stack>
-          )}
-
-          {error ? <Alert severity="error">{error}</Alert> : null}
-        </Stack>
-      </PageSection>
+      <InformesScopeSection
+        scope={scope}
+        selectedTaller={selectedTaller}
+        selectedMaterial={selectedMaterial}
+        selectedSedes={selectedSedes}
+        selectedTallerIds={selectedTallerIds}
+        availableSedes={availableSedes}
+        individualTallerOptions={individualTallerOptions}
+        materialOptions={materialOptions}
+        selectedTalleresCompletos={selectedTalleresCompletos}
+        loading={loading}
+        error={error}
+        onScopeChange={setScope}
+        onSelectedTallerChange={setSelectedTaller}
+        onSelectedMaterialChange={setSelectedMaterial}
+        onSelectedSedesChange={setSelectedSedes}
+        formatTallerId={formatTallerId}
+      />
 
       <InformeFilters
         searchQuery={searchQuery}
@@ -658,263 +525,21 @@ const InformesHistoricos = () => {
         onMaxPesoChange={setMaxPeso}
       />
 
-      <PageSection
-        title="Detalle de los talleres seleccionados"
-        description="Visualiza el desempeño por corte con los filtros aplicados."
-      >
-        <Stack spacing={2.5}>
-          {!selectedTallerIds.length ? (
-            <Alert severity="info">
-              Selecciona un taller o ajusta el alcance para ver su detalle.
-            </Alert>
-          ) : null}
-
-          {selectedTallerIds.length && loadingCalculo ? (
-            <Stack direction="row" spacing={2} alignItems="center">
-              <CircularProgress size={20} />
-              <Typography variant="body2">
-                Cargando detalle de los talleres seleccionados...
-              </Typography>
-            </Stack>
-          ) : null}
-
-          {selectedTallerIds.length && !loadingCalculo && filteredCalculo.length === 0 ? (
-            <Alert severity="warning">
-              No se encontraron cortes que coincidan con los filtros aplicados.
-            </Alert>
-          ) : null}
-
-          {filteredCalculo.length ? (
-            <Paper variant="outlined" sx={{ p: 2.5 }}>
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                divider={<Divider flexItem orientation="vertical" />}
-                spacing={2.5}
-              >
-                <Stack spacing={0.5}>
-                  <Typography variant="overline" color="text.secondary">
-                    {scope === "sede" ? "Total talleres" : "Total cortes"}
-                  </Typography>
-                  <Typography variant="h6">
-                    {scope === "sede" ? resumen.talleres : resumen.cortes}
-                  </Typography>
-                </Stack>
-                <Stack spacing={0.5}>
-                  <Typography variant="overline" color="text.secondary">
-                    Peso filtrado
-                  </Typography>
-                  <Typography variant="h6">{pesoFormatter.format(resumen.totalPeso)} kg</Typography>
-                </Stack>
-                <Stack spacing={0.5}>
-                  <Typography variant="overline" color="text.secondary">
-                    Valor estimado
-                  </Typography>
-                  <Typography variant="h6">
-                    {currencyFormatter.format(resumen.totalValor)}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Stack spacing={2}>
-                {groupedCalculo.map((group) => {
-                  const singleMaterial = group.materiales.length === 1 ? group.materiales[0] : null;
-
-                  return (
-                    <Accordion key={`taller-${group.groupKey}`} variant="outlined" disableGutters>
-                      <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        sx={{
-                          backgroundColor: "rgba(25, 118, 210, 0.08)",
-                          "& .MuiAccordionSummary-content": { my: 1 },
-                        }}
-                      >
-                        <Stack spacing={0.2}>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            {group.groupLabel}
-                          </Typography>
-                          <Stack direction="row" spacing={1} flexWrap="wrap">
-                            <Typography variant="caption" color="text.secondary">
-                              ID: {formatTallerId(group.displayId)}
-                            </Typography>
-                            {singleMaterial?.material ? (
-                              <Typography variant="caption" color="text.secondary">
-                                Código: {singleMaterial.material}
-                              </Typography>
-                            ) : null}
-                            {group.materiales.length > 1 ? (
-                              <Typography variant="caption" color="text.secondary">
-                                Cortes principales: {group.materiales.length}
-                              </Typography>
-                            ) : null}
-                            {group.sede ? (
-                              <Typography variant="caption" color="text.secondary">
-                                Sede: {group.sede}
-                              </Typography>
-                            ) : null}
-                          </Stack>
-                        </Stack>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Stack
-                          spacing={2.5}
-                          divider={
-                            <Divider
-                              flexItem
-                              sx={{
-                                border: "none",
-                                height: 1.5,
-                                backgroundImage:
-                                  "repeating-linear-gradient(to right, #C7C7C7 0 8px, transparent 8px 18px)",
-                              }}
-                            />
-                          }
-                        >
-                          {group.materiales.map((material) => (
-                            <Stack key={material.tallerId} spacing={1.5}>
-                              <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                spacing={2}
-                                divider={<Divider flexItem orientation="vertical" />}
-                                sx={{
-                                  p: 1.5,
-                                  borderRadius: 1,
-                                  border: "1px solid",
-                                  borderColor: "divider",
-                                  backgroundColor: "rgba(25, 118, 210, 0.04)",
-                                }}
-                              >
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Corte principal
-                                  </Typography>
-                                  <Typography variant="subtitle2">{material.label}</Typography>
-                                  {material.material ? (
-                                    <Typography variant="caption" color="text.secondary">
-                                      Código: {material.material}
-                                    </Typography>
-                                  ) : null}
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Peso inicial
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {pesoFormatter.format(material.pesoInicial)} kg
-                                  </Typography>
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Subcortes
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {pesoFormatter.format(
-                                      material.rows.reduce((acc, row) => acc + row.peso, 0)
-                                    )}{" "}
-                                    kg
-                                  </Typography>
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    Peso final
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {pesoFormatter.format(material.pesoFinal)} kg
-                                  </Typography>
-                                </Stack>
-                                <Stack spacing={0.25}>
-                                  <Typography variant="overline" color="text.secondary">
-                                    % pérdida
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={600}>
-                                    {material.porcentajePerdida === null
-                                      ? "N/D"
-                                      : `${porcentajeFormatter.format(
-                                          material.porcentajePerdida
-                                        )}%`}
-                                  </Typography>
-                                </Stack>
-                              </Stack>
-                              <Typography variant="overline" color="text.secondary">
-                                Subcortes de {material.label}
-                              </Typography>
-
-                              <Stack spacing={1}>
-                                {material.rows.map((row, index) => (
-                                  <Stack
-                                    key={`${row.tallerId}-${row.item_code}-${row.nombre_corte}-${row.peso}-${index}`}
-                                    direction={{ xs: "column", sm: "row" }}
-                                    spacing={1.5}
-                                    justifyContent="space-between"
-                                    alignItems={{ xs: "flex-start", sm: "center" }}
-                                    sx={{
-                                      p: 1.5,
-                                      borderRadius: 1,
-                                      border: "1px solid",
-                                      borderColor: "divider",
-                                      backgroundColor:
-                                        index % 2 === 0
-                                          ? "rgba(76, 175, 80, 0.06)"
-                                          : "rgba(255, 152, 0, 0.06)",
-                                    }}
-                                  >
-                                    <Stack spacing={0.25}>
-                                      <Typography variant="subtitle2">
-                                        {formatCorteNombre(row.nombre_corte)}
-                                      </Typography>
-                                      <Typography variant="body2" color="text.secondary">
-                                        {row.descripcion}
-                                      </Typography>
-                                      <Typography variant="caption" color="text.secondary">
-                                        Codigo: {row.item_code || "N/A"}
-                                      </Typography>
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={2}
-                                      divider={<Divider flexItem orientation="vertical" />}
-                                    >
-                                      <Stack spacing={0.25}>
-                                        <Typography variant="overline" color="text.secondary">
-                                          Peso
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {pesoFormatter.format(row.peso)} kg
-                                        </Typography>
-                                      </Stack>
-                                      <Stack spacing={0.25}>
-                                        <Typography variant="overline" color="text.secondary">
-                                          % Real
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {porcentajeFormatter.format(row.porcentaje_real)}%
-                                        </Typography>
-                                      </Stack>
-                                      <Stack spacing={0.25}>
-                                        <Typography variant="overline" color="text.secondary">
-                                          Venta estimada
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {formatCurrencyOrNA(row.valor_estimado)}
-                                        </Typography>
-                                      </Stack>
-                                    </Stack>
-                                  </Stack>
-                                ))}
-                              </Stack>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </AccordionDetails>
-                    </Accordion>
-                  );
-                })}
-              </Stack>
-            </Paper>
-          ) : null}
-        </Stack>
-      </PageSection>
+      <InformesDetalleSection
+        scope={scope}
+        selectedTallerIdsLength={selectedTallerIds.length}
+        filteredCalculoLength={filteredCalculo.length}
+        loadingCalculo={loadingCalculo}
+        resumen={resumen}
+        groupedCalculo={groupedCalculo}
+        formatTallerId={formatTallerId}
+        formatCorteNombre={formatCorteNombre}
+        formatCurrencyOrNA={formatCurrencyOrNA}
+        pesoFormatter={pesoFormatter}
+        porcentajeFormatter={porcentajeFormatter}
+        totalPesoLabel={pesoFormatter.format(resumen.totalPeso)}
+        totalValorLabel={currencyFormatter.format(resumen.totalValor)}
+      />
 
       <InformeExportPanel
         fields={exportFieldDefinitions}
