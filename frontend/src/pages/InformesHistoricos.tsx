@@ -1290,16 +1290,16 @@ const InformesHistoricos = () => {
     ];
 
     groupedByPrincipal.forEach((rows, principalLabel) => {
-      const principalSummary = rows.length
-        ? principalSummaryFields.map(
-            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
-          )
+      const principalSummaryValues = rows.length
+        ? principalSummaryFields.map((field) => normalizeWhitespace(field.getValue(rows[0])))
         : [];
-      const sectionLabel = principalSummary.length
-        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
-        : `Corte principal: ${principalLabel}`;
 
-      csvRows.push([sectionLabel]);
+      if (principalSummaryFields.length) {
+        csvRows.push(principalSummaryHeaders);
+        csvRows.push([principalLabel, ...principalSummaryValues]);
+      } else {
+        csvRows.push(["Corte principal", principalLabel]);
+      }
       csvRows.push(detailHeaders);
       rows.forEach((row) => {
         csvRows.push(detailFields.map((field) => normalizeWhitespace(field.getValue(row))));
