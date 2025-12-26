@@ -32,7 +32,7 @@ export type InformesTallerCalculoGroup = {
   displayId: number;
   groupLabel: string;
   sede: string | null;
-  materiales: MaterialGroup[];
+  materiales: InformesMaterialGroup[];
 };
 
 interface InformesTablaProps {
