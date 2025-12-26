@@ -1183,6 +1183,8 @@ const InformesHistoricos = () => {
     selectedTallerIds.length,
   ]);
 
+  const csvExcludedFields = new Set(["descripcion"]);
+
   const handleFieldToggle = (fieldKey: string) => {
     setSelectedFields((prev) => {
       if (prev.includes(fieldKey)) {
