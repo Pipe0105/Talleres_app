@@ -50,6 +50,19 @@ const dateFormatter = new Intl.DateTimeFormat("es-CO", {
 const formatCurrencyOrNA = (value: number | null) =>
   value == null ? "N/D" : currencyFormatter.format(value);
 
+const SPECIES_LABELS: Record<string, string> = {
+  res: "Res",
+  cerdo: "Cerdo",
+};
+
+const formatSpeciesLabel = (value: string | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+  const normalized = value.toLowerCase();
+  return SPECIES_LABELS[normalized] ?? value;
+};
+
 const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
   acc[material.codigo] = material.nombre;
   return acc;
@@ -124,11 +137,6 @@ const baseExportFieldDefinitions: ExportFieldDefinition[] = [
     key: "sede",
     label: "Sede",
     getValue: (row) => row.sede ?? UNKNOWN_BRANCH_LABEL,
-  },
-  {
-    key: "material",
-    label: "Material",
-    getValue: (row) => row.material ?? "Sin material",
   },
   {
     key: "corte_principal",
@@ -817,6 +825,23 @@ const InformesHistoricos = () => {
     [selectedTallerIds, talleresFiltrados]
   );
 
+  const selectedSpeciesLabel = useMemo(() => {
+    const especies = selectedTalleres
+      .map((taller) => formatSpeciesLabel(taller.especie))
+      .filter(Boolean) as string[];
+    const uniqueSpecies = new Set(especies);
+
+    if (!uniqueSpecies.size) {
+      return null;
+    }
+
+    if (uniqueSpecies.size === 1) {
+      return uniqueSpecies.values().next().value ?? null;
+    }
+
+    return "Varias especies";
+  }, [selectedTalleres]);
+
   const selectedTalleresCompletos = useMemo(() => {
     const grupos = new Map<number, TallerListItem>();
     selectedTalleres.forEach((taller) => {
@@ -1104,6 +1129,9 @@ const InformesHistoricos = () => {
       return;
     }
     const csvRows = [
+      ...(selectedSpeciesLabel
+        ? [`${escapeCsvValue("Especie")};${escapeCsvValue(selectedSpeciesLabel)}`]
+        : []),
       headers.map((header) => escapeCsvValue(header)).join(";"),
       ...formattedRows.map((row) => row.map((value) => escapeCsvValue(value)).join(";")),
     ];
@@ -1121,12 +1149,21 @@ const InformesHistoricos = () => {
       return;
     }
 
-    const tableHead = headers.map((header) => `<th>${escapeHtmlValue(header)}</th>`).join("");
+    const tableHeadRows = [
+      selectedSpeciesLabel
+        ? `<tr><th colspan="${headers.length}">Especie: ${escapeHtmlValue(
+            selectedSpeciesLabel
+          )}</th></tr>`
+        : null,
+      `<tr>${headers.map((header) => `<th>${escapeHtmlValue(header)}</th>`).join("")}</tr>`,
+    ]
+      .filter(Boolean)
+      .join("");
     const tableBody = formattedRows
       .map((row) => `<tr>${row.map((value) => `<td>${escapeHtmlValue(value)}</td>`).join("")}</tr>`)
       .join("");
 
-    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><thead><tr>${tableHead}</tr></thead><tbody>${tableBody}</tbody></table></body></html>`;
+    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><thead>${tableHeadRows}</thead><tbody>${tableBody}</tbody></table></body></html>`;
     const blob = new Blob([htmlContent], {
       type: "application/vnd.ms-excel",
     });
@@ -1163,6 +1200,7 @@ const InformesHistoricos = () => {
 
     const filtersSummary = [
       scopeDescription,
+      selectedSpeciesLabel ? `Especie: ${selectedSpeciesLabel}` : null,
       sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
       scope === "material" && selectedMaterial ? `Material: ${selectedMaterial.label}` : null,
       dateRangeLabel,
