@@ -1,7 +1,10 @@
 import { Alert, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import PageSection from "../PageSection";
 import InformesResumen from "./InformesResumen";
-import InformesTabla, { InformesTallerCalculoGroup } from "./InformesTabla";
+import InformesTabla, {
+  InformesItemComparisonGroup,
+  InformesTallerCalculoGroup,
+} from "./InformesTabla";
 
 interface ResumenData {
   totalPeso: number;
@@ -16,7 +19,7 @@ interface InformesDetalleSectionProps {
   filteredCalculoLength: number;
   loadingCalculo: boolean;
   resumen: ResumenData;
-  groupedCalculo: InformesTallerCalculoGroup[];
+  groupedCalculo: InformesTallerCalculoGroup[] | InformesItemComparisonGroup[];
   formatTallerId: (value: number) => string;
   formatCorteNombre: (value: string) => string;
   formatCurrencyOrNA: (value: number | null) => string;
@@ -73,6 +76,7 @@ const InformesDetalleSection = ({
             totalValorLabel={totalValorLabel}
           />
           <InformesTabla
+            scope={scope}
             groupedCalculo={groupedCalculo}
             formatTallerId={formatTallerId}
             formatCorteNombre={formatCorteNombre}

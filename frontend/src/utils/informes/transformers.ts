@@ -42,6 +42,13 @@ export type TallerCalculoGroup = {
   materiales: MaterialGroup[];
 };
 
+export type TallerItemComparisonGroup = {
+  itemKey: string;
+  itemLabel: string;
+  itemCode: string | null;
+  rows: TallerCalculoWithMeta[];
+};
+
 export const formatTallerId = (id: number) => id.toString().padStart(2, "0");
 
 export const buildTallerCalculoWithMeta = ({
@@ -199,4 +206,35 @@ export const groupCalculoByTaller = (
   });
 
   return ordered;
+};
+
+export const groupCalculoByItem = (rows: TallerCalculoWithMeta[]): TallerItemComparisonGroup[] => {
+  if (!rows.length) {
+    return [];
+  }
+
+  const groups = new Map<string, TallerItemComparisonGroup>();
+
+  rows.forEach((row) => {
+    const normalizedCode = row.item_code?.trim();
+    const normalizedName = row.nombre_corte?.trim() ?? "";
+    const key = normalizedCode
+      ? `code:${normalizedCode.toLowerCase()}`
+      : `name:${normalizedName.toLowerCase()}`;
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.rows.push(row);
+      return;
+    }
+
+    groups.set(key, {
+      itemKey: key,
+      itemLabel: normalizedName || normalizedCode || "Item sin nombre",
+      itemCode: normalizedCode || null,
+      rows: [row],
+    });
+  });
+
+  return Array.from(groups.values()).sort((a, b) => a.itemLabel.localeCompare(b.itemLabel));
 };

@@ -11,7 +11,7 @@ import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel from "../components/informes/InformeExportPanel";
 import { exportFieldDefinitions, pdfFieldDefinitions } from "../components/informes/exportFields";
 import {
-  buildTallerCalculoWithMeta,
+  groupCalculoByItem,
   calculateResumen,
   formatTallerId,
   groupCalculoByTaller,
@@ -578,8 +578,12 @@ const InformesHistoricos = () => {
   }, [filteredCalculo]);
 
   const groupedCalculo = useMemo(() => {
+    if (scope === "comparar") {
+      return groupCalculoByItem(filteredCalculo);
+    }
+
     return groupCalculoByTaller(filteredCalculo, selectedTallerIds);
-  }, [filteredCalculo, selectedTallerIds]);
+  }, [filteredCalculo, scope, selectedTallerIds]);
 
   return (
     <Stack spacing={3} className="animate-fade-up">
