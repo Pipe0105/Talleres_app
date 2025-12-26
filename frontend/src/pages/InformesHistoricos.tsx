@@ -1375,12 +1375,15 @@ const InformesHistoricos = () => {
 
     const pdfRows: PdfRow[] = [];
     groupedByPrincipal.forEach((rows, principalLabel) => {
-      const principalSummaryValues = rows.length
-        ? principalSummaryFields.map((field) => normalizeWhitespace(field.getValue(rows[0])))
-        : principalSummaryFields.map(() => "");
-      csvRows.push(principalSummaryHeaders);
-      csvRows.push([principalLabel, ...principalSummaryValues]);
-      csvRows.push([""]);
+      const principalSummary = rows.length
+        ? principalSummaryFields.map(
+            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
+          )
+        : [];
+      const sectionLabel = principalSummary.length
+        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
+        : `Corte principal: ${principalLabel}`;
+      pdfRows.push({ type: "section", label: sectionLabel });
       rows.forEach((row) => {
         pdfRows.push({
           type: "row",
