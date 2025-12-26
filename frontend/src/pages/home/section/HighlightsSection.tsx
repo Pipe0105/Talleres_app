@@ -12,13 +12,12 @@ const capabilityPillars = [
     title: "Talleres Desposte",
     description: "Realizar el ingreso de nuevos talleres de desposte.",
     tag: "Inventario",
-    to: "/talleres/desposte",
+    to: "/talleres-plus",
   },
   {
     icon: <AssessmentIcon fontSize="large" color="primary" />,
     title: "Informes Historicos",
-    description:
-      "Generar reportes detallados de talleres realizados historicamente.",
+    description: "Generar reportes detallados de talleres realizados historicamente.",
     tag: "Historial",
     to: "/informes-historicos",
   },

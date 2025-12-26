@@ -22,7 +22,6 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import HistoryEduRoundedIcon from "@mui/icons-material/HistoryEduRounded";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ViewTimelineRoundedIcon from "@mui/icons-material/ViewTimelineRounded";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import StoreMallDirectoryOutlinedIcon from "@mui/icons-material/StoreMallDirectoryOutlined";
@@ -55,7 +54,7 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       {
         title: "Principal",
         items: navItems.filter((item) =>
-          ["Talleres", "Talleres+", "Seguimiento", "Informes"].includes(item.label)
+          ["Talleres+", "Seguimiento", "Informes"].includes(item.label)
         ),
       },
       {
@@ -72,8 +71,6 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
 
   const getIconForLabel = (label: string) => {
     switch (label) {
-      case "Talleres":
-        return <DashboardRoundedIcon />;
       case "Talleres+":
         return <TimelineRoundedIcon />;
       case "Seguimiento":

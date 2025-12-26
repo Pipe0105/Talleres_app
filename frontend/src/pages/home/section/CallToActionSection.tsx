@@ -17,16 +17,11 @@ const CallToActionSection = () => {
           Potencia tus operaciones hoy mismo
         </Typography>
         <Typography variant="body1" color="text.secondary" maxWidth={520}>
-          Agenda una sesión con nuestro equipo y descubre cómo digitalizar
-          controles, automatizar reportes y mantener la trazabilidad total.
+          Agenda una sesión con nuestro equipo y descubre cómo digitalizar controles, automatizar
+          reportes y mantener la trazabilidad total.
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
-          <Button
-            component={RouterLink}
-            to="/talleres"
-            variant="contained"
-            color="primary"
-          >
+          <Button component={RouterLink} to="/talleres-plus" variant="contained" color="primary">
             Explorar tablero
           </Button>
           <Button

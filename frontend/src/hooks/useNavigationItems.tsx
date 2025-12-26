@@ -15,16 +15,12 @@ interface UseNavigationItemsOptions {
   currentPath?: string;
 }
 
-export const useNavigationItems = ({
-  user,
-  currentPath,
-}: UseNavigationItemsOptions) => {
+export const useNavigationItems = ({ user, currentPath }: UseNavigationItemsOptions) => {
   const location = useLocation();
   const pathToUse = currentPath ?? location.pathname;
 
   return useMemo<NavigationItem[]>(() => {
     const navigationConfig: NavigationItem[] = [
-      { label: "Talleres", to: "/talleres" },
       { label: "Talleres+", to: "/talleres-plus" },
       { label: "Seguimiento", to: "/talleres/seguimiento" },
       { label: "Informes", to: "/informes-historicos" },
@@ -40,23 +36,20 @@ export const useNavigationItems = ({
         : [{ label: "Iniciar sesión", to: "/login" }]),
     ];
 
-    const activeRoute = navigationConfig.reduce<string | null>(
-      (current, item) => {
-        if (!item.to) return current;
+    const activeRoute = navigationConfig.reduce<string | null>((current, item) => {
+      if (!item.to) return current;
 
-        const isMatch =
-          item.to === "/"
-            ? pathToUse === "/"
-            : pathToUse === item.to || pathToUse.startsWith(`${item.to}/`);
+      const isMatch =
+        item.to === "/"
+          ? pathToUse === "/"
+          : pathToUse === item.to || pathToUse.startsWith(`${item.to}/`);
 
-        if (!isMatch) return current;
+      if (!isMatch) return current;
 
-        if (!current) return item.to;
+      if (!current) return item.to;
 
-        return item.to.length > current.length ? item.to : current;
-      },
-      null
-    );
+      return item.to.length > current.length ? item.to : current;
+    }, null);
 
     return navigationConfig.map((item) => {
       const isActive = activeRoute ? item.to === activeRoute : false;

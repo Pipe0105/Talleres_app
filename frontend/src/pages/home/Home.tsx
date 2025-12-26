@@ -34,8 +34,7 @@ import { DashboardStats, TallerGrupoListItem } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 
 const navigationPaths = {
-  talleres: "/talleres",
-  TalleresPlus: "/talleres-plus",
+  talleresPlus: "/talleres-plus",
   seguimiento: "/talleres/seguimiento",
   historial: "/talleres/historial",
   informes: "/informes-historicos",
@@ -57,7 +56,7 @@ const quickActions: QuickAction[] = [
     label: "Nuevo Taller",
     icon: <AddCircleRoundedIcon />,
     color: "#00b290",
-    to: navigationPaths.talleres,
+    to: navigationPaths.talleresPlus,
   },
   {
     label: "Generar Informe",
@@ -445,7 +444,7 @@ const Home = () => {
             color="primary"
             startIcon={<AddCircleRoundedIcon />}
             component={RouterLink}
-            to={navigationPaths.talleres}
+            to={navigationPaths.talleresPlus}
           >
             Nuevo Taller
           </Button>
@@ -615,7 +614,7 @@ const Home = () => {
                               size="small"
                               color="success"
                               component={RouterLink}
-                              to={navigationPaths.TalleresPlus}
+                              to={navigationPaths.talleresPlus}
                               aria-label="Editar taller"
                             >
                               <EditRoundedIcon fontSize="small" />
