@@ -25,44 +25,6 @@ import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel, { ExportField } from "../components/informes/InformeExportPanel";
 import { TALLER_MATERIALES } from "../data/talleres";
 import { parseWeightInput } from "../utils/weights";
-
-const pesoFormatter = new Intl.NumberFormat("es-CO", {
-  minimumFractionDigits: 3,
-  maximumFractionDigits: 3,
-});
-
-const porcentajeFormatter = new Intl.NumberFormat("es-CO", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const currencyFormatter = new Intl.NumberFormat("es-CO", {
-  style: "currency",
-  currency: "COP",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-const dateFormatter = new Intl.DateTimeFormat("es-CO", {
-  dateStyle: "medium",
-});
-
-const formatCurrencyOrNA = (value: number | null) =>
-  value == null ? "N/D" : currencyFormatter.format(value);
-
-const SPECIES_LABELS: Record<string, string> = {
-  res: "Res",
-  cerdo: "Cerdo",
-};
-
-const formatSpeciesLabel = (value: string | null | undefined) => {
-  if (!value) {
-    return null;
-  }
-  const normalized = value.toLowerCase();
-  return SPECIES_LABELS[normalized] ?? value;
-};
-
 const LOCAL_MATERIAL_NAMES = TALLER_MATERIALES.reduce<Record<string, string>>((acc, material) => {
   acc[material.codigo] = material.nombre;
   return acc;
@@ -114,143 +76,6 @@ type MaterialOption = {
   label: string;
 };
 
-const UNKNOWN_BRANCH_LABEL = "Sin sede asignada";
-
-interface ExportFieldDefinition extends ExportField {
-  getValue: (row: TallerCalculoWithMeta) => string;
-}
-
-const formatTallerId = (id: number) => id.toString().padStart(2, "0");
-
-const baseExportFieldDefinitions: ExportFieldDefinition[] = [
-  {
-    key: "taller_id",
-    label: "ID taller",
-    getValue: (row) => formatTallerId(row.displayId),
-  },
-  {
-    key: "taller_nombre",
-    label: "Taller",
-    getValue: (row) => row.tallerNombre,
-  },
-  {
-    key: "sede",
-    label: "Sede",
-    getValue: (row) => row.sede ?? UNKNOWN_BRANCH_LABEL,
-  },
-  {
-    key: "corte_principal",
-    label: "Corte principal",
-    getValue: (row) => row.materialLabel,
-  },
-  {
-    key: "nombre_corte",
-    label: "Corte",
-    getValue: (row) => formatCorteNombre(row.nombre_corte),
-  },
-  {
-    key: "item_code",
-    label: "Codigo de item",
-    getValue: (row) => row.item_code,
-  },
-  {
-    key: "peso",
-    label: "Peso (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso),
-  },
-  {
-    key: "peso_inicial",
-    label: "Peso inicial (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_inicial),
-  },
-  {
-    key: "peso_subcortes",
-    label: "Peso subcortes (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_subcortes),
-  },
-  {
-    key: "peso_final",
-    label: "Peso final (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_final),
-  },
-  {
-    key: "porcentaje_perdida",
-    label: "% pérdida",
-    getValue: (row) =>
-      row.porcentaje_perdida === null || Number.isNaN(row.porcentaje_perdida)
-        ? "N/D"
-        : `${porcentajeFormatter.format(row.porcentaje_perdida)}%`,
-  },
-  {
-    key: "porcentaje_real",
-    label: "% real",
-    getValue: (row) => `${porcentajeFormatter.format(row.porcentaje_real)}%`,
-  },
-  {
-    key: "precio_venta",
-    label: "Precio de venta",
-    getValue: (row) => formatCurrencyOrNA(row.precio_venta),
-  },
-  {
-    key: "valor_estimado",
-    label: "Valor estimado",
-    getValue: (row) => formatCurrencyOrNA(row.valor_estimado),
-  },
-];
-
-const exportFieldDefinitions = baseExportFieldDefinitions;
-const pdfFieldDefinitions: ExportFieldDefinition[] = exportFieldDefinitions;
-
-const normalizeWhitespace = (value: string) => value.replace(/\u00a0/g, " ");
-
-const formatCorteNombre = (value: string) => normalizeWhitespace(value).toUpperCase();
-
-const escapeCsvValue = (value: string) => {
-  const normalized = normalizeWhitespace(value).replace(/\r?\n/g, " ");
-  const needsQuotes = /[";\n]/.test(normalized);
-  const escaped = normalized.replace(/"/g, '""');
-  return needsQuotes ? `"${escaped}"` : escaped;
-};
-
-const escapeHtmlValue = (value: string) =>
-  normalizeWhitespace(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-const stripPdfAccents = (value: string) =>
-  normalizeWhitespace(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-const escapePdfText = (value: string) => {
-  const normalized = stripPdfAccents(value);
-  let escaped = "";
-
-  for (const char of normalized) {
-    if (char === "\\") {
-      escaped += "\\\\";
-      continue;
-    }
-    if (char === "(") {
-      escaped += "\\(";
-      continue;
-    }
-    if (char === ")") {
-      escaped += "\\)";
-      continue;
-    }
-
-    const code = char.charCodeAt(0);
-    if (code >= 0x20 && code <= 0x7e) {
-      escaped += char;
-      continue;
-    }
-    if (code <= 0xff) {
-      escaped += `\\${code.toString(8).padStart(3, "0")}`;
-    }
-  }
-
-  return escaped;
-};
-
 type PdfHighlight = { label: string; value: string };
 
 type PdfReportMetadata = {
@@ -269,15 +94,6 @@ type PdfRow =
       type: "row";
       cells: string[];
     };
-
-const slugify = (value: string) =>
-  normalizeWhitespace(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
 
 const createSimplePdf = (
   title: string,
