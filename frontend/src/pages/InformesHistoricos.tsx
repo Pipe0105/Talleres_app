@@ -1284,6 +1284,11 @@ const InformesHistoricos = () => {
     csvRows.push(["Valor estimado", currencyFormatter.format(resumen.totalValor)]);
     csvRows.push([""]);
 
+    const principalSummaryHeaders = [
+      "Corte principal",
+      ...principalSummaryFields.map((field) => field.label),
+    ];
+
     groupedByPrincipal.forEach((rows, principalLabel) => {
       const principalSummary = rows.length
         ? principalSummaryFields.map(
@@ -1370,15 +1375,12 @@ const InformesHistoricos = () => {
 
     const pdfRows: PdfRow[] = [];
     groupedByPrincipal.forEach((rows, principalLabel) => {
-      const principalSummary = rows.length
-        ? principalSummaryFields.map(
-            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
-          )
-        : [];
-      const sectionLabel = principalSummary.length
-        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
-        : `Corte principal: ${principalLabel}`;
-      pdfRows.push({ type: "section", label: sectionLabel });
+      const principalSummaryValues = rows.length
+        ? principalSummaryFields.map((field) => normalizeWhitespace(field.getValue(rows[0])))
+        : principalSummaryFields.map(() => "");
+      csvRows.push(principalSummaryHeaders);
+      csvRows.push([principalLabel, ...principalSummaryValues]);
+      csvRows.push([""]);
       rows.forEach((row) => {
         pdfRows.push({
           type: "row",
@@ -1815,7 +1817,13 @@ const InformesHistoricos = () => {
 
                   return (
                     <Accordion key={`taller-${group.groupKey}`} variant="outlined" disableGutters>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                          backgroundColor: "rgba(25, 118, 210, 0.08)",
+                          "& .MuiAccordionSummary-content": { my: 1 },
+                        }}
+                      >
                         <Stack spacing={0.2}>
                           <Typography variant="subtitle1" fontWeight={600}>
                             {group.groupLabel}
@@ -1868,6 +1876,7 @@ const InformesHistoricos = () => {
                                   borderRadius: 1,
                                   border: "1px solid",
                                   borderColor: "divider",
+                                  backgroundColor: "rgba(25, 118, 210, 0.04)",
                                 }}
                               >
                                 <Stack spacing={0.25}>
@@ -1938,6 +1947,10 @@ const InformesHistoricos = () => {
                                       borderRadius: 1,
                                       border: "1px solid",
                                       borderColor: "divider",
+                                      backgroundColor:
+                                        index % 2 === 0
+                                          ? "rgba(76, 175, 80, 0.06)"
+                                          : "rgba(255, 152, 0, 0.06)",
                                     }}
                                   >
                                     <Stack spacing={0.25}>
