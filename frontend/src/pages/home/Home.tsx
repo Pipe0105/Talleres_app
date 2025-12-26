@@ -29,12 +29,9 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import TrendingFlatRoundedIcon from "@mui/icons-material/TrendingFlatRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
-import { getDashboardStats, getTalleres } from "../../api/talleresApi";
-import { DashboardStats, TallerListItem } from "../../types";
+import { getDashboardStats, getTalleresCompletos } from "../../api/talleresApi";
+import { DashboardStats, TallerGrupoListItem } from "../../types";
 import { useAuth } from "../../context/AuthContext";
-
-type WorkshopStatus = "completado" | "pendiente";
-type TallerConEstado = TallerListItem & { estado: WorkshopStatus; progreso: number };
 
 const navigationPaths = {
   talleres: "/talleres",
@@ -153,7 +150,7 @@ const Home = () => {
   const { user } = useAuth();
   const isAdmin = Boolean(user?.is_admin || user?.is_gerente);
 
-  const [talleres, setTalleres] = useState<TallerListItem[]>([]);
+  const [talleres, setTalleres] = useState<TallerGrupoListItem[]>([]);
   const [loadingTalleres, setLoadingTalleres] = useState(false);
   const [errorTalleres, setErrorTalleres] = useState<string | null>(null);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
@@ -168,7 +165,7 @@ const Home = () => {
       if (!isAdmin) return;
       try {
         setLoadingTalleres(true);
-        const data = await getTalleres();
+        const data = await getTalleresCompletos();
         if (!active) return;
         setTalleres(data);
         setErrorTalleres(null);
@@ -219,69 +216,7 @@ const Home = () => {
     };
   }, [isAdmin]);
 
-  const talleresConEstado = useMemo<TallerConEstado[]>(() => {
-    const deriveEstado = (taller: TallerListItem): WorkshopStatus => {
-      const processed = Math.max(taller.total_peso, taller.peso_final);
-      const ratio = taller.peso_inicial > 0 ? processed / taller.peso_inicial : 0;
-
-      if (ratio >= 0.99) return "completado";
-      return "pendiente";
-    };
-
-    return talleres.map((taller) => ({
-      ...taller,
-      estado: deriveEstado(taller),
-      progreso:
-        taller.peso_inicial > 0
-          ? Math.min(
-              Math.max(Math.max(taller.total_peso, taller.peso_final) / taller.peso_inicial, 0),
-              1
-            )
-          : 0,
-    }));
-  }, [talleres]);
-
-  const talleresAgrupados = useMemo(() => {
-    const grupos = new Map<
-      string,
-      {
-        items: TallerConEstado[];
-        createdAt: Date | null;
-      }
-    >();
-
-    talleresConEstado.forEach((taller) => {
-      const groupKey = String(
-        taller.taller_grupo_id ?? taller.codigo_principal ?? `taller-${taller.id}`
-      );
-      const createdAt = new Date(taller.creado_en);
-      const entry = grupos.get(groupKey);
-      const validDate = Number.isNaN(createdAt.getTime()) ? null : createdAt;
-
-      if (!entry) {
-        grupos.set(groupKey, {
-          items: [taller],
-          createdAt: validDate,
-        });
-        return;
-      }
-
-      entry.items.push(taller);
-      if (validDate && (!entry.createdAt || validDate < entry.createdAt)) {
-        entry.createdAt = validDate;
-      }
-    });
-
-    return Array.from(grupos.values());
-  }, [talleresConEstado]);
-
-  const completedWorkshopsCount = useMemo(
-    () =>
-      talleresAgrupados.filter((grupo) =>
-        grupo.items.every((taller) => taller.estado === "completado")
-      ).length,
-    [talleresAgrupados]
-  );
+  const completedWorkshopsCount = useMemo(() => talleres.length, [talleres]);
 
   const completadosHoy = useMemo(() => {
     const now = new Date();
@@ -289,12 +224,12 @@ const Home = () => {
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(todayStart.getDate() + 1);
 
-    return talleresAgrupados.filter((grupo) => {
-      if (!grupo.createdAt) return false;
-      if (grupo.createdAt < todayStart || grupo.createdAt >= tomorrowStart) return false;
-      return grupo.items.every((taller) => taller.estado === "completado");
+    return talleres.filter((taller) => {
+      const createdAt = new Date(taller.creado_en);
+      if (Number.isNaN(createdAt.getTime())) return false;
+      return createdAt >= todayStart && createdAt < tomorrowStart;
     }).length;
-  }, [talleresAgrupados]);
+  }, [talleres]);
 
   const formatDate = useCallback((value?: string | null) => {
     if (!value) return "Sin fecha";
@@ -307,18 +242,16 @@ const Home = () => {
     });
   }, []);
 
-  const filteredWorkshops = useMemo<TallerConEstado[]>(() => {
+  const filteredWorkshops = useMemo<TallerGrupoListItem[]>(() => {
     const query = searcTerm.trim().toLowerCase();
-    const matchesQuery = (taller: TallerConEstado) =>
+    const matchesQuery = (taller: TallerGrupoListItem) =>
       !query ||
-      [taller.nombre_taller, taller.codigo_principal ?? "", taller.especie, taller.sede ?? ""]
+      [taller.nombre_taller, String(taller.id), taller.especie, taller.sede ?? ""]
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(query));
 
-    return talleresConEstado.filter(
-      (taller) => taller.estado === "completado" && matchesQuery(taller)
-    );
-  }, [searcTerm, talleresConEstado]);
+    return talleres.filter((taller) => matchesQuery(taller));
+  }, [searcTerm, talleres]);
 
   const formatTrend = useCallback((trend?: number | null): string | null => {
     if (trend === null || trend === undefined || Number.isNaN(trend)) {
@@ -642,7 +575,7 @@ const Home = () => {
                       >
                         <Grid item xs={12} sm={6} md={7}>
                           <Typography variant="subtitle2" fontWeight={800}>
-                            {taller.codigo_principal ?? `TL-${taller.id}`}
+                            {`TL-${taller.id}`}
                           </Typography>
                           <Typography variant="body2" fontWeight={700}>
                             {taller.nombre_taller}
