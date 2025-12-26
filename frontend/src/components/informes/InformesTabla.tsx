@@ -43,6 +43,8 @@ export type InformesItemComparisonGroup = {
   itemKey: string;
   itemLabel: string;
   itemCode: string | null;
+  materialLabel: string;
+  materialCode: string | null;
   rows: InformesMaterialGroup["rows"];
 };
 
@@ -94,6 +96,14 @@ const InformesTabla = ({
                     {formatCorteNombre(group.itemLabel)}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Typography variant="caption" color="text.secondary">
+                      Corte principal: {group.materialLabel}
+                    </Typography>
+                    {group.materialCode ? (
+                      <Typography variant="caption" color="text.secondary">
+                        Código: {group.materialCode}
+                      </Typography>
+                    ) : null}
                     {group.itemCode ? (
                       <Typography variant="caption" color="text.secondary">
                         Código: {group.itemCode}

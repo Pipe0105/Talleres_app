@@ -46,6 +46,8 @@ export type TallerItemComparisonGroup = {
   itemKey: string;
   itemLabel: string;
   itemCode: string | null;
+  materialLabel: string;
+  materialCode: string | null;
   rows: TallerCalculoWithMeta[];
 };
 
@@ -218,9 +220,13 @@ export const groupCalculoByItem = (rows: TallerCalculoWithMeta[]): TallerItemCom
   rows.forEach((row) => {
     const normalizedCode = row.item_code?.trim();
     const normalizedName = row.nombre_corte?.trim() ?? "";
-    const key = normalizedCode
+    const materialCode = row.material?.trim() ?? null;
+    const materialLabel = row.materialLabel?.trim() ?? "Corte principal";
+    const materialKey = (materialCode ?? materialLabel).toLowerCase();
+    const itemKey = normalizedCode
       ? `code:${normalizedCode.toLowerCase()}`
       : `name:${normalizedName.toLowerCase()}`;
+    const key = `material:${materialKey}|${itemKey}`;
     const existing = groups.get(key);
 
     if (existing) {
@@ -232,9 +238,18 @@ export const groupCalculoByItem = (rows: TallerCalculoWithMeta[]): TallerItemCom
       itemKey: key,
       itemLabel: normalizedName || normalizedCode || "Item sin nombre",
       itemCode: normalizedCode || null,
+      materialLabel,
+      materialCode,
       rows: [row],
     });
   });
 
-  return Array.from(groups.values()).sort((a, b) => a.itemLabel.localeCompare(b.itemLabel));
+  return Array.from(groups.values()).sort((a, b) => {
+    const materialCompare = a.materialLabel.localeCompare(b.materialLabel);
+    if (materialCompare !== 0) {
+      return materialCompare;
+    }
+
+    return a.itemLabel.localeCompare(b.itemLabel);
+  });
 };
