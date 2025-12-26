@@ -23,7 +23,7 @@ import PageHeader from "../components/PageHeader";
 import type { TallerOption } from "../components/informes/TallerSelectionCard";
 import InformeFilters from "../components/informes/InformeFilters";
 import InformeExportPanel from "../components/informes/InformeExportPanel";
-import {} from "../components/informes/exportFields";
+import { exportFieldDefinitions, pdfFieldDefinitions } from "../components/informes/exportFields";
 import { TALLER_MATERIALES } from "../data/talleres";
 import {
   SPECIES_LABELS,
