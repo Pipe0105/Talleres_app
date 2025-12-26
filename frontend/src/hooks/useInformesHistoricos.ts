@@ -33,7 +33,7 @@ const formatSpeciesLabel = (value: string | null | undefined) => {
   return SPECIES_LABELS[normalized] ?? value;
 };
 
-export type InformeScope = "taller" | "sede" | "material";
+export type InformeScope = "taller" | "sede" | "material" | "comparar";
 
 export type TallerCalculoWithMeta = TallerCalculoRow & {
   tallerId: number;
@@ -68,6 +68,7 @@ export const useInformesHistoricos = () => {
   const [selectedTaller, setSelectedTaller] = useState<TallerOption | null>(null);
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialOption | null>(null);
+  const [selectedCompareTalleres, setSelectedCompareTalleres] = useState<TallerOption[]>([]);
   const [calculo, setCalculo] = useState<TallerCalculoWithMeta[] | null>(null);
   const [loadingCalculo, setLoadingCalculo] = useState(false);
   const [materialNames, setMaterialNames] = useState<Record<string, string>>({});
@@ -98,6 +99,14 @@ export const useInformesHistoricos = () => {
       return true;
     });
   }, [dateFrom, dateTo, talleres]);
+
+  const sedesByTallerId = useMemo(() => {
+    const map = new Map<string, string>();
+    talleresFiltrados.forEach((taller) => {
+      map.set(String(taller.id), taller.sede ?? UNKNOWN_BRANCH_LABEL);
+    });
+    return map;
+  }, [talleresFiltrados]);
 
   const filteredTallerIds = useMemo(
     () => new Set(talleresFiltrados.map((taller) => String(taller.id))),
@@ -154,6 +163,21 @@ export const useInformesHistoricos = () => {
     }));
   }, [talleresFiltrados]);
 
+  const compareTallerSedesById = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    individualTallerOptions.forEach((option) => {
+      const sedes = new Set<string>();
+      option.tallerIds.forEach((id) => {
+        const sede = sedesByTallerId.get(id);
+        if (sede) {
+          sedes.add(sede);
+        }
+      });
+      map[option.id] = Array.from(sedes.values());
+    });
+    return map;
+  }, [individualTallerOptions, sedesByTallerId]);
+
   const availableSedes = useMemo(() => {
     const sedeSet = new Set<string>();
     talleresFiltrados.forEach((taller) => {
@@ -182,12 +206,17 @@ export const useInformesHistoricos = () => {
       })
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [materialNames, talleresFiltrados]);
-
   const selectedTallerIds = useMemo(() => {
     if (scope === "taller") {
       return selectedTaller
         ? selectedTaller.tallerIds.filter((id) => filteredTallerIds.has(id))
         : [];
+    }
+
+    if (scope === "comparar") {
+      return selectedCompareTalleres
+        .flatMap((taller) => taller.tallerIds)
+        .filter((id) => filteredTallerIds.has(id));
     }
 
     let filtered = talleresFiltrados;
@@ -213,6 +242,7 @@ export const useInformesHistoricos = () => {
     availableSedes,
     filteredTallerIds,
     scope,
+    selectedCompareTalleres,
     selectedMaterial,
     selectedSedes,
     selectedTaller,
@@ -339,10 +369,51 @@ export const useInformesHistoricos = () => {
       setSelectedMaterial(null);
     }
 
+    if (scope !== "comparar") {
+      setSelectedCompareTalleres([]);
+    }
+
     if (scope === "taller") {
       setSelectedSedes([]);
     }
   }, [scope]);
+
+  const compareSelectionDetails = useMemo(() => {
+    return selectedCompareTalleres.map((option) => {
+      const sedes = new Set<string>();
+      talleresFiltrados.forEach((taller) => {
+        if (option.tallerIds.includes(String(taller.id))) {
+          sedes.add(taller.sede ?? UNKNOWN_BRANCH_LABEL);
+        }
+      });
+
+      return {
+        id: option.id,
+        label: option.label,
+        sedes: Array.from(sedes.values()),
+      };
+    });
+  }, [selectedCompareTalleres, talleresFiltrados]);
+
+  const compareSelectionError = useMemo(() => {
+    if (scope !== "comparar") {
+      return null;
+    }
+
+    if (selectedCompareTalleres.length < 2) {
+      return null;
+    }
+
+    const [first, second] = compareSelectionDetails;
+    if (!first || !second) {
+      return null;
+    }
+
+    const firstSedes = new Set(first.sedes);
+    const hasOverlap = second.sedes.some((sede) => firstSedes.has(sede));
+
+    return hasOverlap ? "Selecciona talleres de sedes distintas para comparar." : null;
+  }, [compareSelectionDetails, scope, selectedCompareTalleres.length]);
 
   useEffect(() => {
     if (!selectedTallerIds.length) {
@@ -439,6 +510,8 @@ export const useInformesHistoricos = () => {
     setSelectedSedes,
     selectedMaterial,
     setSelectedMaterial,
+    selectedCompareTalleres,
+    setSelectedCompareTalleres,
     calculo,
     loadingCalculo,
     dateFrom,
@@ -451,5 +524,8 @@ export const useInformesHistoricos = () => {
     selectedTallerIds,
     selectedSpeciesLabel,
     selectedTalleresCompletos,
+    compareSelectionDetails,
+    compareSelectionError,
+    compareTallerSedesById,
   };
 };

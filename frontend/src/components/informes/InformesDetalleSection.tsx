@@ -11,7 +11,7 @@ interface ResumenData {
 }
 
 interface InformesDetalleSectionProps {
-  scope: "taller" | "sede" | "material";
+  scope: "taller" | "sede" | "material" | "comparar";
   selectedTallerIdsLength: number;
   filteredCalculoLength: number;
   loadingCalculo: boolean;

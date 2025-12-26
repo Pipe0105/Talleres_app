@@ -1,7 +1,7 @@
 import { Divider, Stack, Typography } from "@mui/material";
 
 interface InformesResumenProps {
-  scope: "taller" | "sede" | "material";
+  scope: "taller" | "sede" | "material" | "comparar";
   totalCortes: number;
   totalTalleres: number;
   totalPesoLabel: string;
@@ -23,9 +23,11 @@ const InformesResumen = ({
     >
       <Stack spacing={0.5}>
         <Typography variant="overline" color="text.secondary">
-          {scope === "sede" ? "Total talleres" : "Total cortes"}
+          {scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes"}
         </Typography>
-        <Typography variant="h6">{scope === "sede" ? totalTalleres : totalCortes}</Typography>
+        <Typography variant="h6">
+          {scope === "sede" || scope === "comparar" ? totalTalleres : totalCortes}
+        </Typography>
       </Stack>
       <Stack spacing={0.5}>
         <Typography variant="overline" color="text.secondary">

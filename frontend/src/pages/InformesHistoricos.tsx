@@ -70,6 +70,8 @@ const InformesHistoricos = () => {
     setSelectedSedes,
     selectedMaterial,
     setSelectedMaterial,
+    selectedCompareTalleres,
+    setSelectedCompareTalleres,
     calculo,
     loadingCalculo,
     dateFrom,
@@ -82,6 +84,9 @@ const InformesHistoricos = () => {
     selectedTallerIds,
     selectedSpeciesLabel,
     selectedTalleresCompletos,
+    compareSelectionDetails,
+    compareSelectionError,
+    compareTallerSedesById,
   } = useInformesHistoricos();
   const [selectedFields, setSelectedFields] = useState<string[]>(
     exportFieldDefinitions.map((field) => field.key)
@@ -158,10 +163,16 @@ const InformesHistoricos = () => {
       return `material_${slugify(selectedMaterial.codigo)}_${sedesSlug}`;
     }
 
+    if (scope === "comparar" && selectedCompareTalleres.length) {
+      const compareSlug = selectedCompareTalleres.map((taller) => slugify(taller.id)).join("-");
+      return `comparacion_talleres_${compareSlug}`;
+    }
+
     return "detalle_taller";
   }, [
     availableSedes,
     scope,
+    selectedCompareTalleres,
     selectedMaterial,
     selectedSedes,
     selectedTaller,
@@ -225,7 +236,11 @@ const InformesHistoricos = () => {
           ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
           : scope === "material" && selectedMaterial
             ? `Alcance: Material ${selectedMaterial.label}`
-            : "Alcance: selección personalizada";
+            : scope === "comparar" && selectedCompareTalleres.length
+              ? `Alcance: Comparación de ${selectedCompareTalleres
+                  .map((taller) => taller.label)
+                  .join(" vs ")}`
+              : "Alcance: selección personalizada";
     const dateFromLabel = dateFrom ? dateFormatter.format(new Date(`${dateFrom}T00:00:00`)) : "";
     const dateToLabel = dateTo ? dateFormatter.format(new Date(`${dateTo}T00:00:00`)) : "";
     const dateRangeLabel =
@@ -258,7 +273,9 @@ const InformesHistoricos = () => {
     const csvTitle =
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
-        : "Detalle consolidado";
+        : scope === "comparar"
+          ? "Comparación de talleres"
+          : "Detalle consolidado";
 
     pushRow(["Informe", csvTitle], "title");
     pushRow(
@@ -281,8 +298,10 @@ const InformesHistoricos = () => {
     pushShiftedRow(["Talleres incluidos", resumen.talleres.toString()], "summary-row");
     pushShiftedRow(
       [
-        scope === "sede" ? "Total talleres" : "Total cortes",
-        scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
+        scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes",
+        scope === "sede" || scope === "comparar"
+          ? resumen.talleres.toString()
+          : resumen.cortes.toString(),
       ],
       "summary-row"
     );
@@ -482,7 +501,11 @@ const InformesHistoricos = () => {
           ? `Alcance: ${sedesSeleccionadas.length} sede(s)`
           : scope === "material" && selectedMaterial
             ? `Alcance: Material ${selectedMaterial.label}`
-            : "Alcance: selección personalizada";
+            : scope === "comparar" && selectedCompareTalleres.length
+              ? `Alcance: Comparación de ${selectedCompareTalleres
+                  .map((taller) => taller.label)
+                  .join(" vs ")}`
+              : "Alcance: selección personalizada";
     const dateFromLabel = dateFrom ? dateFormatter.format(new Date(`${dateFrom}T00:00:00`)) : "";
     const dateToLabel = dateTo ? dateFormatter.format(new Date(`${dateTo}T00:00:00`)) : "";
     const dateRangeLabel =
@@ -507,7 +530,9 @@ const InformesHistoricos = () => {
     const pdfTitle =
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
-        : "Detalle consolidado";
+        : scope === "comparar"
+          ? "Comparación de talleres"
+          : "Detalle consolidado";
 
     const pdfBlob = createSimplePdf(pdfTitle, pdfHeaders, pdfRows, {
       subtitle: "Informe consolidado",
@@ -519,8 +544,11 @@ const InformesHistoricos = () => {
       highlights: [
         { label: "Talleres incluidos", value: resumen.talleres.toString() },
         {
-          label: scope === "sede" ? "Total talleres" : "Total cortes",
-          value: scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
+          label: scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes",
+          value:
+            scope === "sede" || scope === "comparar"
+              ? resumen.talleres.toString()
+              : resumen.cortes.toString(),
         },
         {
           label: "Peso filtrado",
@@ -536,11 +564,14 @@ const InformesHistoricos = () => {
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
   };
 
+  const isCompareInvalid = scope === "comparar" && Boolean(compareSelectionError);
+
   const isExportDisabled =
     loadingCalculo ||
     !formattedRows.length ||
     selectedFieldDefinitions.length === 0 ||
-    (scope === "taller" && !selectedTaller);
+    (scope === "taller" && !selectedTaller) ||
+    isCompareInvalid;
 
   const resumen = useMemo(() => {
     return calculateResumen(filteredCalculo);
@@ -580,17 +611,22 @@ const InformesHistoricos = () => {
         selectedTaller={selectedTaller}
         selectedMaterial={selectedMaterial}
         selectedSedes={selectedSedes}
+        selectedCompareTalleres={selectedCompareTalleres}
         selectedTallerIds={selectedTallerIds}
         availableSedes={availableSedes}
         individualTallerOptions={individualTallerOptions}
         materialOptions={materialOptions}
         selectedTalleresCompletos={selectedTalleresCompletos}
+        compareSelectionDetails={compareSelectionDetails}
+        compareSelectionError={compareSelectionError}
+        compareTallerSedesById={compareTallerSedesById}
         loading={loading}
         error={error}
         onScopeChange={setScope}
         onSelectedTallerChange={setSelectedTaller}
         onSelectedMaterialChange={setSelectedMaterial}
         onSelectedSedesChange={setSelectedSedes}
+        onSelectedCompareTalleresChange={setSelectedCompareTalleres}
         formatTallerId={formatTallerId}
       />
 
