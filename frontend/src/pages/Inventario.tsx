@@ -112,10 +112,26 @@ const Inventario = () => {
     [inventario]
   );
 
-  const sortedInventory = useMemo(
-    () => [...inventario].sort((a, b) => b.total_peso - a.total_peso),
-    [inventario]
-  );
+  const sortedInventory = useMemo(() => {
+    const normalizeSede = (sede?: string | null) => sede?.trim() ?? "";
+    return [...inventario].sort((a, b) => {
+      const sedeA = normalizeSede(a.sede);
+      const sedeB = normalizeSede(b.sede);
+
+      if (sedeA && sedeB) {
+        const sedeCompare = sedeA.localeCompare(sedeB, "es", { sensitivity: "base" });
+        if (sedeCompare !== 0) {
+          return sedeCompare;
+        }
+      } else if (sedeA) {
+        return -1;
+      } else if (sedeB) {
+        return 1;
+      }
+
+      return b.total_peso - a.total_peso;
+    });
+  }, [inventario]);
 
   const selectedLabel = selectedBranch === "todas" ? "todas las sedes" : selectedBranch;
   const selectedSpeciesLabel = selectedSpecies === "todas" ? "todas las especies" : selectedSpecies;
