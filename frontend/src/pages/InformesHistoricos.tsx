@@ -170,6 +170,19 @@ const InformesHistoricos = () => {
 
   const csvExcludedFields = new Set(["descripcion"]);
 
+  type ExportRowType =
+    | "title"
+    | "meta"
+    | "spacer"
+    | "section"
+    | "filter"
+    | "summary-header"
+    | "summary-row"
+    | "group-summary-header"
+    | "group-summary-row"
+    | "detail-header"
+    | "detail-row";
+
   const buildExportRows = () => {
     if (!filteredCalculo.length) {
       return null;
@@ -235,35 +248,50 @@ const InformesHistoricos = () => {
     ].filter(Boolean) as string[];
 
     const csvRows: string[][] = [];
+    const rowTypes: ExportRowType[] = [];
+
+    const pushRow = (row: string[], type: ExportRowType) => {
+      csvRows.push(row);
+      rowTypes.push(type);
+    };
 
     const csvTitle =
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
         : "Detalle consolidado";
 
-    csvRows.push(["Informe", csvTitle]);
-    csvRows.push([
-      "Generado",
-      new Intl.DateTimeFormat("es-CO", {
-        dateStyle: "full",
-        timeStyle: "short",
-      }).format(new Date()),
-    ]);
-    csvRows.push([""]);
-    csvRows.push(["Filtros"]);
-    filtersSummary.forEach((filter) => csvRows.push([filter]));
-    csvRows.push([""]);
-    const pushShiftedRow = (row: string[]) => csvRows.push(["", ...row]);
+    pushRow(["Informe", csvTitle], "title");
+    pushRow(
+      [
+        "Generado",
+        new Intl.DateTimeFormat("es-CO", {
+          dateStyle: "full",
+          timeStyle: "short",
+        }).format(new Date()),
+      ],
+      "meta"
+    );
+    pushRow([""], "spacer");
+    pushRow(["Filtros"], "section");
+    filtersSummary.forEach((filter) => pushRow([filter], "filter"));
+    pushRow([""], "spacer");
+    const pushShiftedRow = (row: string[], type: ExportRowType) => pushRow(["", ...row], type);
 
-    pushShiftedRow(["Resumen"]);
-    pushShiftedRow(["Talleres incluidos", resumen.talleres.toString()]);
-    pushShiftedRow([
-      scope === "sede" ? "Total talleres" : "Total cortes",
-      scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
-    ]);
-    pushShiftedRow(["Peso filtrado", `${pesoFormatter.format(resumen.totalPeso)} kg`]);
-    pushShiftedRow(["Valor estimado", currencyFormatter.format(resumen.totalValor)]);
-    csvRows.push([""]);
+    pushShiftedRow(["Resumen"], "section");
+    pushShiftedRow(["Talleres incluidos", resumen.talleres.toString()], "summary-row");
+    pushShiftedRow(
+      [
+        scope === "sede" ? "Total talleres" : "Total cortes",
+        scope === "sede" ? resumen.talleres.toString() : resumen.cortes.toString(),
+      ],
+      "summary-row"
+    );
+    pushShiftedRow(
+      ["Peso filtrado", `${pesoFormatter.format(resumen.totalPeso)} kg`],
+      "summary-row"
+    );
+    pushShiftedRow(["Valor estimado", currencyFormatter.format(resumen.totalValor)], "summary-row");
+    pushRow([""], "spacer");
 
     const principalSummaryHeaders = [
       "Corte principal",
@@ -276,19 +304,22 @@ const InformesHistoricos = () => {
         : [];
 
       if (principalSummaryFields.length) {
-        pushShiftedRow(principalSummaryHeaders);
-        pushShiftedRow([principalLabel, ...principalSummaryValues]);
+        pushShiftedRow(principalSummaryHeaders, "group-summary-header");
+        pushShiftedRow([principalLabel, ...principalSummaryValues], "group-summary-row");
       } else {
-        pushShiftedRow(["Corte principal", principalLabel]);
+        pushShiftedRow(["Corte principal", principalLabel], "group-summary-row");
       }
-      pushShiftedRow(detailHeaders);
+      pushShiftedRow(detailHeaders, "detail-header");
       rows.forEach((row) => {
-        pushShiftedRow(detailFields.map((field) => normalizeWhitespace(field.getValue(row))));
+        pushShiftedRow(
+          detailFields.map((field) => normalizeWhitespace(field.getValue(row))),
+          "detail-row"
+        );
       });
-      csvRows.push([""]);
+      pushRow([""], "spacer");
     });
 
-    return { rows: csvRows, detailHeaders };
+    return { rows: csvRows, detailHeaders, rowTypes };
   };
 
   const handleFieldToggle = (fieldKey: string) => {
@@ -329,14 +360,48 @@ const InformesHistoricos = () => {
     }
 
     const maxColumns = exportRows.rows.reduce((max, row) => Math.max(max, row.length), 0);
+
+    const baseCellStyle =
+      "border:1px solid #d5dce5;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
+    const rowStyleMap: Record<Exclude<ExportRowType, "detail-row">, string> = {
+      title: "background-color:#e3eaf2;font-weight:bold;font-size:14px;",
+      meta: "background-color:#f3f6fa;",
+      spacer: "border:none;background-color:#ffffff;",
+      section: "background-color:#dde7f2;font-weight:bold;",
+      filter: "background-color:#f7f9fc;",
+      "summary-header": "background-color:#e6eef7;font-weight:bold;",
+      "summary-row": "background-color:#f7fbff;",
+      "group-summary-header": "background-color:#e8edf5;font-weight:bold;",
+      "group-summary-row": "background-color:#f3f7fb;",
+      "detail-header": "background-color:#dce6f3;font-weight:bold;",
+    };
+    let detailRowIndex = 0;
     const tableBody = exportRows.rows
-      .map((row) => {
+      .map((row, rowIndex) => {
+        const rowType = exportRows.rowTypes[rowIndex];
         const paddedRow = [...row, ...Array(Math.max(maxColumns - row.length, 0)).fill("")];
+        const rowStyle =
+          rowType === "detail-row"
+            ? detailRowIndex++ % 2 === 0
+              ? "background-color:#ffffff;"
+              : "background-color:#f5f7fb;"
+            : rowStyleMap[rowType];
         return `<tr>${paddedRow
-          .map((value) => {
+          .map((value, cellIndex) => {
             const trimmedValue = value.trim();
-            const borderStyle = trimmedValue ? ' style="border:1px solid #000;"' : "";
-            return `<td${borderStyle}>${escapeHtmlValue(value)}</td>`;
+            const isSpacerRow = rowType === "spacer";
+            const emphasizedFirstCell =
+              ["meta", "summary-row", "group-summary-row"].includes(rowType) &&
+              cellIndex === 0 &&
+              trimmedValue;
+            const cellStyle = [
+              isSpacerRow ? "border:none;padding:4px;" : baseCellStyle,
+              rowStyle,
+              emphasizedFirstCell ? "font-weight:bold;" : "",
+            ]
+              .filter(Boolean)
+              .join("");
+            return `<td style="${cellStyle}">${escapeHtmlValue(value)}</td>`;
           })
           .join("")}</tr>`;
       })
