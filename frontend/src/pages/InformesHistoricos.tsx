@@ -333,12 +333,16 @@ const InformesHistoricos = () => {
       .map((row) => {
         const paddedRow = [...row, ...Array(Math.max(maxColumns - row.length, 0)).fill("")];
         return `<tr>${paddedRow
-          .map((value) => `<td>${escapeHtmlValue(value)}</td>`)
+          .map((value) => {
+            const trimmedValue = value.trim();
+            const borderStyle = trimmedValue ? ' style="border:1px solid #000;"' : "";
+            return `<td${borderStyle}>${escapeHtmlValue(value)}</td>`;
+          })
           .join("")}</tr>`;
       })
       .join("");
 
-    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><tbody>${tableBody}</tbody></table></body></html>`;
+    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table style="border-collapse:collapse;"><tbody>${tableBody}</tbody></table></body></html>`;
     const blob = new Blob([htmlContent], {
       type: "application/vnd.ms-excel",
     });
