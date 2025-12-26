@@ -519,6 +519,16 @@ const createSimplePdf = (
     currentY = separatorY - 6;
   };
 
+  const estimateTableRowSpace = (cells: string[], fontSize: number) => {
+    const cellPadding = 4;
+    const wrappedCells = cells.map((cell, columnIndex) =>
+      wrapText(cell, fontSize, columnWidths[columnIndex] - cellPadding * 2)
+    );
+    const maxLines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
+    const rowHeight = maxLines * (fontSize + 3) + cellPadding * 2;
+    return rowHeight + 12;
+  };
+
   const addSectionRow = (label: string) => {
     ensureSpace(26);
     addRoundedRect(margin, currentY - 20, contentWidth, 20, color.primaryDark);
@@ -553,7 +563,7 @@ const createSimplePdf = (
 
   addTableRow(header, 11, 0, true);
   let dataRowIndex = 0;
-  rows.forEach((row) => {
+  rows.forEach((row, index) => {
     if (currentY < margin + 60) {
       addSeparator();
       startPage(false);
@@ -562,6 +572,12 @@ const createSimplePdf = (
       addTableRow(header, 11, 0, true);
     }
     if (row.type === "section") {
+      const nextRow = rows[index + 1];
+      if (nextRow?.type === "row") {
+        const sectionSpace = 26;
+        const nextRowSpace = estimateTableRowSpace(nextRow.cells, 10);
+        ensureSpace(sectionSpace + nextRowSpace);
+      }
       addSectionRow(row.label);
       return;
     }
