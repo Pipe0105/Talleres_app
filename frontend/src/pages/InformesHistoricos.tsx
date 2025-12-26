@@ -363,6 +363,8 @@ const InformesHistoricos = () => {
 
     const baseCellStyle =
       "border:1px solid #d5dce5;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
+    const baseCellStyleNoBorder =
+      "border:none;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
     const rowStyleMap: Record<Exclude<ExportRowType, "detail-row">, string> = {
       title: "background-color:#e3eaf2;font-weight:bold;font-size:14px;",
       meta: "background-color:#f3f6fa;",
@@ -396,7 +398,11 @@ const InformesHistoricos = () => {
               trimmedValue;
             const isEmptyCell = trimmedValue.length === 0;
             const cellStyle = [
-              isSpacerRow ? "border:none;padding:4px;" : baseCellStyle,
+              isSpacerRow
+                ? "border:none;padding:4px;"
+                : isEmptyCell
+                  ? baseCellStyleNoBorder
+                  : baseCellStyle,
               isEmptyCell ? "background-color:#ffffff;" : rowStyle,
               emphasizedFirstCell ? "font-weight:bold;" : "",
             ]
