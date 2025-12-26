@@ -517,7 +517,7 @@ def obtener_calculo_taller(
     codigos_producto = {
         detalle.codigo_producto
         for detalle in taller.detalles
-        if not detalle.item_id and detalle.codigo_producto
+        if detalle.codigo_producto
     }
     codigos_normalizados = {
         normalized
