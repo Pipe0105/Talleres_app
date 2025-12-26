@@ -1243,11 +1243,14 @@ const InformesHistoricos = () => {
       return;
     }
 
-    const pdfFieldDefinitions = selectedFieldDefinitions.filter(
-      (field) => field.key !== "descripcion"
+    const principalSummaryKeys = new Set(["peso_inicial", "peso_final", "porcentaje_perdida"]);
+    const principalSummaryFields = pdfFieldDefinitions.filter((field) =>
+      principalSummaryKeys.has(field.key)
     );
-    const pdfDetailFields = pdfFieldDefinitions.filter((field) => field.key !== "corte_principal");
-    if (!pdfDetailFields) {
+    const pdfDetailFields = pdfFieldDefinitions.filter(
+      (field) => field.key !== "corte_principal" && !principalSummaryKeys.has(field.key)
+    );
+    if (!pdfDetailFields.length) {
       return;
     }
 
@@ -1265,7 +1268,15 @@ const InformesHistoricos = () => {
 
     const pdfRows: PdfRow[] = [];
     groupedByPrincipal.forEach((rows, principalLabel) => {
-      pdfRows.push({ type: "section", label: `Corte principal: ${principalLabel}` });
+      const principalSummary = rows.length
+        ? principalSummaryFields.map(
+            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
+          )
+        : [];
+      const sectionLabel = principalSummary.length
+        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
+        : `Corte principal: ${principalLabel}`;
+      pdfRows.push({ type: "section", label: sectionLabel });
       rows.forEach((row) => {
         pdfRows.push({
           type: "row",
