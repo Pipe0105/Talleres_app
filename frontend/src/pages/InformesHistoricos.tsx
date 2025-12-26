@@ -1206,9 +1206,11 @@ const InformesHistoricos = () => {
       principalSummaryKeys.has(field.key)
     );
 
-    const csvExcludedFields = new Set(["descripcion"]);
     const detailFields = selectedFieldDefinitions.filter(
-      (field) => field.key !== "corte_principal" && !principalSummaryKeys.has(field.key)
+      (field) =>
+        field.key !== "corte_principal" &&
+        !principalSummaryKeys.has(field.key) &&
+        !csvExcludedFields.has(field.key)
     );
 
     if (!detailFields.length) {
