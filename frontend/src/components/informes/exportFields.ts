@@ -127,6 +127,7 @@ const baseExportFieldDefinitions: ExportFieldDefinition[] = [
 
 const exportFieldDefinitions = baseExportFieldDefinitions;
 const pdfFieldDefinitions: ExportFieldDefinition[] = exportFieldDefinitions;
+
 export {
   ExportFieldDefinition,
   UNKNOWN_BRANCH_LABEL,

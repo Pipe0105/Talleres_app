@@ -22,7 +22,8 @@ import PageSection from "../components/PageSection";
 import PageHeader from "../components/PageHeader";
 import type { TallerOption } from "../components/informes/TallerSelectionCard";
 import InformeFilters from "../components/informes/InformeFilters";
-import InformeExportPanel, { ExportField } from "../components/informes/InformeExportPanel";
+import InformeExportPanel from "../components/informes/InformeExportPanel";
+import {} from "../components/informes/exportFields";
 import { TALLER_MATERIALES } from "../data/talleres";
 import {
   SPECIES_LABELS,
@@ -92,93 +93,6 @@ type MaterialOption = {
   label: string;
 };
 
-const UNKNOWN_BRANCH_LABEL = "Sin sede asignada";
-
-interface ExportFieldDefinition extends ExportField {
-  getValue: (row: TallerCalculoWithMeta) => string;
-}
-
-const formatTallerId = (id: number) => id.toString().padStart(2, "0");
-
-const baseExportFieldDefinitions: ExportFieldDefinition[] = [
-  {
-    key: "taller_id",
-    label: "ID taller",
-    getValue: (row) => formatTallerId(row.displayId),
-  },
-  {
-    key: "taller_nombre",
-    label: "Taller",
-    getValue: (row) => row.tallerNombre,
-  },
-  {
-    key: "sede",
-    label: "Sede",
-    getValue: (row) => row.sede ?? UNKNOWN_BRANCH_LABEL,
-  },
-  {
-    key: "corte_principal",
-    label: "Corte principal",
-    getValue: (row) => row.materialLabel,
-  },
-  {
-    key: "nombre_corte",
-    label: "Corte",
-    getValue: (row) => formatCorteNombre(row.nombre_corte),
-  },
-  {
-    key: "item_code",
-    label: "Codigo de item",
-    getValue: (row) => row.item_code,
-  },
-  {
-    key: "peso",
-    label: "Peso (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso),
-  },
-  {
-    key: "peso_inicial",
-    label: "Peso inicial (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_inicial),
-  },
-  {
-    key: "peso_subcortes",
-    label: "Peso subcortes (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_subcortes),
-  },
-  {
-    key: "peso_final",
-    label: "Peso final (KG)",
-    getValue: (row) => pesoFormatter.format(row.peso_final),
-  },
-  {
-    key: "porcentaje_perdida",
-    label: "% pérdida",
-    getValue: (row) =>
-      row.porcentaje_perdida === null || Number.isNaN(row.porcentaje_perdida)
-        ? "N/D"
-        : `${porcentajeFormatter.format(row.porcentaje_perdida)}%`,
-  },
-  {
-    key: "porcentaje_real",
-    label: "% real",
-    getValue: (row) => `${porcentajeFormatter.format(row.porcentaje_real)}%`,
-  },
-  {
-    key: "precio_venta",
-    label: "Precio de venta",
-    getValue: (row) => formatCurrencyOrNA(row.precio_venta),
-  },
-  {
-    key: "valor_estimado",
-    label: "Valor estimado",
-    getValue: (row) => formatCurrencyOrNA(row.valor_estimado),
-  },
-];
-
-const exportFieldDefinitions = baseExportFieldDefinitions;
-const pdfFieldDefinitions: ExportFieldDefinition[] = exportFieldDefinitions;
-
 type PdfHighlight = { label: string; value: string };
 
 type PdfReportMetadata = {
@@ -197,15 +111,6 @@ type PdfRow =
       type: "row";
       cells: string[];
     };
-
-const slugify = (value: string) =>
-  normalizeWhitespace(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
 
 const createSimplePdf = (
   title: string,
