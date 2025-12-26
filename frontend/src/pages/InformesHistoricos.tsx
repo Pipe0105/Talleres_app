@@ -135,11 +135,6 @@ const InformesHistoricos = () => {
     );
   }, [filteredCalculo, selectedFieldDefinitions]);
 
-  const headers = useMemo(
-    () => selectedFieldDefinitions.map((field) => field.label),
-    [selectedFieldDefinitions]
-  );
-
   const exportFileName = useMemo(() => {
     if (!selectedTallerIds.length) {
       return "detalle_taller";
@@ -175,21 +170,9 @@ const InformesHistoricos = () => {
 
   const csvExcludedFields = new Set(["descripcion"]);
 
-  const handleFieldToggle = (fieldKey: string) => {
-    setSelectedFields((prev) => {
-      if (prev.includes(fieldKey)) {
-        if (prev.length === 1) {
-          return prev;
-        }
-        return prev.filter((key) => key !== fieldKey);
-      }
-      return [...prev, fieldKey];
-    });
-  };
-
-  const handleExportCsv = () => {
+  const buildExportRows = () => {
     if (!filteredCalculo.length) {
-      return;
+      return null;
     }
     const principalSummaryKeys = new Set(["peso_inicial", "peso_final", "porcentaje_perdida"]);
     const principalSummaryFields = exportFieldDefinitions.filter((field) =>
@@ -204,7 +187,7 @@ const InformesHistoricos = () => {
     );
 
     if (!detailFields.length) {
-      return;
+      return null;
     }
 
     const detailHeaders = detailFields.map((field) => field.label);
@@ -305,7 +288,29 @@ const InformesHistoricos = () => {
       csvRows.push([""]);
     });
 
-    const csvContent = `\ufeff${csvRows
+    return { rows: csvRows, detailHeaders };
+  };
+
+  const handleFieldToggle = (fieldKey: string) => {
+    setSelectedFields((prev) => {
+      if (prev.includes(fieldKey)) {
+        if (prev.length === 1) {
+          return prev;
+        }
+        return prev.filter((key) => key !== fieldKey);
+      }
+      return [...prev, fieldKey];
+    });
+  };
+
+  const handleExportCsv = () => {
+    const exportRows = buildExportRows();
+
+    if (!exportRows) {
+      return;
+    }
+
+    const csvContent = `\ufeff${exportRows.rows
       .map((row) => row.map((value) => escapeCsvValue(value)).join(";"))
       .join("\n")}`;
 
@@ -317,25 +322,23 @@ const InformesHistoricos = () => {
   };
 
   const handleExportExcel = () => {
-    if (!formattedRows.length) {
+    const exportRows = buildExportRows();
+
+    if (!exportRows) {
       return;
     }
 
-    const tableHeadRows = [
-      selectedSpeciesLabel
-        ? `<tr><th colspan="${headers.length}">Especie: ${escapeHtmlValue(
-            selectedSpeciesLabel
-          )}</th></tr>`
-        : null,
-      `<tr>${headers.map((header) => `<th>${escapeHtmlValue(header)}</th>`).join("")}</tr>`,
-    ]
-      .filter(Boolean)
-      .join("");
-    const tableBody = formattedRows
-      .map((row) => `<tr>${row.map((value) => `<td>${escapeHtmlValue(value)}</td>`).join("")}</tr>`)
+    const maxColumns = exportRows.rows.reduce((max, row) => Math.max(max, row.length), 0);
+    const tableBody = exportRows.rows
+      .map((row) => {
+        const paddedRow = [...row, ...Array(Math.max(maxColumns - row.length, 0)).fill("")];
+        return `<tr>${paddedRow
+          .map((value) => `<td>${escapeHtmlValue(value)}</td>`)
+          .join("")}</tr>`;
+      })
       .join("");
 
-    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><thead>${tableHeadRows}</thead><tbody>${tableBody}</tbody></table></body></html>`;
+    const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8" /></head><body><table border="1"><tbody>${tableBody}</tbody></table></body></html>`;
     const blob = new Blob([htmlContent], {
       type: "application/vnd.ms-excel",
     });
