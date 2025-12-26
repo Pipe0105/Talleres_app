@@ -1176,6 +1176,18 @@ const InformesHistoricos = () => {
       return;
     }
 
+    const pdfFieldDefinitions = selectedFieldDefinitions.filter(
+      (field) => field.key !== "descripcion"
+    );
+    if (!pdfFieldDefinitions.length) {
+      return;
+    }
+
+    const pdfHeaders = pdfFieldDefinitions.map((field) => field.label);
+    const pdfRows = filteredCalculo.map((row) =>
+      pdfFieldDefinitions.map((field) => normalizeWhitespace(field.getValue(row)))
+    );
+
     const sedesSeleccionadas =
       scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
 
@@ -1204,8 +1216,8 @@ const InformesHistoricos = () => {
       sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
       scope === "material" && selectedMaterial ? `Material: ${selectedMaterial.label}` : null,
       dateRangeLabel,
-      `Columnas incluidas: ${headers.join(", ")}`,
-      `Registros filtrados: ${formattedRows.length}`,
+      `Columnas incluidas: ${pdfHeaders.join(", ")}`,
+      `Registros filtrados: ${pdfRows.length}`,
     ].filter(Boolean) as string[];
 
     const pdfTitle =
@@ -1213,7 +1225,7 @@ const InformesHistoricos = () => {
         ? `Detalle del taller ${selectedTaller.label}`
         : "Detalle consolidado";
 
-    const pdfBlob = createSimplePdf(pdfTitle, headers, formattedRows, {
+    const pdfBlob = createSimplePdf(pdfTitle, pdfHeaders, pdfRows, {
       subtitle: "Informe consolidado",
       gemeratedAt: new Intl.DateTimeFormat("es-CO", {
         dateStyle: "full",
