@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -17,8 +18,10 @@ router = APIRouter(
     tags=["talleres"],
 )
 
+_WHITESPACE_RE = re.compile(r"\s+")
+
 def _normalize_item_code(codigo: str) -> str:
-    normalized = codigo.strip()
+    normalized = _WHITESPACE_RE.sub("", codigo.strip())
     if normalized.isdigit():
         trimmed = normalized.lstrip("0")
         return trimmed or "0"
@@ -28,6 +31,10 @@ def _normalize_item_lookup(codigo: Optional[str]) -> Optional[str]:
     if not codigo:
         return None
     return _normalize_item_code(codigo).strip().lower() or None
+
+def _normalized_db_code(col):
+    return func.lower(func.regexp_replace(func.trim(col), r"\s+", "", "g"))
+
 
 
 def _find_item_id_by_code(db: Session, codigo: Optional[str]) -> Optional[int]:
@@ -531,15 +538,14 @@ def obtener_calculo_taller(
     }
     items_por_codigo = {}
     if codigos_normalizados:
+        normalized_item_code = _normalized_db_code(models.Item.item_code)
         items_por_codigo = {
             _normalize_item_lookup(item.item_code): item
             for item in db.query(models.Item)
             .filter(
                 or_(
-                    func.lower(func.trim(models.Item.item_code)).in_(codigos_normalizados),
-                    func.lower(
-                        func.ltrim(func.trim(models.Item.item_code), "0")
-                    ).in_(codigos_normalizados),
+                    normalized_item_code.in_(codigos_normalizados),
+                    func.ltrim(normalized_item_code, "0").in_(codigos_normalizados),
                 )
             )
             .all()
@@ -558,15 +564,14 @@ def obtener_calculo_taller(
         return candidate if Decimal(candidate.precio) < Decimal(existing.precio) else existing
     lista_precios_por_codigo: dict[str, models.ListaPrecios] = {}
     if codigos_normalizados:
+        normalized_referencia = _normalized_db_code(models.ListaPrecios.referencia)
         lista_precios = (
             db.query(models.ListaPrecios)
             .filter(models.ListaPrecios.activo.is_(True))
             .filter(
                 or_(
-                    func.lower(func.trim(models.ListaPrecios.referencia)).in_(codigos_normalizados),
-                    func.lower(
-                        func.ltrim(func.trim(models.ListaPrecios.referencia), "0")
-                    ).in_(codigos_normalizados),
+                    normalized_referencia.in_(codigos_normalizados),
+                    func.ltrim(normalized_referencia, "0").in_(codigos_normalizados),
                 )
             )
             .order_by(models.ListaPrecios.fecha_vigencia.desc().nullslast())
