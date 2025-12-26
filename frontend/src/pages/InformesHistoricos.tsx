@@ -362,20 +362,20 @@ const InformesHistoricos = () => {
     const maxColumns = exportRows.rows.reduce((max, row) => Math.max(max, row.length), 0);
 
     const baseCellStyle =
-      "border:1px solid #d5dce5;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
+      "border:1px solid #e1e7ef;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
     const baseCellStyleNoBorder =
       "border:none;padding:6px 8px;font-family:Calibri, Arial, sans-serif;font-size:12px;";
     const rowStyleMap: Record<Exclude<ExportRowType, "detail-row">, string> = {
-      title: "background-color:#e3eaf2;font-weight:bold;font-size:14px;",
-      meta: "background-color:#f3f6fa;",
+      title: "background-color:#eef3f8;font-weight:bold;font-size:14px;",
+      meta: "background-color:#f6f8fb;",
       spacer: "border:none;background-color:#ffffff;",
-      section: "background-color:#dde7f2;font-weight:bold;",
-      filter: "background-color:#f7f9fc;",
-      "summary-header": "background-color:#e6eef7;font-weight:bold;",
-      "summary-row": "background-color:#f7fbff;",
-      "group-summary-header": "background-color:#e8edf5;font-weight:bold;",
-      "group-summary-row": "background-color:#f3f7fb;",
-      "detail-header": "background-color:#dce6f3;font-weight:bold;",
+      section: "background-color:#e9f0f7;font-weight:bold;",
+      filter: "background-color:#fbfcfe;",
+      "summary-header": "background-color:#edf2f7;font-weight:bold;",
+      "summary-row": "background-color:#f8fbff;",
+      "group-summary-header": "background-color:#eef2f8;font-weight:bold;",
+      "group-summary-row": "background-color:#f7f9fc;",
+      "detail-header": "background-color:#e6eef7;font-weight:bold;",
     };
     let detailRowIndex = 0;
     const tableBody = exportRows.rows
@@ -386,7 +386,7 @@ const InformesHistoricos = () => {
           rowType === "detail-row"
             ? detailRowIndex++ % 2 === 0
               ? "background-color:#ffffff;"
-              : "background-color:#f5f7fb;"
+              : "background-color:#f8f9fb;"
             : rowStyleMap[rowType];
         return `<tr>${paddedRow
           .map((value, cellIndex) => {
