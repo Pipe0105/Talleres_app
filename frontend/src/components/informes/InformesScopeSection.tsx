@@ -84,7 +84,7 @@ const InformesScopeSection = ({
   return (
     <PageSection
       title="Alcance del informe"
-      description="Elige si quieres analizar un taller individual, todas las operaciones de una sede, comparar un material entre sedes o contrastar dos talleres."
+      description="Elige si quieres analizar un taller individual, todas las operaciones de una sede, comparar un material entre sedes o contrastar talleres con un informe comparativo."
       spacing={2.5}
     >
       <Stack spacing={2.5}>
@@ -153,7 +153,7 @@ const InformesScopeSection = ({
                   {...params}
                   label="Talleres a comparar"
                   placeholder="Selecciona hasta 2 talleres"
-                  helperText="Selecciona dos talleres de sedes distintas para compararlos."
+                  helperText="Selecciona dos talleres de sedes distintas para generar un informe comparativo."
                 />
               )}
             />

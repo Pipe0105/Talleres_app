@@ -45,8 +45,12 @@ const InformesDetalleSection = ({
   totalValorLabel,
 }: InformesDetalleSectionProps) => (
   <PageSection
-    title="Detalle de los talleres seleccionados"
-    description="Visualiza el desempeño por corte con los filtros aplicados."
+    title={scope === "comparar" ? "Detalle comparativo de talleres" : "Detalle de los talleres"}
+    description={
+      scope === "comparar"
+        ? "Contrasta subcortes entre talleres completos usando los filtros aplicados."
+        : "Visualiza el desempeño por corte con los filtros aplicados."
+    }
   >
     <Stack spacing={2.5}>
       {!selectedTallerIdsLength ? (

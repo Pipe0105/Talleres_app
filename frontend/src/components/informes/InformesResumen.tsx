@@ -23,7 +23,11 @@ const InformesResumen = ({
     >
       <Stack spacing={0.5}>
         <Typography variant="overline" color="text.secondary">
-          {scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes"}
+          {scope === "comparar"
+            ? "Talleres comparados"
+            : scope === "sede"
+              ? "Total talleres"
+              : "Total cortes"}
         </Typography>
         <Typography variant="h6">
           {scope === "sede" || scope === "comparar" ? totalTalleres : totalCortes}

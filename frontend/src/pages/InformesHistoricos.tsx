@@ -237,7 +237,7 @@ const InformesHistoricos = () => {
           : scope === "material" && selectedMaterial
             ? `Alcance: Material ${selectedMaterial.label}`
             : scope === "comparar" && selectedCompareTalleres.length
-              ? `Alcance: Comparación de ${selectedCompareTalleres
+              ? `Alcance: Informe comparativo entre ${selectedCompareTalleres
                   .map((taller) => taller.label)
                   .join(" vs ")}`
               : "Alcance: selección personalizada";
@@ -274,7 +274,7 @@ const InformesHistoricos = () => {
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
         : scope === "comparar"
-          ? "Comparación de talleres"
+          ? "Informe comparativo de talleres"
           : "Detalle consolidado";
 
     pushRow(["Informe", csvTitle], "title");
@@ -298,7 +298,11 @@ const InformesHistoricos = () => {
     pushShiftedRow(["Talleres incluidos", resumen.talleres.toString()], "summary-row");
     pushShiftedRow(
       [
-        scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes",
+        scope === "comparar"
+          ? "Talleres comparados"
+          : scope === "sede"
+            ? "Total talleres"
+            : "Total cortes",
         scope === "sede" || scope === "comparar"
           ? resumen.talleres.toString()
           : resumen.cortes.toString(),
@@ -502,7 +506,7 @@ const InformesHistoricos = () => {
           : scope === "material" && selectedMaterial
             ? `Alcance: Material ${selectedMaterial.label}`
             : scope === "comparar" && selectedCompareTalleres.length
-              ? `Alcance: Comparación de ${selectedCompareTalleres
+              ? `Alcance: Informe comparativo entre ${selectedCompareTalleres
                   .map((taller) => taller.label)
                   .join(" vs ")}`
               : "Alcance: selección personalizada";
@@ -531,11 +535,11 @@ const InformesHistoricos = () => {
       scope === "taller" && selectedTaller
         ? `Detalle del taller ${selectedTaller.label}`
         : scope === "comparar"
-          ? "Comparación de talleres"
+          ? "Informe comparativo de talleres"
           : "Detalle consolidado";
 
     const pdfBlob = createSimplePdf(pdfTitle, pdfHeaders, pdfRows, {
-      subtitle: "Informe consolidado",
+      subtitle: scope === "comparar" ? "Informe comparativo" : "Informe consolidado",
       gemeratedAt: new Intl.DateTimeFormat("es-CO", {
         dateStyle: "full",
         timeStyle: "short",
@@ -544,7 +548,12 @@ const InformesHistoricos = () => {
       highlights: [
         { label: "Talleres incluidos", value: resumen.talleres.toString() },
         {
-          label: scope === "sede" || scope === "comparar" ? "Total talleres" : "Total cortes",
+          label:
+            scope === "comparar"
+              ? "Talleres comparados"
+              : scope === "sede"
+                ? "Total talleres"
+                : "Total cortes",
           value:
             scope === "sede" || scope === "comparar"
               ? resumen.talleres.toString()
