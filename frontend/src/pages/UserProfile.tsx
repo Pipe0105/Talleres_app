@@ -14,7 +14,11 @@ const UserProfile = () => {
   if (!user) {
     return null;
   }
-  const roleLabel = user.is_admin ? "Administrador" : user.is_gerente ? "Gerente" : "Operador";
+  const roleLabel = user.is_admin
+    ? "Super administrador"
+    : user.is_gerente
+      ? "Gerente"
+      : "Operador";
 
   const infoItems = [
     {
@@ -35,7 +39,7 @@ const UserProfile = () => {
     {
       label: "Contraseña",
       value: maskedPassword,
-      helper: "Para reestablecerla, comunicate con un administrador",
+      helper: "Para reestablecerla, comunicate con un super administrador",
     },
   ];
   const handleLogout = () => {
@@ -196,7 +200,7 @@ const UserProfile = () => {
                 </Typography>
               </Stack>
               <Chip
-                label={user.is_admin ? "Administradores" : "Gerentes"}
+                label={user.is_admin ? "Super administradores" : "Gerentes"}
                 color="secondary"
                 variant="outlined"
                 sx={{ fontWeight: 700 }}

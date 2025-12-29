@@ -421,7 +421,7 @@ const CreateTaller = () => {
                       label="Sede del taller"
                       value={sede}
                       onChange={(e) => setSede(e.target.value)}
-                      helperText="Visible para administradores y gerentes"
+                      helperText="Visible para super administradores y gerentes"
                     >
                       <MenuItem value="">Selecciona la sede</MenuItem>
                       {BRANCH_LOCATIONS.map((branch) => (

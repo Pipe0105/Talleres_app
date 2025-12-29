@@ -433,7 +433,7 @@ const UsersAdmin = () => {
                 fullWidth
               >
                 <MenuItem value="">Todos los roles</MenuItem>
-                <MenuItem value="admin">Administrador</MenuItem>
+                <MenuItem value="admin">Super administrador</MenuItem>
                 <MenuItem value="gerente">Gerente</MenuItem>
                 <MenuItem value="operador">Operador</MenuItem>
               </TextField>
@@ -473,7 +473,11 @@ const UsersAdmin = () => {
                     <TableCell>
                       <Chip
                         label={
-                          user.is_admin ? "Administrador" : user.is_gerente ? "Gerente" : "Operador"
+                          user.is_admin
+                            ? "Super administrador"
+                            : user.is_gerente
+                              ? "Gerente"
+                              : "Operador"
                         }
                         color={
                           user.is_admin ? "primary" : user.is_gerente ? "secondary" : "default"
@@ -701,7 +705,7 @@ const UsersAdmin = () => {
                     }
                   />
                 }
-                label="Otorgar permisos de administrador"
+                label="Otorgar permisos de super administrador"
               />
               <FormControlLabel
                 control={
@@ -839,7 +843,7 @@ const UsersAdmin = () => {
                     disabled={disableSelfManagement.has(editTarget?.id ?? "")}
                   />
                 }
-                label="Permisos de administrador"
+                label="Permisos de super administrador"
               />
 
               <FormControlLabel

@@ -27,7 +27,7 @@ def _parse_args() -> UserPayload:
     parser.add_argument(
         "--is-admin",
         action="store_true",
-        help="Crea el usuario con permisos de administrador",
+        help="Crea el usuario con permisos de super administrador",
     )
     parser.add_argument(
         "--inactive",

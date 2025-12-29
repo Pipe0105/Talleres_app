@@ -50,7 +50,7 @@ def get_current_admin_user(
     if not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere permisos de administrador",
+            detail="Se requiere permisos de super administrador",
         )
         
     return current_user
@@ -62,6 +62,6 @@ def get_current_manager_user(
     if not (current_user.is_admin or current_user.is_gerente):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requieren permisos de gerente o administrador",
+            detail="Se requieren permisos de gerente o super administrador",
         )
     return current_user
