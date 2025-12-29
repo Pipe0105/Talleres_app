@@ -215,16 +215,6 @@ const InformesHistoricos = () => {
     }
 
     const detailHeaders = detailFields.map((field) => field.label);
-    const groupedByPrincipal = new Map<string, TallerCalculoWithMeta[]>();
-    filteredCalculo.forEach((row) => {
-      const principalLabel = row.materialLabel?.trim() || "Sin corte principal";
-      const group = groupedByPrincipal.get(principalLabel);
-      if (group) {
-        group.push(row);
-      } else {
-        groupedByPrincipal.set(principalLabel, [row]);
-      }
-    });
 
     const sedesSeleccionadas =
       scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
@@ -477,23 +467,100 @@ const InformesHistoricos = () => {
     });
 
     const pdfRows: PdfRow[] = [];
-    groupedByPrincipal.forEach((rows, principalLabel) => {
-      const principalSummary = rows.length
-        ? principalSummaryFields.map(
-            (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
-          )
-        : [];
-      const sectionLabel = principalSummary.length
-        ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
-        : `Corte principal: ${principalLabel}`;
-      pdfRows.push({ type: "section", label: sectionLabel });
-      rows.forEach((row) => {
-        pdfRows.push({
-          type: "row",
-          cells: pdfDetailFields.map((field) => normalizeWhitespace(field.getValue(row))),
+    let compareItemCount: number | null = null;
+    if (scope === "comparar") {
+      const itemGroups = new Map<
+        string,
+        {
+          itemLabel: string;
+          itemCode: string | null;
+          cortes: Map<string, TallerCalculoWithMeta[]>;
+        }
+      >();
+
+      filteredCalculo.forEach((row) => {
+        const normalizedCode = row.item_code?.trim();
+        const normalizedName = row.nombre_corte?.trim() ?? "";
+        const itemKey = normalizedCode
+          ? `code:${normalizedCode.toLowerCase()}`
+          : `name:${normalizedName.toLowerCase()}`;
+        const corteLabel = row.materialLabel?.trim() || "Sin corte principal";
+        const existing = itemGroups.get(itemKey);
+        if (!existing) {
+          itemGroups.set(itemKey, {
+            itemLabel: normalizedName || normalizedCode || "Item sin nombre",
+            itemCode: normalizedCode || null,
+            cortes: new Map([[corteLabel, [row]]]),
+          });
+          return;
+        }
+
+        const corteRows = existing.cortes.get(corteLabel);
+        if (corteRows) {
+          corteRows.push(row);
+        } else {
+          existing.cortes.set(corteLabel, [row]);
+        }
+      });
+
+      const orderedItems = Array.from(itemGroups.values()).sort((a, b) =>
+        a.itemLabel.localeCompare(b.itemLabel)
+      );
+      compareItemCount = orderedItems.length;
+
+      orderedItems.forEach((item) => {
+        const formattedItemLabel = formatCorteNombre(item.itemLabel);
+        const itemDescriptor = item.itemCode
+          ? `${formattedItemLabel} · Código: ${item.itemCode}`
+          : formattedItemLabel;
+        pdfRows.push({ type: "section", label: `Item comparado: ${itemDescriptor}` });
+
+        const orderedCortes = Array.from(item.cortes.entries()).sort(([a], [b]) =>
+          a.localeCompare(b)
+        );
+        orderedCortes.forEach(([corteLabel, rows]) => {
+          pdfRows.push({ type: "section", label: `Corte principal: ${corteLabel}` });
+          rows
+            .slice()
+            .sort((a, b) => a.displayId - b.displayId)
+            .forEach((row) => {
+              pdfRows.push({
+                type: "row",
+                cells: pdfDetailFields.map((field) => normalizeWhitespace(field.getValue(row))),
+              });
+            });
         });
       });
-    });
+    } else {
+      const groupedByPrincipal = new Map<string, TallerCalculoWithMeta[]>();
+      filteredCalculo.forEach((row) => {
+        const principalLabel = row.materialLabel?.trim() || "Sin corte principal";
+        const group = groupedByPrincipal.get(principalLabel);
+        if (group) {
+          group.push(row);
+        } else {
+          groupedByPrincipal.set(principalLabel, [row]);
+        }
+      });
+
+      groupedByPrincipal.forEach((rows, principalLabel) => {
+        const principalSummary = rows.length
+          ? principalSummaryFields.map(
+              (field) => `${field.label}: ${normalizeWhitespace(field.getValue(rows[0]))}`
+            )
+          : [];
+        const sectionLabel = principalSummary.length
+          ? `Corte principal: ${principalLabel} · ${principalSummary.join(" · ")}`
+          : `Corte principal: ${principalLabel}`;
+        pdfRows.push({ type: "section", label: sectionLabel });
+        rows.forEach((row) => {
+          pdfRows.push({
+            type: "row",
+            cells: pdfDetailFields.map((field) => normalizeWhitespace(field.getValue(row))),
+          });
+        });
+      });
+    }
 
     const sedesSeleccionadas =
       scope === "sede" ? (selectedSedes.length ? selectedSedes : availableSedes) : selectedSedes;
@@ -523,6 +590,9 @@ const InformesHistoricos = () => {
 
     const filtersSummary = [
       scopeDescription,
+      scope === "comparar" && compareItemCount !== null
+        ? `Items comparados: ${compareItemCount}`
+        : null,
       selectedSpeciesLabel ? `Especie: ${selectedSpeciesLabel}` : null,
       sedesSeleccionadas.length ? `Sedes: ${sedesSeleccionadas.join(", ")}` : null,
       scope === "material" && selectedMaterial ? `Material: ${selectedMaterial.label}` : null,
@@ -538,6 +608,33 @@ const InformesHistoricos = () => {
           ? "Informe comparativo de talleres"
           : "Detalle consolidado";
 
+    const pdfHighlights: PdfHighlight[] = [
+      { label: "Talleres incluidos", value: resumen.talleres.toString() },
+      {
+        label:
+          scope === "comparar"
+            ? "Talleres comparados"
+            : scope === "sede"
+              ? "Total talleres"
+              : "Total cortes",
+        value:
+          scope === "sede" || scope === "comparar"
+            ? resumen.talleres.toString()
+            : resumen.cortes.toString(),
+      },
+      ...(scope === "comparar" && compareItemCount !== null
+        ? [{ label: "Items comparados", value: compareItemCount.toString() }]
+        : []),
+      {
+        label: "Peso filtrado",
+        value: `${pesoFormatter.format(resumen.totalPeso)} kg`,
+      },
+      {
+        label: "Valor estimado",
+        value: currencyFormatter.format(resumen.totalValor),
+      },
+    ];
+
     const pdfBlob = createSimplePdf(pdfTitle, pdfHeaders, pdfRows, {
       subtitle: scope === "comparar" ? "Informe comparativo" : "Informe consolidado",
       gemeratedAt: new Intl.DateTimeFormat("es-CO", {
@@ -545,29 +642,7 @@ const InformesHistoricos = () => {
         timeStyle: "short",
       }).format(new Date()),
       filters: filtersSummary,
-      highlights: [
-        { label: "Talleres incluidos", value: resumen.talleres.toString() },
-        {
-          label:
-            scope === "comparar"
-              ? "Talleres comparados"
-              : scope === "sede"
-                ? "Total talleres"
-                : "Total cortes",
-          value:
-            scope === "sede" || scope === "comparar"
-              ? resumen.talleres.toString()
-              : resumen.cortes.toString(),
-        },
-        {
-          label: "Peso filtrado",
-          value: `${pesoFormatter.format(resumen.totalPeso)} kg`,
-        },
-        {
-          label: "Valor estimado",
-          value: currencyFormatter.format(resumen.totalValor),
-        },
-      ],
+      highlights: pdfHighlights,
     });
 
     downloadBlob(pdfBlob, `${exportFileName}.pdf`);
