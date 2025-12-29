@@ -2,7 +2,7 @@ import { Alert, CircularProgress, Paper, Stack, Typography } from "@mui/material
 import PageSection from "../PageSection";
 import InformesResumen from "./InformesResumen";
 import InformesTabla, {
-  InformesItemComparisonGroup,
+  InformesMaterialComparisonGroup,
   InformesTallerCalculoGroup,
 } from "./InformesTabla";
 
@@ -19,7 +19,7 @@ interface InformesDetalleSectionProps {
   filteredCalculoLength: number;
   loadingCalculo: boolean;
   resumen: ResumenData;
-  groupedCalculo: InformesTallerCalculoGroup[] | InformesItemComparisonGroup[];
+  groupedCalculo: InformesTallerCalculoGroup[] | InformesMaterialComparisonGroup[];
   formatTallerId: (value: number) => string;
   formatCorteNombre: (value: string) => string;
   formatCurrencyOrNA: (value: number | null) => string;

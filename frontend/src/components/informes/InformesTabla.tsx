@@ -39,18 +39,23 @@ export type InformesTallerCalculoGroup = {
   materiales: InformesMaterialGroup[];
 };
 
-export type InformesItemComparisonGroup = {
+export type InformesItemComparison = {
   itemKey: string;
   itemLabel: string;
   itemCode: string | null;
+  rows: InformesMaterialGroup["rows"];
+};
+
+export type InformesMaterialComparisonGroup = {
+  materialKey: string;
   materialLabel: string;
   materialCode: string | null;
-  rows: InformesMaterialGroup["rows"];
+  items: InformesItemComparison[];
 };
 
 interface InformesTablaProps {
   scope: "taller" | "sede" | "material" | "comparar";
-  groupedCalculo: InformesTallerCalculoGroup[] | InformesItemComparisonGroup[];
+  groupedCalculo: InformesTallerCalculoGroup[] | InformesMaterialComparisonGroup[];
   formatTallerId: (value: number) => string;
   formatCorteNombre: (value: string) => string;
   formatCurrencyOrNA: (value: number | null) => string;
@@ -68,22 +73,16 @@ const InformesTabla = ({
   porcentajeFormatter,
 }: InformesTablaProps) => {
   if (scope === "comparar") {
-    const compareGroups = groupedCalculo as InformesItemComparisonGroup[];
+    const compareGroups = groupedCalculo as InformesMaterialComparisonGroup[];
 
     return (
       <Stack spacing={2}>
         {compareGroups.map((group) => {
-          const orderedRows = [...group.rows].sort((a, b) => {
-            if (a.displayId !== b.displayId) {
-              return a.displayId - b.displayId;
-            }
-
-            return a.materialLabel.localeCompare(b.materialLabel);
-          });
-          const uniqueTalleres = new Set(group.rows.map((row) => row.groupKey)).size;
+          const groupRows = group.items.flatMap((item) => item.rows);
+          const uniqueTalleres = new Set(groupRows.map((row) => row.groupKey)).size;
 
           return (
-            <Accordion key={`item-${group.itemKey}`} variant="outlined" disableGutters>
+            <Accordion key={`material-${group.materialKey}`} variant="outlined" disableGutters>
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 sx={{
@@ -93,20 +92,15 @@ const InformesTabla = ({
               >
                 <Stack spacing={0.2}>
                   <Typography variant="subtitle1" fontWeight={600}>
-                    {formatCorteNombre(group.itemLabel)}
+                    Corte principal: {group.materialLabel}
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Typography variant="caption" color="text.secondary">
-                      Corte principal: {group.materialLabel}
+                      Subcortes: {group.items.length}
                     </Typography>
                     {group.materialCode ? (
                       <Typography variant="caption" color="text.secondary">
                         Código: {group.materialCode}
-                      </Typography>
-                    ) : null}
-                    {group.itemCode ? (
-                      <Typography variant="caption" color="text.secondary">
-                        Código: {group.itemCode}
                       </Typography>
                     ) : null}
                     <Typography variant="caption" color="text.secondary">
@@ -116,66 +110,109 @@ const InformesTabla = ({
                 </Stack>
               </AccordionSummary>
               <AccordionDetails>
-                <Stack spacing={1.5}>
-                  {orderedRows.map((row, index) => (
-                    <Stack
-                      key={`${row.groupKey}-${row.item_code}-${row.peso}-${index}`}
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1.5}
-                      justifyContent="space-between"
-                      alignItems={{ xs: "flex-start", sm: "center" }}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        border: "1px solid",
-                        borderColor: "divider",
-                        backgroundColor:
-                          index % 2 === 0 ? "rgba(76, 175, 80, 0.06)" : "rgba(255, 152, 0, 0.06)",
-                      }}
-                    >
-                      <Stack spacing={0.25}>
-                        <Typography variant="subtitle2">
-                          Taller {formatTallerId(row.displayId)} · {row.tallerNombre}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Corte principal: {row.materialLabel}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Código item: {row.item_code || "N/A"}
-                        </Typography>
-                      </Stack>
-                      <Stack
-                        direction="row"
-                        spacing={2}
-                        divider={<Divider flexItem orientation="vertical" />}
+                <Stack spacing={2}>
+                  {group.items.map((item) => {
+                    const orderedRows = [...item.rows].sort((a, b) => {
+                      if (a.displayId !== b.displayId) {
+                        return a.displayId - b.displayId;
+                      }
+
+                      return a.materialLabel.localeCompare(b.materialLabel);
+                    });
+                    const itemTalleres = new Set(item.rows.map((row) => row.groupKey)).size;
+
+                    return (
+                      <Accordion
+                        key={`item-${group.materialKey}-${item.itemKey}`}
+                        variant="outlined"
+                        disableGutters
+                        sx={{ backgroundColor: "transparent" }}
                       >
-                        <Stack spacing={0.25}>
-                          <Typography variant="overline" color="text.secondary">
-                            Peso
-                          </Typography>
-                          <Typography variant="body1" fontWeight={600}>
-                            {pesoFormatter.format(row.peso)} kg
-                          </Typography>
-                        </Stack>
-                        <Stack spacing={0.25}>
-                          <Typography variant="overline" color="text.secondary">
-                            % Real
-                          </Typography>
-                          <Typography variant="body1" fontWeight={600}>
-                            {porcentajeFormatter.format(row.porcentaje_real)}%
-                          </Typography>
-                        </Stack>
-                        <Stack spacing={0.25}>
-                          <Typography variant="overline" color="text.secondary">
-                            Venta estimada
-                          </Typography>
-                          <Typography variant="body1" fontWeight={600}>
-                            {formatCurrencyOrNA(row.valor_estimado)}
-                          </Typography>
-                        </Stack>
-                      </Stack>
-                    </Stack>
-                  ))}
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Stack spacing={0.2}>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                              {formatCorteNombre(item.itemLabel)}
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {item.itemCode ? (
+                                <Typography variant="caption" color="text.secondary">
+                                  Código: {item.itemCode}
+                                </Typography>
+                              ) : null}
+                              <Typography variant="caption" color="text.secondary">
+                                Talleres: {itemTalleres}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Stack spacing={1.5}>
+                            {orderedRows.map((row, index) => (
+                              <Stack
+                                key={`${row.groupKey}-${row.item_code}-${row.peso}-${index}`}
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={1.5}
+                                justifyContent="space-between"
+                                alignItems={{ xs: "flex-start", sm: "center" }}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  border: "1px solid",
+                                  borderColor: "divider",
+                                  backgroundColor:
+                                    index % 2 === 0
+                                      ? "rgba(76, 175, 80, 0.06)"
+                                      : "rgba(255, 152, 0, 0.06)",
+                                }}
+                              >
+                                <Stack spacing={0.25}>
+                                  <Typography variant="subtitle2">
+                                    Taller {formatTallerId(row.displayId)} · {row.tallerNombre}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Corte principal: {row.materialLabel}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Código item: {row.item_code || "N/A"}
+                                  </Typography>
+                                </Stack>
+                                <Stack
+                                  direction="row"
+                                  spacing={2}
+                                  divider={<Divider flexItem orientation="vertical" />}
+                                >
+                                  <Stack spacing={0.25}>
+                                    <Typography variant="overline" color="text.secondary">
+                                      Peso
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                      {pesoFormatter.format(row.peso)} kg
+                                    </Typography>
+                                  </Stack>
+                                  <Stack spacing={0.25}>
+                                    <Typography variant="overline" color="text.secondary">
+                                      % Real
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                      {porcentajeFormatter.format(row.porcentaje_real)}%
+                                    </Typography>
+                                  </Stack>
+                                  <Stack spacing={0.25}>
+                                    <Typography variant="overline" color="text.secondary">
+                                      Venta estimada
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                      {formatCurrencyOrNA(row.valor_estimado)}
+                                    </Typography>
+                                  </Stack>
+                                </Stack>
+                              </Stack>
+                            ))}
+                          </Stack>
+                        </AccordionDetails>
+                      </Accordion>
+                    );
+                  })}
                 </Stack>
               </AccordionDetails>
             </Accordion>

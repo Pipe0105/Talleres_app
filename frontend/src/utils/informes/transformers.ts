@@ -42,13 +42,17 @@ export type TallerCalculoGroup = {
   materiales: MaterialGroup[];
 };
 
-export type TallerItemComparisonGroup = {
+export type TallerItemComparison = {
   itemKey: string;
   itemLabel: string;
   itemCode: string | null;
+  rows: TallerCalculoWithMeta[];
+};
+export type TallerMaterialComparisonGroup = {
+  materialKey: string;
   materialLabel: string;
   materialCode: string | null;
-  rows: TallerCalculoWithMeta[];
+  items: TallerItemComparison[];
 };
 
 export const formatTallerId = (id: number) => id.toString().padStart(2, "0");
@@ -210,12 +214,22 @@ export const groupCalculoByTaller = (
   return ordered;
 };
 
-export const groupCalculoByItem = (rows: TallerCalculoWithMeta[]): TallerItemComparisonGroup[] => {
+export const groupCalculoByItem = (
+  rows: TallerCalculoWithMeta[]
+): TallerMaterialComparisonGroup[] => {
   if (!rows.length) {
     return [];
   }
 
-  const groups = new Map<string, TallerItemComparisonGroup>();
+  const groups = new Map<
+    string,
+    {
+      materialKey: string;
+      materialLabel: string;
+      materialCode: string | null;
+      items: Map<string, TallerItemComparison>;
+    }
+  >();
 
   rows.forEach((row) => {
     const normalizedCode = row.item_code?.trim();
@@ -226,30 +240,50 @@ export const groupCalculoByItem = (rows: TallerCalculoWithMeta[]): TallerItemCom
     const itemKey = normalizedCode
       ? `code:${normalizedCode.toLowerCase()}`
       : `name:${normalizedName.toLowerCase()}`;
-    const key = `material:${materialKey}|${itemKey}`;
-    const existing = groups.get(key);
+    const group = groups.get(materialKey);
 
-    if (existing) {
-      existing.rows.push(row);
+    if (!group) {
+      groups.set(materialKey, {
+        materialKey,
+        materialLabel,
+        materialCode,
+        items: new Map([
+          [
+            itemKey,
+            {
+              itemKey,
+              itemLabel: normalizedName || normalizedCode || "Item sin nombre",
+              itemCode: normalizedCode || null,
+              rows: [row],
+            },
+          ],
+        ]),
+      });
       return;
     }
 
-    groups.set(key, {
-      itemKey: key,
+    const existingItem = group.items.get(itemKey);
+    if (existingItem) {
+      existingItem.rows.push(row);
+      return;
+    }
+
+    group.items.set(itemKey, {
+      itemKey,
       itemLabel: normalizedName || normalizedCode || "Item sin nombre",
       itemCode: normalizedCode || null,
-      materialLabel,
-      materialCode,
       rows: [row],
     });
   });
 
-  return Array.from(groups.values()).sort((a, b) => {
-    const materialCompare = a.materialLabel.localeCompare(b.materialLabel);
-    if (materialCompare !== 0) {
-      return materialCompare;
-    }
-
-    return a.itemLabel.localeCompare(b.itemLabel);
-  });
+  return Array.from(groups.values())
+    .map((group) => ({
+      materialKey: group.materialKey,
+      materialLabel: group.materialLabel,
+      materialCode: group.materialCode,
+      items: Array.from(group.items.values()).sort((a, b) =>
+        a.itemLabel.localeCompare(b.itemLabel)
+      ),
+    }))
+    .sort((a, b) => a.materialLabel.localeCompare(b.materialLabel));
 };
