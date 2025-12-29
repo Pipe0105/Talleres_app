@@ -115,7 +115,7 @@ const App = () => {
             <Route
               path="/usuarios"
               element={
-                <ProtectedRoute requiresUserAdmin unauthorizedRedirectTo="/">
+                <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
                   <UsersAdmin />
                 </ProtectedRoute>
               }
