@@ -50,6 +50,7 @@ interface NewUserForm {
   fullName: string;
   isAdmin: boolean;
   isGerente: boolean;
+  isBranchAdmin: boolean;
   isActive: boolean;
   sede: string;
 }
@@ -61,6 +62,7 @@ interface EditUserForm {
   fullname: string;
   isAdmin: boolean;
   isGerente: boolean;
+  isBranchAdmin: boolean;
   isActive: boolean;
   sede: string;
 }
@@ -72,6 +74,7 @@ const INITIAL_FORM_STATE: NewUserForm = {
   fullName: "",
   isAdmin: false,
   isGerente: false,
+  isBranchAdmin: false,
   isActive: true,
   sede: "",
 };
@@ -99,6 +102,8 @@ const UsersAdmin = () => {
     sede: "",
     role: "",
   });
+  const isSuperAdmin = Boolean(currentUser?.is_admin);
+  const isBranchAdmin = Boolean(currentUser?.is_branch_admin && !currentUser?.is_admin);
 
   const resolveErrorMessage = (error: unknown, fallback: string) => {
     if (!axios.isAxiosError(error)) {
@@ -193,6 +198,7 @@ const UsersAdmin = () => {
         is_admin: formState.isAdmin,
         is_active: formState.isActive,
         is_gerente: formState.isGerente,
+        is_branch_admin: formState.isBranchAdmin,
         sede: normalizedSede || undefined,
       });
       setFormSuccess("Usuario creado correctamente.");
@@ -231,6 +237,7 @@ const UsersAdmin = () => {
       password: "",
       isAdmin: target.is_admin,
       isGerente: target.is_gerente,
+      isBranchAdmin: target.is_branch_admin,
       isActive: target.is_active,
       sede: target.sede ?? "",
     });
@@ -275,6 +282,7 @@ const UsersAdmin = () => {
         is_admin: editForm.isAdmin,
         is_active: editForm.isActive,
         is_gerente: editForm.isGerente,
+        is_branch_admin: editForm.isBranchAdmin,
         sede: editForm.sede.trim() || undefined,
       });
       closeEditDialog();
@@ -328,7 +336,13 @@ const UsersAdmin = () => {
         user.username.toLowerCase().includes(normalizedName) ||
         (user.full_name ?? "").toLowerCase().includes(normalizedName);
       const matchesSede = !filters.sede || user.sede === filters.sede;
-      const role = user.is_admin ? "admin" : user.is_gerente ? "gerente" : "operador";
+      const role = user.is_admin
+        ? "admin"
+        : user.is_branch_admin
+          ? "branch-admin"
+          : user.is_gerente
+            ? "gerente"
+            : "operador";
       const matchesRole = !filters.role || role === filters.role;
 
       return matchesName && matchesSede && matchesRole;
@@ -342,6 +356,14 @@ const UsersAdmin = () => {
   const openCreateDialog = () => {
     setFormError(null);
     setFormSuccess(null);
+    if (isBranchAdmin) {
+      setFormState((prev) => ({
+        ...INITIAL_FORM_STATE,
+        sede: currentUser?.sede ?? prev.sede,
+      }));
+    } else {
+      setFormState(INITIAL_FORM_STATE);
+    }
     setCreateDialogOpen(true);
     setShowEditPassword(false);
     setShowCreatePassword(false);
@@ -434,6 +456,7 @@ const UsersAdmin = () => {
               >
                 <MenuItem value="">Todos los roles</MenuItem>
                 <MenuItem value="admin">Super administrador</MenuItem>
+                <MenuItem value="branch-admin">Administrador de sede</MenuItem>
                 <MenuItem value="gerente">Gerente</MenuItem>
                 <MenuItem value="operador">Operador</MenuItem>
               </TextField>
@@ -475,12 +498,18 @@ const UsersAdmin = () => {
                         label={
                           user.is_admin
                             ? "Super administrador"
-                            : user.is_gerente
-                              ? "Gerente"
-                              : "Operador"
+                            : user.is_branch_admin
+                              ? "Administrador de sede"
+                              : user.is_gerente
+                                ? "Gerente"
+                                : "Operador"
                         }
                         color={
-                          user.is_admin ? "primary" : user.is_gerente ? "secondary" : "default"
+                          user.is_admin || user.is_branch_admin
+                            ? "primary"
+                            : user.is_gerente
+                              ? "secondary"
+                              : "default"
                         }
                         size="small"
                       />
@@ -671,6 +700,7 @@ const UsersAdmin = () => {
                 fullWidth
                 SelectProps={{ displayEmpty: true }}
                 helperText="Selecciona la sede asignada"
+                disabled={isBranchAdmin}
               >
                 <MenuItem value=""></MenuItem>
                 {BRANCH_LOCATIONS.map((branch) => (
@@ -679,34 +709,52 @@ const UsersAdmin = () => {
                   </MenuItem>
                 ))}
               </TextField>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formState.isGerente}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        isGerente: event.target.checked,
-                      }))
+              {isSuperAdmin && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formState.isBranchAdmin}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            isBranchAdmin: event.target.checked,
+                          }))
+                        }
+                      />
                     }
+                    label="Asignar rol de administrador de sede"
                   />
-                }
-                label="Asignar rol de gerente"
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formState.isAdmin}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        isAdmin: event.target.checked,
-                      }))
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formState.isGerente}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            isGerente: event.target.checked,
+                          }))
+                        }
+                      />
                     }
+                    label="Asignar rol de gerente"
                   />
-                }
-                label="Otorgar permisos de super administrador"
-              />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formState.isAdmin}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            isAdmin: event.target.checked,
+                          }))
+                        }
+                      />
+                    }
+                    label="Otorgar permisos de super administrador"
+                  />
+                </>
+              )}
               <FormControlLabel
                 control={
                   <Switch
@@ -795,6 +843,7 @@ const UsersAdmin = () => {
                 fullWidth
                 SelectProps={{ displayEmpty: true }}
                 helperText="Selecciona la sede asignada"
+                disabled={isBranchAdmin}
               >
                 <MenuItem value=""></MenuItem>
                 {editSedeOptions.map((branch) => (
@@ -826,40 +875,63 @@ const UsersAdmin = () => {
                 }
                 fullWidth
               />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={editForm?.isAdmin ?? false}
-                    onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              isAdmin: event.target.checked,
-                            }
-                          : prev
-                      )
+              {isSuperAdmin && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={editForm?.isBranchAdmin ?? false}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  isBranchAdmin: event.target.checked,
+                                }
+                              : prev
+                          )
+                        }
+                        disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                      />
                     }
-                    disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                    label="Rol de administrador de sede"
                   />
-                }
-                label="Permisos de super administrador"
-              />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={editForm?.isAdmin ?? false}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  isAdmin: event.target.checked,
+                                }
+                              : prev
+                          )
+                        }
+                        disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                      />
+                    }
+                    label="Permisos de administrador"
+                  />
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={editForm?.isGerente ?? false}
-                    onChange={(event) =>
-                      setEditForm((prev) =>
-                        prev ? { ...prev, isGerente: event.target.checked } : prev
-                      )
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={editForm?.isGerente ?? false}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev ? { ...prev, isGerente: event.target.checked } : prev
+                          )
+                        }
+                        disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                      />
                     }
-                    disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                    label="Rol de gerente"
                   />
-                }
-                label="Rol de gerente"
-              />
+                </>
+              )}
               <FormControlLabel
                 control={
                   <Switch

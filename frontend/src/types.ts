@@ -41,6 +41,7 @@ export interface UserProfile {
   is_active: boolean;
   is_admin: boolean;
   is_gerente: boolean;
+  is_branch_admin: boolean;
   sede: string | null;
   creado_en: string;
   actualizado_en: string;

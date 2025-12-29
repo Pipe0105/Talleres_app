@@ -138,6 +138,7 @@ class UserOut(UserBase):
     is_active: bool
     is_admin: bool
     is_gerente: bool
+    is_branch_admin: bool
     creado_en: datetime
     actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)
@@ -175,6 +176,7 @@ class UserAdminCreate(UserCreate):
     is_active: bool = True
     is_admin: bool = False
     is_gerente: bool = False
+    is_branch_admin: bool = False
 
 
 class UserUpdate(BaseModel):
@@ -185,6 +187,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
     is_gerente: Optional[bool] = None
+    is_branch_admin: Optional[bool] = None
     sede: Optional[str] = None
     
     model_config = ConfigDict(extra="forbid")

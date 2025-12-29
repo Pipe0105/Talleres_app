@@ -29,6 +29,12 @@ def apply_startup_migrations(engine: Engine) -> None:
                 "ADD COLUMN IF NOT EXISTS is_gerente BOOLEAN NOT NULL DEFAULT FALSE"
             )
         )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS users "
+                "ADD COLUMN IF NOT EXISTS is_branch_admin BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
         conn.execute(text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS sede TEXT"))
         conn.execute(
             text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS plain_password TEXT")

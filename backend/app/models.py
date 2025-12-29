@@ -53,6 +53,7 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, server_default="true")
     is_admin = Column(Boolean, nullable=False, server_default="false")
     is_gerente = Column(Boolean, nullable=False, server_default="false")
+    is_branch_admin = Column(Boolean, nullable=False, server_default="false")
     sede = Column(Text)
     creado_en = Column(TIMESTAMP, server_default=func.now(), nullable=False)
     actualizado_en = Column(

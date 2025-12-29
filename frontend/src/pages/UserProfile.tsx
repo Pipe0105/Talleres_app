@@ -16,9 +16,11 @@ const UserProfile = () => {
   }
   const roleLabel = user.is_admin
     ? "Super administrador"
-    : user.is_gerente
-      ? "Gerente"
-      : "Operador";
+    : user.is_branch_admin
+      ? "Administrador de sede"
+      : user.is_gerente
+        ? "Gerente"
+        : "Operador";
 
   const infoItems = [
     {
@@ -127,12 +129,14 @@ const UserProfile = () => {
           >
             <Chip
               label={roleLabel}
-              color={user.is_admin || user.is_gerente ? "primary" : "default"}
+              color={
+                user.is_admin || user.is_gerente || user.is_branch_admin ? "primary" : "default"
+              }
               sx={(theme) => ({
                 fontWeight: 700,
                 borderRadius: 1.5,
                 bgcolor:
-                  user.is_admin || user.is_gerente
+                  user.is_admin || user.is_gerente || user.is_branch_admin
                     ? undefined
                     : alpha(theme.palette.text.primary, 0.04),
               })}
@@ -170,7 +174,7 @@ const UserProfile = () => {
         </Stack>
       </Paper>
 
-      {(user.is_admin || user.is_gerente) && (
+      {(user.is_admin || user.is_gerente || user.is_branch_admin) && (
         <Paper
           sx={(theme) => ({
             p: { xs: 3, md: 4 },
@@ -200,27 +204,35 @@ const UserProfile = () => {
                 </Typography>
               </Stack>
               <Chip
-                label={user.is_admin ? "Super administradores" : "Gerentes"}
+                label={
+                  user.is_admin
+                    ? "Super administradores"
+                    : user.is_branch_admin
+                      ? "Administradores de sede"
+                      : "Gerentes"
+                }
                 color="secondary"
                 variant="outlined"
                 sx={{ fontWeight: 700 }}
               />
             </Stack>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1} flexWrap="wrap" useFlexGap>
-              <Button
-                component={RouterLink}
-                to="/talleres/historial"
-                variant="contained"
-                color="primary"
-                startIcon={<HistoryEduOutlinedIcon />}
-                sx={{
-                  flex: { xs: "1 1 100%", sm: "0 1 auto" },
-                  borderRadius: 2,
-                }}
-              >
-                Historial de talleres
-              </Button>
               {user.is_admin && (
+                <Button
+                  component={RouterLink}
+                  to="/talleres/historial"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<HistoryEduOutlinedIcon />}
+                  sx={{
+                    flex: { xs: "1 1 100%", sm: "0 1 auto" },
+                    borderRadius: 2,
+                  }}
+                >
+                  Historial de talleres
+                </Button>
+              )}
+              {(user.is_admin || user.is_branch_admin) && (
                 <Button
                   component={RouterLink}
                   to="/usuarios"
@@ -267,7 +279,9 @@ const UserProfile = () => {
             <Stack direction="row" spacing={1}>
               <Chip
                 label={roleLabel}
-                color={user.is_admin || user.is_gerente ? "primary" : "default"}
+                color={
+                  user.is_admin || user.is_gerente || user.is_branch_admin ? "primary" : "default"
+                }
                 variant="outlined"
                 sx={{ fontWeight: 700 }}
               />

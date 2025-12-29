@@ -93,9 +93,11 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
   const displayName = user?.full_name?.trim() || user?.email || "Invitado";
   const roleLabel = user?.is_admin
     ? "Super administrador"
-    : user?.is_gerente
-      ? "Gerente"
-      : "Operador";
+    : user?.is_branch_admin
+      ? "Administrador de sede"
+      : user?.is_gerente
+        ? "Gerente"
+        : "Operador";
 
   const navigationContent = (
     <Stack spacing={4} height="100%">

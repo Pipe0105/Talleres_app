@@ -49,6 +49,7 @@ type QuickAction = {
   to: string;
   requiresAdmin?: boolean;
   requiresManager?: boolean;
+  requiresUserAdmin?: boolean;
 };
 
 const quickActions: QuickAction[] = [
@@ -76,7 +77,7 @@ const quickActions: QuickAction[] = [
     icon: <GroupAddRoundedIcon />,
     color: "#2dd4bf",
     to: navigationPaths.usuarios,
-    requiresAdmin: true,
+    requiresUserAdmin: true,
   },
 ];
 
@@ -301,9 +302,12 @@ const Home = () => {
       if (action.requiresManager) {
         return Boolean(user?.is_admin || user?.is_gerente);
       }
+      if (action.requiresUserAdmin) {
+        return Boolean(user?.is_admin || user?.is_branch_admin);
+      }
       return true;
     });
-  }, [user?.is_admin, user?.is_gerente]);
+  }, [user?.is_admin, user?.is_branch_admin, user?.is_gerente]);
 
   const QuickActionsPanel = ({ actions }: { actions: QuickAction[] }) => (
     <Card

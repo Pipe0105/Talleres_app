@@ -55,6 +55,15 @@ def get_current_admin_user(
         
     return current_user
 
+def get_current_user_admin(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if not (current_user.is_admin or current_user.is_branch_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requeiren permiosos de admin"
+        )
+    return current_user
 
 def get_current_manager_user(
     current_user: models.User = Depends(get_current_active_user),
