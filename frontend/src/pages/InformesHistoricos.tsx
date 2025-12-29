@@ -203,6 +203,17 @@ const InformesHistoricos = () => {
       principalSummaryKeys.has(field.key)
     );
 
+    const groupedByPrincipal = new Map<string, TallerCalculoWithMeta[]>();
+    filteredCalculo.forEach((row) => {
+      const principalLabel = row.materialLabel?.trim() || "Sin corte principal";
+      const group = groupedByPrincipal.get(principalLabel);
+      if (group) {
+        group.push(row);
+      } else {
+        groupedByPrincipal.set(principalLabel, [row]);
+      }
+    });
+
     const detailFields = selectedFieldDefinitions.filter(
       (field) =>
         field.key !== "corte_principal" &&
