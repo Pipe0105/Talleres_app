@@ -8,8 +8,17 @@ export const parseWeightInput = (value: string): number => {
 };
 export const isNegativeInputValue = (value: string): boolean => value.trim().startsWith("-");
 
+export const normalizeZero = (value: number) =>
+  Object.is(value, -0) || Math.abs(value) < Number.EPSILON ? 0 : value;
+
 export const formatKg = (value: number) =>
   new Intl.NumberFormat("es-CO", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(normalizeZero(value));
+
+export const formatPercent = (value: number) =>
+  new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(normalizeZero(value));

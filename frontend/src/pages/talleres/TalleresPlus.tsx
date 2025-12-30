@@ -33,7 +33,12 @@ import { useAuth } from "../../context/AuthContext";
 
 import SelectableSubcorteCard from "../../components/taller/SelectableSubcorteCard";
 import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
-import { formatKg, isNegativeInputValue, parseWeightInput } from "../../utils/weights";
+import {
+  formatKg,
+  formatPercent,
+  isNegativeInputValue,
+  parseWeightInput,
+} from "../../utils/weights";
 
 interface TallerPlusMaterial {
   id: string;
@@ -623,7 +628,7 @@ const TalleresPlus = () => {
 
                           <Box>
                             <Typography variant="subtitle1" fontWeight={700} color="error">
-                              Pérdida: {formatKg(perdida)} kg ({porcentajePerdida.toFixed(2)}%)
+                              Pérdida: {formatKg(perdida)} kg ({formatPercent(porcentajePerdida)}%)
                             </Typography>
                             <Typography color="text.secondary">
                               Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}
@@ -709,7 +714,7 @@ const TalleresPlus = () => {
                               <Typography variant="body2" color="text.secondary">
                                 {material.subcortes.length} subcorte(s) · Pérdida:{" "}
                                 {formatKg(material.perdida)} kg (
-                                {material.porcentajePerdida.toFixed(2)}%)
+                                {formatPercent(material.porcentajePerdida)}%)
                               </Typography>
                               <Stack direction="row" spacing={1} flexWrap="wrap">
                                 <Chip

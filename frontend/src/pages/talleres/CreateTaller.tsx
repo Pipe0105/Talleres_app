@@ -28,7 +28,12 @@ import { useAuth } from "../../context/AuthContext";
 
 import SelectableSubcorteCard from "../../components/taller/SelectableSubcorteCard";
 import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
-import { formatKg, isNegativeInputValue, parseWeightInput } from "../../utils/weights";
+import {
+  formatKg,
+  formatPercent,
+  isNegativeInputValue,
+  parseWeightInput,
+} from "../../utils/weights";
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_.-]*$/i;
 
@@ -607,7 +612,7 @@ const CreateTaller = () => {
 
                       <Box>
                         <Typography variant="subtitle1" fontWeight={700} color="error">
-                          Pérdida: {formatKg(perdida)} kg ({porcentajePerdida.toFixed(2)}%)
+                          Pérdida: {formatKg(perdida)} kg ({formatPercent(porcentajePerdida)}%)
                         </Typography>
                         <Typography color="text.secondary">
                           Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}

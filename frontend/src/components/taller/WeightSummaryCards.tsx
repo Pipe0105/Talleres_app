@@ -1,6 +1,6 @@
 import { Assessment, CheckCircle } from "@mui/icons-material";
 import { Card, CardContent, Grid, Stack, Typography } from "@mui/material";
-import { formatKg } from "../../utils/weights";
+import { formatKg, formatPercent } from "../../utils/weights";
 
 interface WeightSummaryCardsProps {
   hasPesoInicial: boolean;
@@ -94,7 +94,7 @@ const WeightSummaryCards = ({
                 {formatKg(perdida)} kg
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {porcentajePerdida.toFixed(2)}% del peso inicial.
+                {formatPercent(porcentajePerdida)}% del peso inicial.
               </Typography>
             </Stack>
           </CardContent>
