@@ -184,6 +184,15 @@ const TalleresPlus = () => {
       return;
     }
 
+    if (porcentajePerdida < 0) {
+      setMensaje({
+        tipo: "error",
+        texto:
+          "El porcentaje de pérdida no puede ser negativo. Revisa los pesos para poder guardar el material.",
+      });
+      return;
+    }
+
     setSavingMaterial(true);
     setMensaje(null);
 
@@ -222,6 +231,18 @@ const TalleresPlus = () => {
       setMensaje({
         tipo: "error",
         texto: "Añade al menos un material antes de guardar el taller.",
+      });
+      return;
+    }
+
+    const tienePerdidaNegativa = materialesGuardados.some(
+      (material) => material.porcentajePerdida < 0
+    );
+    if (tienePerdidaNegativa) {
+      setMensaje({
+        tipo: "error",
+        texto:
+          "Hay materiales con porcentaje de perdida negativo. Corrige los pesos antes de guardar",
       });
       return;
     }
