@@ -33,7 +33,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import SelectableSubcorteCard from "../../components/taller/SelectableSubcorteCard";
 import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
-import { formatKg, parseWeightInput } from "../../utils/weights";
+import { formatKg, isNegativeInputValue, parseWeightInput } from "../../utils/weights";
 
 interface TallerPlusMaterial {
   id: string;
@@ -462,7 +462,12 @@ const TalleresPlus = () => {
                         inputProps={{ min: 0, step: "0.01" }}
                         label="Peso inicial (kg)"
                         value={pesoInicial}
-                        onChange={(e) => setPesoInicial(e.target.value)}
+                        onChange={(e) => {
+                          if (isNegativeInputValue(e.target.value)) {
+                            return;
+                          }
+                          setPesoInicial(e.target.value);
+                        }}
                       />
                     </Grid>
                     <Grid item xs={12} md={6} display="flex" alignItems="center">
@@ -584,12 +589,15 @@ const TalleresPlus = () => {
                                   inputProps={{ min: 0, step: "0.01" }}
                                   label={`${subcorte.nombre} (${subcorte.codigo})`}
                                   value={subcortesPesos[subcorte.codigo] ?? ""}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    if (isNegativeInputValue(e.target.value)) {
+                                      return;
+                                    }
                                     setSubcortesPesos((prev) => ({
                                       ...prev,
                                       [subcorte.codigo]: e.target.value,
-                                    }))
-                                  }
+                                    }));
+                                  }}
                                 />
                               </Grid>
                             ))}
@@ -603,7 +611,12 @@ const TalleresPlus = () => {
                                 inputProps={{ min: 0, step: "0.01" }}
                                 label="Peso final del corte (kg)"
                                 value={pesoFinal}
-                                onChange={(e) => setPesoFinal(e.target.value)}
+                                onChange={(e) => {
+                                  if (isNegativeInputValue(e.target.value)) {
+                                    return;
+                                  }
+                                  setPesoFinal(e.target.value);
+                                }}
                               />
                             </Grid>
                           </Grid>

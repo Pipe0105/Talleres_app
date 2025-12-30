@@ -1,6 +1,7 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { InputAdornment, Stack, TextField } from "@mui/material";
 import PageSection from "../PageSection";
+import { isNegativeInputValue } from "../../utils/weights";
 
 interface InformeFiltersProps {
   searchQuery: string;
@@ -49,7 +50,12 @@ const InformeFilters = ({
             label="Peso mínimo (KG)"
             type="text"
             value={minPeso}
-            onChange={(event) => onMinPesoChange(event.target.value)}
+            onChange={(event) => {
+              if (isNegativeInputValue(event.target.value)) {
+                return;
+              }
+              onMinPesoChange(event.target.value);
+            }}
             inputProps={{ inputMode: "decimal" }}
             helperText="Muestra cortes con peso igual o superior al valor"
             disabled={disabled}
