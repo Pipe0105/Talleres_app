@@ -220,7 +220,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   sede: raw?.sede ?? null,
   peso_inicial: toNumber(raw?.peso_inicial, 0),
   peso_final: toNumber(raw?.peso_final, 0),
-  porcentaje_perdida: raw?.porcentaje_perdida ? toNumber(raw?.porcentaje_perdida, 0) : null,
+  porcentaje_perdida: raw?.porcentaje_perdida == null ? null : toNumber(raw?.porcentaje_perdida, 0),
   especie: toStringOr(raw?.especie, ""),
   item_principal_id: raw?.item_principal_id ?? null,
   codigo_principal: toStringOr(raw?.codigo_principal, ""),

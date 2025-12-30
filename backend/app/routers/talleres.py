@@ -20,6 +20,10 @@ router = APIRouter(
 
 _WHITESPACE_RE = re.compile(r"\s+")
 _USE_PAYLOAD = object()
+_ZERO_TOLERANCE = Decimal("0.0001")
+
+def _normalize_loss(value: Decimal) -> Decimal:
+    return Decimal("0") if abs(value) < _ZERO_TOLERANCE else value
 
 def _normalize_item_code(codigo: str) -> str:
     normalized = _WHITESPACE_RE.sub("", codigo.strip())
@@ -91,9 +95,11 @@ def _build_taller_from_payload(
 
     total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
     total_procesado = peso_final + total_subcortes
-    perdida = peso_inicial - total_procesado
+    perdida = _normalize_loss(peso_inicial - total_procesado)
     porcentaje_perdida = (
-        (perdida / peso_inicial * Decimal("100")) if peso_inicial > 0 else None
+        (_normalize_loss(perdida / peso_inicial * Decimal("100")))
+        if peso_inicial > 0
+        else None
     )
 
     item_principal_id = payload.item_principal_id or _find_item_id_by_code(
@@ -880,9 +886,11 @@ def actualizar_taller(
     peso_final = Decimal(payload.peso_final)
     total_subcortes = sum(Decimal(det.peso) for det in payload.subcortes)
     total_procesado = peso_final + total_subcortes
-    perdida = peso_inicial - total_procesado
+    perdida = _normalize_loss(peso_inicial - total_procesado)
     porcentaje_perdida = (
-        (perdida / peso_inicial * Decimal("100")) if peso_inicial > 0 else None
+        (_normalize_loss(perdida / peso_inicial * Decimal("100")))
+        if peso_inicial > 0
+        else None
     )
 
     item_principal_id = payload.item_principal_id or _find_item_id_by_code(
