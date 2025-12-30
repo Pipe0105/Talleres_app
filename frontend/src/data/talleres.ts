@@ -86,7 +86,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "22835", nombre: "Gordana*Kilo" },
         { codigo: "70165", nombre: "Costichi" },
       ],
-      []
+      [{ codigo: "5815", nombre: "Molida Normal" }]
     ),
   },
   {
@@ -353,6 +353,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "7758", nombre: "Costilla Especial" },
         { codigo: "31682", nombre: "Merma" },
+        { codigo: "5815", nombre: "Molida" },
       ]
     ),
   },
@@ -366,7 +367,10 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5800", nombre: "Empella" },
         { codigo: "22835", nombre: "Gordana" },
       ],
-      [{ codigo: "31783", nombre: "Picada" }]
+      [
+        { codigo: "31783", nombre: "Picada" },
+        { codigo: "5815", nombre: "Molida" },
+      ]
     ),
   },
   {
@@ -399,6 +403,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
+        { codigo: "5815", nombre: "Molida" },
       ]
     ),
   },
