@@ -268,6 +268,32 @@ const Home = () => {
     return `${prefix}${formatted}%`;
   }, []);
 
+  const inactivityBySede = useMemo(() => {
+    const latestBySede = new Map<string, Date>();
+
+    talleres.forEach((taller) => {
+      const sede = taller.sede?.trim() || "Sin sede";
+      const createdAt = new Date(taller.creado_en);
+      if (Number.isNaN(createdAt.getTime())) return;
+      const existing = latestBySede.get(sede);
+      if (!existing || createdAt > existing) {
+        latestBySede.set(sede, createdAt);
+      }
+    });
+
+    const now = new Date();
+    return Array.from(latestBySede.entries())
+      .map(([sede, lastDate]) => {
+        const diffMs = now.getTime() - lastDate.getTime();
+        const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        return {
+          sede,
+          days,
+          lastDate,
+        };
+      })
+      .sort((a, b) => b.days - a.days);
+  }, [talleres]);
   const statCards = useMemo(() => {
     const buildStat = (
       title: string,
@@ -645,6 +671,64 @@ const Home = () => {
 
         <Grid item xs={12} md={3.5}>
           <Stack spacing={2.5}>
+            <Card
+              sx={(theme) => ({
+                p: 2.5,
+                borderRadius: 4,
+                border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+                background: `linear-gradient(180deg, ${alpha(
+                  theme.palette.info.light,
+                  0.08
+                )}, ${alpha(theme.palette.common.white, 0.9)})`,
+              })}
+            >
+              <Stack spacing={1.5}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={800}>
+                    Alerta de Inactividad por Sede
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Días desde el último taller registrado.
+                  </Typography>
+                </Box>
+                {loadingTalleres ? <LinearProgress /> : null}
+                {!loadingTalleres && !inactivityBySede.length ? (
+                  <Alert severity="info">Sin talleres para calcular inactividad.</Alert>
+                ) : (
+                  <Stack spacing={1}>
+                    {inactivityBySede.map((item) => {
+                      const chipColor =
+                        item.days >= 30 ? "error" : item.days >= 14 ? "warning" : "success";
+                      const dayLabel = `${item.days} día${item.days === 1 ? "" : "s"}`;
+                      return (
+                        <Paper
+                          key={item.sede}
+                          variant="outlined"
+                          sx={(theme) => ({
+                            p: 1.25,
+                            borderRadius: 2,
+                            border: `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+                            boxShadow: "0 10px 20px rgba(15,23,42,0.06)",
+                          })}
+                        >
+                          <Stack direction="row" alignItems="center" justifyContent="space-between">
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight={700}>
+                                {item.sede}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Último taller: {formatDate(item.lastDate.toISOString())}
+                              </Typography>
+                            </Box>
+                            <Chip label={dayLabel} color={chipColor} size="small" />
+                          </Stack>
+                        </Paper>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </Stack>
+            </Card>
             <QuickActionsPanel actions={availableQuickActions} />
           </Stack>
         </Grid>
