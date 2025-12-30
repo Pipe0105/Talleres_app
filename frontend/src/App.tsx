@@ -91,7 +91,7 @@ const App = () => {
             <Route
               path="/talleres/historial"
               element={
-                <ProtectedRoute requiresAdmin unauthorizedRedirectTo="/">
+                <ProtectedRoute requiresUserAdmin unauthorizedRedirectTo="/">
                   <HistorialTalleres />
                 </ProtectedRoute>
               }

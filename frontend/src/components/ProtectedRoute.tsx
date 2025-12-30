@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
   redirectTo?: string;
   requiresAdmin?: boolean;
   requiresManager?: boolean;
+  requiresUserAdmin?: boolean;
   unauthorizedRedirectTo?: string;
 }
 
@@ -14,6 +15,7 @@ const ProtectedRoute = ({
   children,
   redirectTo = "/login",
   requiresAdmin = false,
+  requiresUserAdmin = false,
   requiresManager = false,
   unauthorizedRedirectTo = "/",
 }: ProtectedRouteProps) => {
@@ -28,6 +30,9 @@ const ProtectedRoute = ({
   }
 
   if (requiresManager && !(user.is_admin || user.is_gerente)) {
+    return <Navigate to={unauthorizedRedirectTo} replace />;
+  }
+  if (requiresUserAdmin && !(user.is_admin || user.is_branch_admin)) {
     return <Navigate to={unauthorizedRedirectTo} replace />;
   }
 
