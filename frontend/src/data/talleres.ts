@@ -30,6 +30,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
     subcortes: withUniqueSubcortes(
       [
         { codigo: "33647", nombre: "Recorte" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "22835", nombre: "Gordana" },
       ],
       [
@@ -52,6 +53,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "7790", nombre: "Bola negra normal" },
         { codigo: "33643", nombre: "Espaldilla" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
@@ -385,6 +387,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "37183", nombre: "Picada" },
+        { codigo: "30029", nombre: "Tocino" },
         { codigo: "7860", nombre: "Garra" },
         { codigo: "5815", nombre: "Molida" },
       ]
