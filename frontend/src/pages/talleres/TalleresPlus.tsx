@@ -8,6 +8,11 @@ import {
   CardContent,
   Chip,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
   MenuItem,
   Stack,
@@ -70,6 +75,7 @@ const TalleresPlus = () => {
   const [materialesGuardados, setMaterialesGuardados] = useState<TallerPlusMaterial[]>([]);
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
+  const [negativeLossModal, setNegativeLossModal] = useState<null | string>(null);
 
   const { user } = useAuth();
   const isManager = Boolean(user?.is_admin || user?.is_gerente);
@@ -185,11 +191,9 @@ const TalleresPlus = () => {
     }
 
     if (porcentajePerdida < 0) {
-      setMensaje({
-        tipo: "error",
-        texto:
-          "El porcentaje de pérdida no puede ser negativo. Revisa los pesos para poder guardar el material.",
-      });
+      setNegativeLossModal(
+        "El porcentaje de pérdida no puede ser negativo. Revisa los pesos para poder guardar el material."
+      );
       return;
     }
 
@@ -239,11 +243,9 @@ const TalleresPlus = () => {
       (material) => material.porcentajePerdida < 0
     );
     if (tienePerdidaNegativa) {
-      setMensaje({
-        tipo: "error",
-        texto:
-          "Hay materiales con porcentaje de perdida negativo. Corrige los pesos antes de guardar",
-      });
+      setNegativeLossModal(
+        "Hay materiales con porcentaje de perdida negativo. Corrige los pesos antes de guardar"
+      );
       return;
     }
 
@@ -337,6 +339,21 @@ const TalleresPlus = () => {
             {mensaje.texto}
           </Alert>
         )}
+        <Dialog
+          open={Boolean(negativeLossModal)}
+          onClose={() => setNegativeLossModal(null)}
+          aria-labelledby="negative-loss-dialog-title"
+        >
+          <DialogTitle id="negative-loss-dialog-title">Verifica los pesos ingresados</DialogTitle>
+          <DialogContent>
+            <DialogContentText>{negativeLossModal}</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={() => setNegativeLossModal(null)}>
+              Entendido
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Grid container spacing={3} alignItems="stretch">
           <Grid item xs={12} md={8}>
