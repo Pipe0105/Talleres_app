@@ -126,12 +126,9 @@ const HistorialTalleres = () => {
       setTalleres(data);
       setSelectedIds((prev) => prev.filter((id) => data.some((taller) => taller.id === id)));
       setSelected((prev) => {
-        if (!data.length) return null;
-        if (prev) {
-          const match = data.find((item) => item.id === prev.id);
-          if (match) return match;
-        }
-        return data[0];
+        if (!prev) return null;
+        const match = data.find((item) => item.id === prev.id);
+        return match ?? null;
       });
     } catch (err) {
       console.error(err);
