@@ -29,7 +29,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import TrendingFlatRoundedIcon from "@mui/icons-material/TrendingFlatRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
-import { getDashboardStats, getTalleresCompletos } from "../../api/talleresApi";
+import { adminGetUsers, getDashboardStats, getTalleresCompletos } from "../../api/talleresApi";
 import { DashboardStats, TallerGrupoListItem } from "../../types";
 import { useAuth } from "../../context/AuthContext";
 
@@ -157,6 +157,7 @@ const Home = () => {
   const [loadingStats, setLoadingStats] = useState(false);
   const [errorStats, setErrorStats] = useState<string | null>(null);
   const [searcTerm, setSearchTerm] = useState("");
+  const [userSedes, setUserSedes] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -210,6 +211,37 @@ const Home = () => {
     };
 
     void fetchDashboardStats();
+
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchUsers = async () => {
+      if (!isAdmin) return;
+      try {
+        const users = await adminGetUsers();
+        if (!active) return;
+        const sedes = Array.from(
+          new Set(
+            users
+              .filter((userItem) => userItem.is_active)
+              .map((userItem) => userItem.sede?.trim())
+              .filter((sede): sede is string => Boolean(sede))
+          )
+        ).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+        setUserSedes(sedes);
+      } catch (error) {
+        console.error("Error al obtener las sedes de usuarios", error);
+        if (!active) return;
+        setUserSedes([]);
+      }
+    };
+
+    void fetchUsers();
 
     return () => {
       active = false;
@@ -282,8 +314,24 @@ const Home = () => {
     });
 
     const now = new Date();
-    return Array.from(latestBySede.entries())
-      .map(([sede, lastDate]) => {
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const daysSinceYearStart = Math.max(
+      1,
+      Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    );
+
+    const sedesSet = new Set<string>([...latestBySede.keys(), ...userSedes]);
+
+    return Array.from(sedesSet)
+      .map((sede) => {
+        const lastDate = latestBySede.get(sede) ?? null;
+        if (!lastDate) {
+          return {
+            sede,
+            days: daysSinceYearStart,
+            lastDate,
+          };
+        }
         const diffMs = now.getTime() - lastDate.getTime();
         const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
         return {
@@ -293,7 +341,7 @@ const Home = () => {
         };
       })
       .sort((a, b) => b.days - a.days);
-  }, [talleres]);
+  }, [talleres, userSedes]);
   const statCards = useMemo(() => {
     const buildStat = (
       title: string,
@@ -717,7 +765,10 @@ const Home = () => {
                                 {item.sede}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                Último taller: {formatDate(item.lastDate.toISOString())}
+                                Último taller:{" "}
+                                {item.lastDate
+                                  ? formatDate(item.lastDate.toISOString())
+                                  : "Sin talleres registrados"}
                               </Typography>
                             </Box>
                             <Chip label={dayLabel} color={chipColor} size="small" />
