@@ -76,19 +76,17 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
   {
     especie: "res",
     codigo: "6415",
-    nombre: "Costilla especial",
+    nombre: "Costilla Normal",
     subcortes: withUniqueSubcortes(
       [
-        { codigo: "33647", nombre: "Recorte" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "6414", nombre: "Costilla Especial" },
         { codigo: "33642", nombre: "Costilla Light" },
         { codigo: "37508", nombre: "Hueso Promo" },
+        { codigo: "33647", nombre: "Recorte" },
+        { codigo: "22835", nombre: "Gordana*Kilo" },
+        { codigo: "70165", nombre: "Costichi" },
       ],
-      [
-        { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "6415", nombre: "Costilla Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
-      ]
+      []
     ),
   },
   {
