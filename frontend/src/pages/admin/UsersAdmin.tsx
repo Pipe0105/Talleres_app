@@ -330,23 +330,44 @@ const UsersAdmin = () => {
   const filteredUsers = useMemo(() => {
     const normalizedName = filters.name.trim().toLowerCase();
 
-    return users.filter((user) => {
-      const matchesName =
-        !normalizedName ||
-        user.username.toLowerCase().includes(normalizedName) ||
-        (user.full_name ?? "").toLowerCase().includes(normalizedName);
-      const matchesSede = !filters.sede || user.sede === filters.sede;
-      const role = user.is_admin
-        ? "admin"
-        : user.is_branch_admin
-          ? "branch-admin"
-          : user.is_gerente
-            ? "gerente"
-            : "operador";
-      const matchesRole = !filters.role || role === filters.role;
+    const rolePriority = (user: UserProfile) => {
+      if (user.is_admin) {
+        return 3;
+      }
+      if (user.is_branch_admin) {
+        return 1;
+      }
+      if (user.is_gerente) {
+        return 2;
+      }
+      return 0;
+    };
 
-      return matchesName && matchesSede && matchesRole;
-    });
+    return users
+      .filter((user) => {
+        const matchesName =
+          !normalizedName ||
+          user.username.toLowerCase().includes(normalizedName) ||
+          (user.full_name ?? "").toLowerCase().includes(normalizedName);
+        const matchesSede = !filters.sede || user.sede === filters.sede;
+        const role = user.is_admin
+          ? "admin"
+          : user.is_branch_admin
+            ? "branch-admin"
+            : user.is_gerente
+              ? "gerente"
+              : "operador";
+        const matchesRole = !filters.role || role === filters.role;
+
+        return matchesName && matchesSede && matchesRole;
+      })
+      .sort((a, b) => {
+        const roleDiff = rolePriority(a) - rolePriority(b);
+        if (roleDiff !== 0) {
+          return roleDiff;
+        }
+        return a.username.localeCompare(b.username, "es", { sensitivity: "base" });
+      });
   }, [filters.name, filters.role, filters.sede, users]);
 
   const handleResetFilters = () => {
