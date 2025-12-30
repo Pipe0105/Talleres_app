@@ -63,7 +63,9 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       },
       {
         title: "Configuración",
-        items: navItems.filter((item) => ["Usuario", "Iniciar sesión"].includes(item.label)),
+        items: navItems.filter((item) =>
+          ["Gestión de usuarios", "Usuario", "Iniciar sesión"].includes(item.label)
+        ),
       },
     ],
     [navItems]
@@ -82,6 +84,8 @@ export const AppLayout = ({ navItems, children }: AppLayoutProps) => {
       case "Lista de precios":
         return <ListAltRoundedIcon />;
       case "Usuario":
+        return <PeopleAltOutlinedIcon />;
+      case "Gestión de usuarios":
         return <PeopleAltOutlinedIcon />;
       case "Iniciar sesión":
         return <PeopleAltOutlinedIcon />;

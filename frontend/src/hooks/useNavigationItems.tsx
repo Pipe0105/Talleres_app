@@ -26,6 +26,9 @@ export const useNavigationItems = ({ user, currentPath }: UseNavigationItemsOpti
       { label: "Informes", to: "/informes-historicos" },
       { label: "Inventario", to: "/inventario" },
       { label: "Lista de precios", to: "/lista-precios" },
+      ...(user && (user.is_admin || user.is_branch_admin)
+        ? [{ label: "Gestión de usuarios", to: "/usuarios" }]
+        : []),
       ...(user
         ? [
             {
