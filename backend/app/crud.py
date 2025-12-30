@@ -91,6 +91,14 @@ def list_operarios_by_sede(db: Session, sede: str) -> list[models.User]:
         .order_by(models.User.creado_en.desc())
         .all()
     )
+    
+def list_users_by_sede(db: Session, sede: str) -> list[models.User]:
+    return (
+        db.query(models.User)
+        .filter(models.User.sede == sede)
+        .order_by(models.User.creado_en.desc())
+        .all()
+    )
 
 def update_user(
     db: Session,

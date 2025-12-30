@@ -23,7 +23,7 @@ def list_users(
         return crud.list_users(db)
     if not current_admin.sede:
         return []
-    return crud.list_operarios_by_sede(db, current_admin.sede)
+    return crud.list_users_by_sede(db, current_admin.sede)
 
 @router.post("", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
