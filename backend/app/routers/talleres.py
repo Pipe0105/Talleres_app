@@ -19,6 +19,7 @@ router = APIRouter(
 )
 
 _WHITESPACE_RE = re.compile(r"\s+")
+_USE_PAYLOAD = object()
 
 def _normalize_item_code(codigo: str) -> str:
     normalized = _WHITESPACE_RE.sub("", codigo.strip())
@@ -56,11 +57,34 @@ def _resolve_sede_registro(
         return current_user.sede
     return current_user.sede
 
+def _format_taller_nombre(sede: Optional[str], especie: str, consecutivo: int) -> str:
+    sede_label = (sede or "Sin sede").strip() or "Sin sede"
+    especie_label = "Res" if especie.strip().lower() == "res" else "Cerdo"
+    return f"Taller {sede_label} {especie_label} {consecutivo:02d}"
+
+def _count_talleres_por_sede_especie(
+    db: Session, sede: Optional[str], especie: str
+) -> int:
+    if not sede:
+        return 0
+    return (
+        db.query(func.count(models.Taller.id))
+        .filter(
+            models.Taller.sede == sede,
+            func.lower(models.Taller.especie) == especie.strip().lower(),
+        )
+        .scalar()
+        or 0
+    )
+
+
 def _build_taller_from_payload(
     payload: schemas.TallerCreate,
     db: Session,
     current_user: models.User,
     sede_override: Optional[str] = None,
+    nombre_override: str | object = _USE_PAYLOAD,
+    descripcion_override: Optional[str] | object = _USE_PAYLOAD,
 ) -> models.Taller:
     peso_inicial = Decimal(payload.peso_inicial)
     peso_final = Decimal(payload.peso_final)
@@ -77,10 +101,19 @@ def _build_taller_from_payload(
     )
 
     sede_registro = _resolve_sede_registro(sede_override or payload.sede, current_user)
+    
+    nombre_taller = (
+        payload.nombre_taller if nombre_override is _USE_PAYLOAD else nombre_override
+    )
+    descripcion = (
+        payload.descripcion
+        if descripcion_override is _USE_PAYLOAD
+        else descripcion_override
+    )
 
     taller = models.Taller(
-        nombre_taller=payload.nombre_taller,
-        descripcion=payload.descripcion,
+        nombre_taller=nombre_taller,
+        descripcion=descripcion,
         sede=sede_registro,
         peso_inicial=peso_inicial,
         peso_final=peso_final,
@@ -240,25 +273,50 @@ def crear_taller_completo(
     sede_registro = _resolve_sede_registro(payload.sede, current_user)
     especies = {material.especie.lower() for material in payload.materiales}
     especie_grupo = payload.especie or (next(iter(especies)) if len(especies) == 1 else None)
+    
+    material_sedes: list[Optional[str]] = []
+    materiales_consecutivos: dict[tuple[Optional[str], str], int] = {}
+    for material in payload.materiales:
+        sede_material = _resolve_sede_registro(material.sede or sede_registro, current_user)
+        material_sedes.append(sede_material)
+        key = (sede_material, material.especie.lower())
+        if key not in materiales_consecutivos:
+            materiales_consecutivos[key] = _count_talleres_por_sede_especie(
+                db, sede_material, material.especie
+            )
+
+    primer_nombre: Optional[str] = None
 
     grupo = models.TallerGrupo(
         nombre_taller=payload.nombre_taller,
-        descripcion=payload.descripcion,
+        descripcion=None,
         sede=sede_registro,
         especie=especie_grupo,
         creado_por_id=current_user.id,
     )
 
     materiales: list[models.Taller] = []
-    for material in payload.materiales:
+    for material, sede_material in zip(payload.materiales, material_sedes):
+        key = (sede_material, material.especie.lower())
+        materiales_consecutivos[key] += 1
+        nombre_generado = _format_taller_nombre(
+            sede_material, material.especie, materiales_consecutivos[key]
+        )
+        if primer_nombre is None:
+            primer_nombre = nombre_generado
         taller = _build_taller_from_payload(
             material,
             db,
             current_user,
-            sede_override=material.sede or sede_registro,
+            sede_override=sede_material,
+            nombre_override=nombre_generado,
+            descripcion_override=None,
         )
         taller.grupo = grupo
         materiales.append(taller)
+    if primer_nombre:
+        grupo.nombre_taller = primer_nombre
+
 
     grupo.materiales = materiales
 

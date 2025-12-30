@@ -37,8 +37,6 @@ interface TallerPlusMaterial {
   materialNombre: string;
   pesoInicial: number;
   pesoFinal: number;
-  nombreTaller?: string;
-  descripcion?: string;
   sede?: string;
   subcortes: {
     codigo: string;
@@ -55,15 +53,11 @@ const buildId = () =>
     : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const TalleresPlus = () => {
-  const [nombreGrupo, setNombreGrupo] = useState<string>("");
-  const [descripcionGrupo, setDescripcionGrupo] = useState<string>("");
   const [especie, setEspecie] = useState<Especie | "">("");
   const [codigoMaterial, setCodigoMaterial] = useState<string>("");
   const [materialSearch, setMaterialSearch] = useState<string>("");
   const [pesoInicial, setPesoInicial] = useState<string>("");
   const [pesoFinal, setPesoFinal] = useState<string>("");
-  const [nombreTaller, setNombreTaller] = useState<string>("");
-  const [descripcion, setDescripcion] = useState<string>("");
   const [sede, setSede] = useState<string>("");
   const [mensaje, setMensaje] = useState<null | {
     tipo: "success" | "error" | "info";
@@ -130,8 +124,6 @@ const TalleresPlus = () => {
     setSeleccionSubcortesGuardada(false);
     setPesoInicial("");
     setPesoFinal("");
-    setNombreTaller("");
-    setDescripcion("");
   };
 
   const handleGuardarPesoInicial = () => {
@@ -202,8 +194,6 @@ const TalleresPlus = () => {
       materialNombre: materialSeleccionado.nombre,
       pesoInicial: pesoInicialNumero,
       pesoFinal: pesoFinalNumero,
-      nombreTaller: nombreTaller.trim() || undefined,
-      descripcion: descripcion.trim() || undefined,
       sede: sede || undefined,
       subcortes: subcortesActivos.map((sc) => ({
         codigo: sc.codigo,
@@ -239,18 +229,16 @@ const TalleresPlus = () => {
     setSavingBatch(true);
     setMensaje(null);
 
-    const nombreGrupoFinal =
-      nombreGrupo.trim() || `Taller+ (${materialesGuardados.length} materiales)`;
+    const nombreGrupoFinal = `Taller (${materialesGuardados.length} materiales)`;
 
     try {
       await createTallerCompleto({
         nombre_taller: nombreGrupoFinal,
-        descripcion: descripcionGrupo.trim() || undefined,
+        descripcion: undefined,
         sede: isManager ? sede || undefined : undefined,
         materiales: materialesGuardados.map((material) => ({
-          nombre_taller:
-            material.nombreTaller || nombreGrupoFinal || `Taller de ${material.materialNombre}`,
-          descripcion: material.descripcion || descripcionGrupo || undefined,
+          nombre_taller: "Taller",
+          descripcion: undefined,
           sede: isManager ? material.sede || undefined : undefined,
           peso_inicial: material.pesoInicial,
           peso_final: material.pesoFinal,
@@ -268,8 +256,6 @@ const TalleresPlus = () => {
         texto: `Se guardaron ${materialesGuardados.length} materiales como parte del taller+.`,
       });
       setMaterialesGuardados([]);
-      setNombreGrupo("");
-      setDescripcionGrupo("");
     } catch (error) {
       console.error("No se pudo guardar el taller completo", error);
       setMensaje({
@@ -345,25 +331,6 @@ const TalleresPlus = () => {
               <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
                 <Stack spacing={4}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Nombre del taller"
-                        placeholder="Ej. Taller+ Costilla 10/10"
-                        value={nombreGrupo}
-                        onChange={(e) => setNombreGrupo(e.target.value)}
-                        helperText="Se usará como nombre general al guardar todo el lote"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Descripción general"
-                        placeholder="Notas o detalle del taller+"
-                        value={descripcionGrupo}
-                        onChange={(e) => setDescripcionGrupo(e.target.value)}
-                      />
-                    </Grid>
                     {isManager && (
                       <Grid item xs={12} md={6}>
                         <TextField
@@ -448,25 +415,6 @@ const TalleresPlus = () => {
                             placeholder="Escribe para buscar el material"
                           />
                         )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Nombre del material"
-                        placeholder="Ej. Taller Costilla 10/10"
-                        value={nombreTaller}
-                        onChange={(e) => setNombreTaller(e.target.value)}
-                        helperText="Puedes personalizar cada material o usar el nombre general"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Descripción"
-                        placeholder="Notas o detalle del material"
-                        value={descripcion}
-                        onChange={(e) => setDescripcion(e.target.value)}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
