@@ -70,6 +70,25 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "5839", nombre: "Molida Esp" },
+        { codigo: "11018", nombre: "Pulpa Normal" },
+        { codigo: "35508", nombre: "Hueso Promo" },
+      ]
+    ),
+  },
+  {
+    especie: "res",
+    codigo: "7833",
+    nombre: "Caderita Normal",
+    subcortes: withUniqueSubcortes(
+      [
+        { codigo: "33647", nombre: "Recorte" },
+        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "25493", nombre: "Caderita Especial" },
+      ],
+      [
+        { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "11018", nombre: "Pulpa Normal" },
         { codigo: "35508", nombre: "Hueso Promo" },
       ]
@@ -85,6 +104,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "33642", nombre: "Costilla Light" },
         { codigo: "37508", nombre: "Hueso Promo" },
         { codigo: "33647", nombre: "Recorte" },
+        { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "22835", nombre: "Gordana*Kilo" },
         { codigo: "70165", nombre: "Costichi" },
       ],
@@ -149,6 +169,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "11018", nombre: "Pulpa" },
       ]
     ),
@@ -164,6 +185,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
@@ -195,6 +217,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "7833", nombre: "Caderita" },
         { codigo: "35508", nombre: "Hueso promo" },
       ]
@@ -245,7 +268,9 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "31682", nombre: "Desperdicio" },
+        { codigo: "35139", nombre: "Sobrebarriga especial" },
         { codigo: "5837", nombre: "Sobrebarriga" },
+        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -258,7 +283,10 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "22835", nombre: "Gordana" },
       ],
-      [{ codigo: "5815", nombre: "Molida Normal" }]
+      [
+        { codigo: "5815", nombre: "Molida Normal" },
+        { codigo: "31682", nombre: "Desperdicio" },
+      ]
     ),
   },
   {
@@ -273,6 +301,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "35139", nombre: "SobreBarriga Especial" },
+        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -320,6 +349,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "11018", nombre: "Pulpa" },
+        { codigo: "5839", nombre: "Molida Esp" },
       ]
     ),
   },
@@ -338,6 +368,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "45978", nombre: "Bondiola" },
         { codigo: "31783", nombre: "Picada" },
         { codigo: "5815", nombre: "Molida" },
+        { codigo: "10358", nombre: "Pernil" },
       ]
     ),
   },
@@ -407,6 +438,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
         { codigo: "5815", nombre: "Molida" },
+        { codigo: "10358", nombre: "Pernil" },
       ]
     ),
   },

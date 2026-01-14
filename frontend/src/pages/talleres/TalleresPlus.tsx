@@ -37,6 +37,7 @@ import {
   formatKg,
   formatPercent,
   isNegativeInputValue,
+  normalizeZero,
   parseWeightInput,
 } from "../../utils/weights";
 
@@ -117,8 +118,9 @@ const TalleresPlus = () => {
     return acc + parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
   }, 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
-  const perdida = pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
-  const porcentajePerdida = pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
+  const perdida = pesoInicialNumero > 0 ? normalizeZero(pesoInicialNumero - totalProcesado) : 0;
+  const porcentajePerdida =
+    pesoInicialNumero > 0 ? normalizeZero((perdida / pesoInicialNumero) * 100) : 0;
 
   const readyForSubcortes =
     pesoInicialGuardado && Boolean(materialSeleccionado) && pesoInicialNumero > 0;
