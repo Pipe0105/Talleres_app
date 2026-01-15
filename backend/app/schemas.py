@@ -429,6 +429,29 @@ class TallerOut(BaseModel):
 class TallerWithCreatorOut(TallerOut):
     creado_por: str | None = None
     
+    
+class AlertaSubcorteOut(BaseModel):
+    id: int
+    taller_id: int
+    sede: Optional[str] = None
+    creado_por_id: Optional[int] = None
+    creado_por: Optional[str] = None
+    nombre_subcorte: Optional[str] = None
+    codigo_producto: Optional[str] = None
+    peso: Optional[Decimal] = None
+    porcentaje: Optional[Decimal] = None
+    porcentaje_umbral: Optional[Decimal] = None
+    revisada: bool
+    creado_en: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AlertaSubcorteUpdate(BaseModel):
+    revisada: bool
+
+    model_config = ConfigDict(extra="forbid")
+
 
 class TallerGrupoOut(BaseModel):
     id: int

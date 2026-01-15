@@ -21,6 +21,7 @@ router = APIRouter(
 _WHITESPACE_RE = re.compile(r"\s+")
 _USE_PAYLOAD = object()
 _ZERO_TOLERANCE = Decimal("0.0001")
+_ALERTA_SUBCORTE_UMBRAL = Decimal("50")
 
 def _normalize_loss(value: Decimal) -> Decimal:
     return Decimal("0") if abs(value) < _ZERO_TOLERANCE else value
@@ -131,16 +132,30 @@ def _build_taller_from_payload(
     )
 
     detalles: list[models.TallerDetalle] = []
+    alertas: list[models.AlertaSubcorte] = []
     for det in payload.subcortes:
         detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
         detalle = models.TallerDetalle(
             codigo_producto=det.codigo_producto,
             nombre_subcorte=det.nombre_subcorte,
-            peso=Decimal(det.peso),
+            peso=peso_detalle,
             item_id=detalle_item_id,
         )
         detalles.append(detalle)
+        if porcentaje > _ALERTA_SUBCORTE_UMBRAL:
+            alertas.append(
+                models.AlertaSubcorte(
+                    sede=sede_registro,
+                    creado_por_id=current_user.id,
+                    nombre_subcorte=det.nombre_subcorte,
+                    codigo_producto=det.codigo_producto,
+                    peso=peso_detalle,
+                    porcentaje=porcentaje,
+                    porcentaje_umbral=_ALERTA_SUBCORTE_UMBRAL,
+                )
+            )
     taller.detalles = detalles
+    taller.alertas_subcorte = alertas
     return taller
 
 def _serialize_taller_data(taller: models.Taller) -> dict:
@@ -910,6 +925,12 @@ def actualizar_taller(
     nuevos_detalles: list[models.TallerDetalle] = []
     for det in payload.subcortes:
         detalle_item_id = det.item_id or _find_item_id_by_code(db, det.codigo_producto)
+        peso_detalle = Decimal(det.peso)
+        porcentaje = (
+            (peso_detalle / peso_inicial * Decimal("100"))
+            if peso_inicial > 0
+            else Decimal("0")
+        )
         detalle = models.TallerDetalle(
             codigo_producto=det.codigo_producto,
             nombre_subcorte=det.nombre_subcorte,

@@ -74,3 +74,32 @@ def apply_startup_migrations(engine: Engine) -> None:
                 "ON talleres(taller_grupo_id)"
             )
         )
+        conn.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS alertas_subcorte ("
+                "id SERIAL PRIMARY KEY, "
+                "taller_id INTEGER NOT NULL REFERENCES talleres(id), "
+                "sede TEXT, "
+                "creado_por_id INTEGER REFERENCES users(id), "
+                "nombre_subcorte TEXT, "
+                "codigo_producto TEXT, "
+                "peso NUMERIC(14,4), "
+                "porcentaje NUMERIC(14,4), "
+                "porcentaje_umbral NUMERIC(14,4), "
+                "revisada BOOLEAN DEFAULT FALSE, "
+                "creado_en TIMESTAMP DEFAULT NOW()"
+                ")"
+            )
+        )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_alertas_subcorte_sede "
+                "ON alertas_subcorte(sede)"
+            )
+        )
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_alertas_subcorte_taller_id "
+                "ON alertas_subcorte(taller_id)"
+            )
+        )

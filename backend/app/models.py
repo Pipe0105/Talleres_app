@@ -106,6 +106,11 @@ class Taller(Base):
         back_populates="taller",
         cascade="all, delete-orphan",
     )
+    alertas_subcorte = relationship(
+        "AlertaSubcorte",
+        back_populates="taller",
+        cascade="all, delete-orphan",
+    )
     grupo = relationship("TallerGrupo", back_populates="materiales")
 
 
@@ -139,3 +144,21 @@ class TallerDetalle(Base):
 
     taller = relationship("Taller", back_populates="detalles")
     
+
+
+class AlertaSubcorte(Base):
+    __tablename__ = "alertas_subcorte"
+
+    id = Column(Integer, primary_key=True)
+    taller_id = Column(Integer, ForeignKey("talleres.id"), nullable=False)
+    sede = Column(Text)
+    creado_por_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    nombre_subcorte = Column(Text)
+    codigo_producto = Column(Text)
+    peso = Column(Numeric(14, 4))
+    porcentaje = Column(Numeric(14, 4))
+    porcentaje_umbral = Column(Numeric(14, 4))
+    revisada = Column(Boolean, default=False)
+    creado_en = Column(DateTime, default=datetime.utcnow)
+
+    taller = relationship("Taller", back_populates="alertas_subcorte")
