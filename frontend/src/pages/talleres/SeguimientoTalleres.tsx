@@ -44,7 +44,12 @@ import { getItems, getTallerActividad, getTallerActividadDetalle } from "../../a
 import { TALLER_MATERIALES } from "../../data/talleres";
 import { TallerActividadUsuario, TallerResponse } from "../../types";
 
-const formatDateInput = (value: Date): string => value.toISOString().slice(0, 10);
+const pad2 = (value: number): string => value.toString().padStart(2, "0");
+
+const formatLocalDate = (value: Date): string =>
+  `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`;
+
+const formatDateInput = (value: Date): string => formatLocalDate(value);
 
 const startOfWeek = (): Date => {
   const now = new Date();
@@ -63,7 +68,7 @@ const endOfWeek = (start: Date): Date => {
 };
 
 const formatTableDay = (value: string): { label: string; helper: string } => {
-  const parsed = new Date(value);
+  const parsed = new Date(`${value}T00:00:00`);
   const label = parsed.toLocaleDateString("es-ES", {
     weekday: "short",
   });
@@ -84,7 +89,7 @@ const buildDateRange = (start: string, end: string): string[] => {
   }
 
   while (current <= limit) {
-    dates.push(current.toISOString().slice(0, 10));
+    dates.push(formatLocalDate(current));
     current.setDate(current.getDate() + 1);
   }
 
