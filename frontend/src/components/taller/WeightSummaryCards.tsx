@@ -17,9 +17,12 @@ const WeightSummaryCards = ({
   perdida,
   porcentajePerdida,
 }: WeightSummaryCardsProps) => {
+  const porcentajeActual =
+    hasPesoInicial && pesoInicial > 0 ? (totalProcesado / pesoInicial) * 100 : 0;
+
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={4}>
+      <Grid item xs={12} md={3}>
         <Card
           variant="outlined"
           sx={{
@@ -44,7 +47,7 @@ const WeightSummaryCards = ({
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid item xs={12} md={3}>
         <Card
           variant="outlined"
           sx={{
@@ -72,7 +75,7 @@ const WeightSummaryCards = ({
           </CardContent>
         </Card>
       </Grid>
-      <Grid item xs={12} md={4}>
+      <Grid item xs={12} md={3}>
         <Card
           variant="outlined"
           sx={{
@@ -95,6 +98,34 @@ const WeightSummaryCards = ({
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {formatPercent(porcentajePerdida)}% del peso inicial.
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <Card
+          variant="outlined"
+          sx={{
+            height: "100%",
+            borderRadius: 3,
+            bgcolor: "rgba(234, 179, 8, 0.05)",
+            borderColor: "rgba(234, 179, 8, 0.18)",
+          }}
+        >
+          <CardContent>
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Assessment fontSize="small" sx={{ color: "warning.main" }} />
+                <Typography sx={{ color: "warning.main" }} fontWeight={700}>
+                  Porcentaje actual
+                </Typography>
+              </Stack>
+              <Typography variant="h5" fontWeight={800} sx={{ color: "warning.main" }}>
+                {hasPesoInicial ? `${formatPercent(porcentajeActual)}%` : "—"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Del peso inicial.
               </Typography>
             </Stack>
           </CardContent>

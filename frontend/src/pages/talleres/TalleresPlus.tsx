@@ -19,7 +19,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { AddCircleOutline, CheckCircle, PlaylistAdd, SaveRounded } from "@mui/icons-material";
+import {
+  AddCircleOutline,
+  CheckCircle,
+  Close,
+  History,
+  PlaylistAdd,
+  SaveRounded,
+} from "@mui/icons-material";
 
 import { createTallerCompleto } from "../../api/talleresApi";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
@@ -30,6 +37,7 @@ import {
   getMaterialesPorEspecie,
 } from "../../data/talleres";
 import { useAuth } from "../../context/AuthContext";
+import HistorialTalleres from "./HistorialTalleres";
 
 import SelectableSubcorteCard from "../../components/taller/SelectableSubcorteCard";
 import WeightSummaryCards from "../../components/taller/WeightSummaryCards";
@@ -82,6 +90,7 @@ const TalleresPlus = () => {
   const [savingMaterial, setSavingMaterial] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
   const [negativeLossModal, setNegativeLossModal] = useState<null | string>(null);
+  const [historialOpen, setHistorialOpen] = useState(false);
 
   const { user } = useAuth();
   const isManager = Boolean(user?.is_admin || user?.is_gerente);
@@ -680,9 +689,25 @@ const TalleresPlus = () => {
                 }}
               >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-                    <PlaylistAdd color="primary" />
-                    <Typography fontWeight={800}>Materiales guardados</Typography>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                    mb={2}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <PlaylistAdd color="primary" />
+                      <Typography fontWeight={800}>Materiales guardados</Typography>
+                    </Stack>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<History />}
+                      onClick={() => setHistorialOpen(true)}
+                    >
+                      Ver historial
+                    </Button>
                   </Stack>
 
                   {!materialesGuardados.length ? (
@@ -773,6 +798,29 @@ const TalleresPlus = () => {
           </Grid>
         </Grid>
       </Stack>
+
+      <Dialog
+        open={historialOpen}
+        onClose={() => setHistorialOpen(false)}
+        fullWidth
+        maxWidth="xl"
+      >
+        <DialogTitle
+          sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+        >
+          <Typography fontWeight={700}>Historial de talleres</Typography>
+          <Button
+            onClick={() => setHistorialOpen(false)}
+            startIcon={<Close />}
+            color="inherit"
+          >
+            Cerrar
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+          <HistorialTalleres />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
