@@ -12,7 +12,12 @@ from ..security import get_password_hash
 router = APIRouter(prefix="/users", tags=["users"])
 
 def _is_operario(user: models.User) -> bool:
-    return not (user.is_admin or user.is_gerente or user.is_branch_admin)
+    return not (
+        user.is_admin
+        or user.is_gerente
+        or user.is_coordinator
+        or user.is_branch_admin
+    )
 
 @router.get("", response_model=List[AdminUserOut])
 def list_users(
@@ -44,7 +49,7 @@ def create_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El administrador de sede no tiene una sede asignada",
             )
-        if payload.is_admin or payload.is_gerente or payload.is_branch_admin:
+        if payload.is_admin or payload.is_gerente or payload.is_coordinator or payload.is_branch_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para asignar roles administrativos",
@@ -74,6 +79,7 @@ def create_user(
         is_active=payload.is_active,
         is_admin=payload.is_admin if current_admin.is_admin else False,
         is_gerente=payload.is_gerente if current_admin.is_admin else False,
+        is_coordinator=payload.is_coordinator if current_admin.is_admin else False,
         is_branch_admin=payload.is_branch_admin if current_admin.is_admin else False,
         sede=payload.sede if current_admin.is_admin else current_admin.sede,
     )
@@ -105,7 +111,7 @@ def update_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Solo puedes administrar usuarios operarios",
             )
-        if payload.is_admin or payload.is_gerente or payload.is_branch_admin:
+        if payload.is_admin or payload.is_gerente or payload.is_coordinator or payload.is_branch_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para modificar roles administrativos",
@@ -146,6 +152,7 @@ def update_user(
         is_active=payload.is_active,
         is_admin=payload.is_admin,
         is_gerente=payload.is_gerente,
+        is_coordinator=payload.is_coordinator,
         is_branch_admin=payload.is_branch_admin,
         sede=payload.sede,
     )

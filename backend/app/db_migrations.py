@@ -32,6 +32,12 @@ def apply_startup_migrations(engine: Engine) -> None:
         conn.execute(
             text(
                 "ALTER TABLE IF EXISTS users "
+                "ADD COLUMN IF NOT EXISTS is_coordinator BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
+        conn.execute(
+            text(
+                "ALTER TABLE IF EXISTS users "
                 "ADD COLUMN IF NOT EXISTS is_branch_admin BOOLEAN NOT NULL DEFAULT FALSE"
             )
         )

@@ -50,6 +50,7 @@ interface NewUserForm {
   fullName: string;
   isAdmin: boolean;
   isGerente: boolean;
+  isCoordinator: boolean;
   isBranchAdmin: boolean;
   isActive: boolean;
   sede: string;
@@ -62,6 +63,7 @@ interface EditUserForm {
   fullname: string;
   isAdmin: boolean;
   isGerente: boolean;
+  isCoordinator: boolean;
   isBranchAdmin: boolean;
   isActive: boolean;
   sede: string;
@@ -74,6 +76,7 @@ const INITIAL_FORM_STATE: NewUserForm = {
   fullName: "",
   isAdmin: false,
   isGerente: false,
+  isCoordinator: false,
   isBranchAdmin: false,
   isActive: true,
   sede: "",
@@ -198,6 +201,7 @@ const UsersAdmin = () => {
         is_admin: formState.isAdmin,
         is_active: formState.isActive,
         is_gerente: formState.isGerente,
+        is_coordinator: formState.isCoordinator,
         is_branch_admin: formState.isBranchAdmin,
         sede: normalizedSede || undefined,
       });
@@ -237,6 +241,7 @@ const UsersAdmin = () => {
       password: "",
       isAdmin: target.is_admin,
       isGerente: target.is_gerente,
+      isCoordinator: target.is_coordinator,
       isBranchAdmin: target.is_branch_admin,
       isActive: target.is_active,
       sede: target.sede ?? "",
@@ -282,6 +287,7 @@ const UsersAdmin = () => {
         is_admin: editForm.isAdmin,
         is_active: editForm.isActive,
         is_gerente: editForm.isGerente,
+        is_coordinator: editForm.isCoordinator,
         is_branch_admin: editForm.isBranchAdmin,
         sede: editForm.sede.trim() || undefined,
       });
@@ -332,13 +338,16 @@ const UsersAdmin = () => {
 
     const rolePriority = (user: UserProfile) => {
       if (user.is_admin) {
+        return 4;
+      }
+      if (user.is_gerente) {
         return 3;
+      }
+      if (user.is_coordinator) {
+        return 2;
       }
       if (user.is_branch_admin) {
         return 1;
-      }
-      if (user.is_gerente) {
-        return 2;
       }
       return 0;
     };
@@ -352,6 +361,8 @@ const UsersAdmin = () => {
         const matchesSede = !filters.sede || user.sede === filters.sede;
         const role = user.is_admin
           ? "admin"
+          : user.is_coordinator
+            ? "coordinator"
           : user.is_branch_admin
             ? "branch-admin"
             : user.is_gerente
@@ -477,6 +488,7 @@ const UsersAdmin = () => {
               >
                 <MenuItem value="">Todos los roles</MenuItem>
                 <MenuItem value="admin">Super administrador</MenuItem>
+                <MenuItem value="coordinator">Coordinador</MenuItem>
                 <MenuItem value="branch-admin">Administrador de sede</MenuItem>
                 <MenuItem value="gerente">Gerente</MenuItem>
                 <MenuItem value="operador">Operador</MenuItem>
@@ -519,6 +531,8 @@ const UsersAdmin = () => {
                         label={
                           user.is_admin
                             ? "Super administrador"
+                            : user.is_coordinator
+                              ? "Coordinador"
                             : user.is_branch_admin
                               ? "Administrador de sede"
                               : user.is_gerente
@@ -526,7 +540,7 @@ const UsersAdmin = () => {
                                 : "Operador"
                         }
                         color={
-                          user.is_admin || user.is_branch_admin
+                          user.is_admin || user.is_branch_admin || user.is_coordinator
                             ? "primary"
                             : user.is_gerente
                               ? "secondary"
@@ -763,6 +777,20 @@ const UsersAdmin = () => {
                   <FormControlLabel
                     control={
                       <Switch
+                        checked={formState.isCoordinator}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            isCoordinator: event.target.checked,
+                          }))
+                        }
+                      />
+                    }
+                    label="Asignar rol de coordinador"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
                         checked={formState.isAdmin}
                         onChange={(event) =>
                           setFormState((prev) => ({
@@ -916,6 +944,25 @@ const UsersAdmin = () => {
                       />
                     }
                     label="Rol de administrador de sede"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={editForm?.isCoordinator ?? false}
+                        onChange={(event) =>
+                          setEditForm((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  isCoordinator: event.target.checked,
+                                }
+                              : prev
+                          )
+                        }
+                        disabled={disableSelfManagement.has(editTarget?.id ?? "")}
+                      />
+                    }
+                    label="Rol de coordinador"
                   />
                   <FormControlLabel
                     control={

@@ -29,7 +29,7 @@ const ProtectedRoute = ({
     return <Navigate to={unauthorizedRedirectTo} replace />;
   }
 
-  if (requiresManager && !(user.is_admin || user.is_gerente)) {
+  if (requiresManager && !(user.is_admin || user.is_gerente || user.is_coordinator)) {
     return <Navigate to={unauthorizedRedirectTo} replace />;
   }
   if (requiresUserAdmin && !(user.is_admin || user.is_branch_admin)) {

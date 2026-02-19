@@ -109,17 +109,14 @@ class UserBase(BaseModel):
     @field_validator("sede")
     @classmethod
     def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
-        from .constants import BRANCH_LOCATIONS
+        from .constants import normalize_sede_name
 
         if value is None:
             return value
 
-        normalized = value.strip()
-        if not normalized:
-            return None
-
-        if normalized not in BRANCH_LOCATIONS:
-            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+        normalized = normalize_sede_name(value)
+        if value.strip() and normalized is None:
+            raise ValueError("La sede no es valida. Usa una de las sedes configuradas.")
 
         return normalized
 
@@ -138,6 +135,7 @@ class UserOut(UserBase):
     is_active: bool
     is_admin: bool
     is_gerente: bool
+    is_coordinator: bool
     is_branch_admin: bool
     creado_en: datetime
     actualizado_en: datetime
@@ -176,6 +174,7 @@ class UserAdminCreate(UserCreate):
     is_active: bool = True
     is_admin: bool = False
     is_gerente: bool = False
+    is_coordinator: bool = False
     is_branch_admin: bool = False
 
 
@@ -187,6 +186,7 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
     is_gerente: Optional[bool] = None
+    is_coordinator: Optional[bool] = None
     is_branch_admin: Optional[bool] = None
     sede: Optional[str] = None
     
@@ -212,17 +212,14 @@ class UserUpdate(BaseModel):
     @field_validator("sede")
     @classmethod
     def _validate_sede(cls, value: Optional[str]) -> Optional[str]:
-        from .constants import BRANCH_LOCATIONS
+        from .constants import normalize_sede_name
 
         if value is None:
             return value
 
-        normalized = value.strip()
-        if not normalized:
-            return None
-
-        if normalized not in BRANCH_LOCATIONS:
-            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+        normalized = normalize_sede_name(value)
+        if value.strip() and normalized is None:
+            raise ValueError("La sede no es valida. Usa una de las sedes configuradas.")
 
         return normalized
 
@@ -335,14 +332,11 @@ class TallerCreate(BaseModel):
         if value is None:
             return value
 
-        from .constants import BRANCH_LOCATIONS
+        from .constants import normalize_sede_name
 
-        normalized = value.strip()
-        if not normalized:
-            return None
-
-        if normalized not in BRANCH_LOCATIONS:
-            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+        normalized = normalize_sede_name(value)
+        if value.strip() and normalized is None:
+            raise ValueError("La sede no es valida. Usa una de las sedes configuradas.")
 
         return normalized
     
@@ -385,14 +379,11 @@ class TallerGrupoCreate(BaseModel):
         if value is None:
             return value
 
-        from .constants import BRANCH_LOCATIONS
+        from .constants import normalize_sede_name
 
-        normalized = value.strip()
-        if not normalized:
-            return None
-
-        if normalized not in BRANCH_LOCATIONS:
-            raise ValueError("La sede no es válida. Usa una de las sedes configuradas.")
+        normalized = normalize_sede_name(value)
+        if value.strip() and normalized is None:
+            raise ValueError("La sede no es valida. Usa una de las sedes configuradas.")
 
         return normalized
 
@@ -531,3 +522,6 @@ class InventarioItem(BaseModel):
     especie: str | None = None
     
     model_config = ConfigDict(from_attributes=True)
+
+
+

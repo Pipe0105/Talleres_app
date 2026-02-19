@@ -16,6 +16,8 @@ const UserProfile = () => {
   }
   const roleLabel = user.is_admin
     ? "Super administrador"
+    : user.is_coordinator
+      ? "Coordinador"
     : user.is_branch_admin
       ? "Administrador de sede"
       : user.is_gerente
@@ -130,13 +132,15 @@ const UserProfile = () => {
             <Chip
               label={roleLabel}
               color={
-                user.is_admin || user.is_gerente || user.is_branch_admin ? "primary" : "default"
+                user.is_admin || user.is_gerente || user.is_coordinator || user.is_branch_admin
+                  ? "primary"
+                  : "default"
               }
               sx={(theme) => ({
                 fontWeight: 700,
                 borderRadius: 1.5,
                 bgcolor:
-                  user.is_admin || user.is_gerente || user.is_branch_admin
+                  user.is_admin || user.is_gerente || user.is_coordinator || user.is_branch_admin
                     ? undefined
                     : alpha(theme.palette.text.primary, 0.04),
               })}
@@ -174,7 +178,7 @@ const UserProfile = () => {
         </Stack>
       </Paper>
 
-      {(user.is_admin || user.is_gerente || user.is_branch_admin) && (
+      {(user.is_admin || user.is_gerente || user.is_coordinator || user.is_branch_admin) && (
         <Paper
           sx={(theme) => ({
             p: { xs: 3, md: 4 },
@@ -207,6 +211,8 @@ const UserProfile = () => {
                 label={
                   user.is_admin
                     ? "Super administradores"
+                    : user.is_coordinator
+                      ? "Coordinadores"
                     : user.is_branch_admin
                       ? "Administradores de sede"
                       : "Gerentes"
@@ -280,7 +286,9 @@ const UserProfile = () => {
               <Chip
                 label={roleLabel}
                 color={
-                  user.is_admin || user.is_gerente || user.is_branch_admin ? "primary" : "default"
+                  user.is_admin || user.is_gerente || user.is_coordinator || user.is_branch_admin
+                    ? "primary"
+                    : "default"
                 }
                 variant="outlined"
                 sx={{ fontWeight: 700 }}

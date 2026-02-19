@@ -93,7 +93,7 @@ const TalleresPlus = () => {
   const [historialOpen, setHistorialOpen] = useState(false);
 
   const { user } = useAuth();
-  const isManager = Boolean(user?.is_admin || user?.is_gerente);
+  const isManager = Boolean(user?.is_admin || user?.is_gerente || user?.is_coordinator);
 
   useEffect(() => {
     if (!isManager && user?.sede) {

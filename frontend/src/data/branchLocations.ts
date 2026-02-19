@@ -1,5 +1,5 @@
 export const BRANCH_LOCATIONS = [
-  "Ciudad Jardín",
+  "Ciudad Jardin",
   "Calle 5ta",
   "La 39",
   "Centro Sur",
@@ -8,6 +8,6 @@ export const BRANCH_LOCATIONS = [
   "Floralia",
   "Guaduales",
   "Palmira",
-  "Bogotá",
+  "Bogota",
   "Chia",
 ];

@@ -54,6 +54,7 @@ def create_user(
     is_active: bool = True,
     is_admin: bool = False,
     is_gerente: bool = False,
+    is_coordinator: bool = False,
     is_branch_admin: bool = False,
     sede: Optional[str] = None,
 ) -> models.User:
@@ -68,6 +69,7 @@ def create_user(
         is_active = is_active,
         is_admin = is_admin,
         is_gerente=is_gerente,
+        is_coordinator=is_coordinator,
         is_branch_admin=is_branch_admin,
         sede=sede,
     )
@@ -86,6 +88,7 @@ def list_operarios_by_sede(db: Session, sede: str) -> list[models.User]:
             models.User.sede == sede,
             models.User.is_admin.is_(False),
             models.User.is_gerente.is_(False),
+            models.User.is_coordinator.is_(False),
             models.User.is_branch_admin.is_(False),
         )
         .order_by(models.User.creado_en.desc())
@@ -112,6 +115,7 @@ def update_user(
     is_active: Optional[bool] = None,
     is_admin: Optional[bool] = None,
     is_gerente: Optional[bool] = None,
+    is_coordinator: Optional[bool] = None,
     is_branch_admin: Optional[bool] = None,
     sede: Optional[str] = None,
 ) -> models.User:
@@ -132,6 +136,8 @@ def update_user(
         
     if is_gerente is not None:
         user.is_gerente = is_gerente
+    if is_coordinator is not None:
+        user.is_coordinator = is_coordinator
     if is_branch_admin is not None:
         user.is_branch_admin = is_branch_admin
     if sede is not None:

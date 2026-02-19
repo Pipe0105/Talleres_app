@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 from typing import List
 from dotenv import load_dotenv
 
-load_dotenv()
+ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(dotenv_path=ENV_PATH)
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 

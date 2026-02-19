@@ -148,7 +148,7 @@ const Home = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useAuth();
-  const isAdmin = Boolean(user?.is_admin || user?.is_gerente);
+  const isAdmin = Boolean(user?.is_admin || user?.is_gerente || user?.is_coordinator);
 
   const [talleres, setTalleres] = useState<TallerGrupoListItem[]>([]);
   const [loadingTalleres, setLoadingTalleres] = useState(false);
@@ -374,14 +374,14 @@ const Home = () => {
         return Boolean(user?.is_admin);
       }
       if (action.requiresManager) {
-        return Boolean(user?.is_admin || user?.is_gerente);
+        return Boolean(user?.is_admin || user?.is_gerente || user?.is_coordinator);
       }
       if (action.requiresUserAdmin) {
         return Boolean(user?.is_admin || user?.is_branch_admin);
       }
       return true;
     });
-  }, [user?.is_admin, user?.is_branch_admin, user?.is_gerente]);
+  }, [user?.is_admin, user?.is_branch_admin, user?.is_coordinator, user?.is_gerente]);
 
   const QuickActionsPanel = ({ actions }: { actions: QuickAction[] }) => (
     <Card

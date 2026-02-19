@@ -68,9 +68,9 @@ def get_current_user_admin(
 def get_current_manager_user(
     current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:
-    if not (current_user.is_admin or current_user.is_gerente):
+    if not (current_user.is_admin or current_user.is_gerente or current_user.is_coordinator):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requieren permisos de gerente o super administrador",
+            detail="Se requieren permisos de coordinador, gerente o super administrador",
         )
     return current_user

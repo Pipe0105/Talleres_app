@@ -207,6 +207,7 @@ const mapUser = (raw: any): UserProfile => ({
   is_active: toBoolean(raw?.is_active, true),
   is_admin: toBoolean(raw?.is_admin, false),
   is_gerente: toBoolean(raw?.is_gerente, false),
+  is_coordinator: toBoolean(raw?.is_coordinator, false),
   is_branch_admin: toBoolean(raw?.is_branch_admin, false),
   sede: raw?.sede ?? null,
   creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
@@ -489,6 +490,7 @@ export interface AdminCreateUserPayload extends RegisterUserPayload {
   is_admin?: boolean;
   is_active?: boolean;
   is_gerente?: boolean;
+  is_coordinator?: boolean;
   is_branch_admin?: boolean;
   sede?: string;
 }
@@ -511,6 +513,7 @@ export interface AdminUpdateUserPayload {
   is_active?: boolean;
   is_admin?: boolean;
   is_gerente?: boolean;
+  is_coordinator?: boolean;
   is_branch_admin?: boolean;
   sede?: string;
 }

@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -9,6 +10,7 @@ from ..schemas import Token, UserCreate, UserOut
 from ..security import create_access_token, get_password_hash, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)) -> UserOut:
@@ -46,7 +48,14 @@ def login_for_access_token(
     db: Session = Depends(get_db),
 ) -> Token:
     user = crud.get_user_by_identifier(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user:
+        logger.warning("Login failed: user not found (%s)", form_data.username)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="credenciales incorrectas",
+        )
+    if not verify_password(form_data.password, user.hashed_password):
+        logger.warning("Login failed: invalid password (user_id=%s)", user.id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="credenciales incorrectas",

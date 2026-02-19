@@ -58,7 +58,7 @@ const CreateTaller = () => {
   const [sede, setSede] = useState<string>("");
 
   const { user } = useAuth();
-  const isManager = Boolean(user?.is_admin || user?.is_gerente);
+  const isManager = Boolean(user?.is_admin || user?.is_gerente || user?.is_coordinator);
 
   useEffect(() => {
     if (!isManager && user?.sede) {
