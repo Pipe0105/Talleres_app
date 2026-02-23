@@ -48,6 +48,7 @@ import {
   normalizeZero,
   parseWeightInput,
 } from "../../utils/weights";
+import { safeStorage } from "../../utils/storage";
 
 interface TallerPlusMaterial {
   id: string;
@@ -71,6 +72,9 @@ const buildId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const getMaterialesStorageKey = (userId?: string) =>
+  `talleres.plus.materialesGuardados.${userId || "anon"}`;
+
 const TalleresPlus = () => {
   const [especie, setEspecie] = useState<Especie | "">("");
   const [codigoMaterial, setCodigoMaterial] = useState<string>("");
@@ -91,6 +95,7 @@ const TalleresPlus = () => {
   const [savingBatch, setSavingBatch] = useState(false);
   const [negativeLossModal, setNegativeLossModal] = useState<null | string>(null);
   const [historialOpen, setHistorialOpen] = useState(false);
+  const [storageHydrated, setStorageHydrated] = useState(false);
 
   const { user } = useAuth();
   const isManager = Boolean(user?.is_admin || user?.is_gerente || user?.is_coordinator);
@@ -100,6 +105,46 @@ const TalleresPlus = () => {
       setSede(user.sede);
     }
   }, [isManager, user?.sede]);
+
+  useEffect(() => {
+    setStorageHydrated(false);
+    const storageKey = getMaterialesStorageKey(user?.id);
+    const fallbackKey = getMaterialesStorageKey();
+    const saved = safeStorage.getItem(storageKey) ?? safeStorage.getItem(fallbackKey);
+
+    if (!saved) {
+      setMaterialesGuardados([]);
+      setStorageHydrated(true);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) {
+        setMaterialesGuardados([]);
+        setStorageHydrated(true);
+        return;
+      }
+      setMaterialesGuardados(parsed as TallerPlusMaterial[]);
+    } catch (error) {
+      console.warn("No se pudieron restaurar los materiales guardados de Talleres+.", error);
+      setMaterialesGuardados([]);
+    } finally {
+      setStorageHydrated(true);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!storageHydrated) {
+      return;
+    }
+    const storageKey = getMaterialesStorageKey(user?.id);
+    if (!materialesGuardados.length) {
+      safeStorage.removeItem(storageKey);
+      return;
+    }
+    safeStorage.setItem(storageKey, JSON.stringify(materialesGuardados));
+  }, [materialesGuardados, storageHydrated, user?.id]);
 
   const materiales = useMemo(() => {
     if (!especie) return [];

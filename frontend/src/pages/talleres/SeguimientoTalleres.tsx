@@ -29,6 +29,8 @@ import {
   TableHead,
   TableRow,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -123,7 +125,18 @@ const formatDateTime = (value: string): string =>
     minute: "2-digit",
   });
 
-const formatTallerId = (id: number): string => id.toString().padStart(2, "0");
+const formatTallerId = (id: number): string => id.toString().padStart(3, "0");
+
+const formatEspecieLabel = (value: string | null | undefined): string => {
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "res") {
+    return "Res";
+  }
+  if (normalized === "cerdo") {
+    return "Cerdo";
+  }
+  return "Sin tipo";
+};
 
 const pesoFormatter = new Intl.NumberFormat("es-CO", {
   minimumFractionDigits: 0,
@@ -151,6 +164,55 @@ const normalizeSede = (value: string | null | undefined): string =>
   (value ?? "").trim().toLowerCase();
 
 type ActividadFilter = "todos" | "con" | "sin";
+type EspecieSeguimiento = "res" | "cerdo";
+
+interface HeatmapCellStyle {
+  label: string;
+  helper: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+}
+
+const getHeatmapCellStyle = (cantidad: number): HeatmapCellStyle => {
+  if (cantidad <= 0) {
+    return {
+      label: "Sin registro",
+      helper: "0 en el dia",
+      bgColor: "#ffebee",
+      textColor: "#b71c1c",
+      borderColor: "#ef9a9a",
+    };
+  }
+
+  if (cantidad <= 2) {
+    return {
+      label: "Bajo",
+      helper: `${cantidad} en el dia`,
+      bgColor: "#fff3e0",
+      textColor: "#e65100",
+      borderColor: "#ffb74d",
+    };
+  }
+
+  if (cantidad <= 4) {
+    return {
+      label: "Medio",
+      helper: `${cantidad} en el dia`,
+      bgColor: "#fffde7",
+      textColor: "#f57f17",
+      borderColor: "#fff176",
+    };
+  }
+
+  return {
+    label: "Alto",
+    helper: `${cantidad} en el dia`,
+    bgColor: "#e8f5e9",
+    textColor: "#1b5e20",
+    borderColor: "#81c784",
+  };
+};
 
 const SeguimientoTalleres = () => {
   const [startDate, setStartDate] = useState<string>(() => formatDateInput(startOfWeek()));
@@ -160,6 +222,7 @@ const SeguimientoTalleres = () => {
   const [error, setError] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedEspecie, setSelectedEspecie] = useState<EspecieSeguimiento>("res");
   const [selectedSedes, setSelectedSedes] = useState<string[]>([]);
   const [actividadFilter, setActividadFilter] = useState<ActividadFilter>("todos");
   const [principalNames, setPrincipalNames] = useState<Record<string, string>>({});
@@ -171,6 +234,7 @@ const SeguimientoTalleres = () => {
     loading: false,
     error: null,
   });
+  const especieSeleccionadaLabel = selectedEspecie === "res" ? "Res" : "Cerdo";
 
   const displayedDates = useMemo(() => buildDateRange(startDate, endDate), [startDate, endDate]);
 
@@ -265,6 +329,7 @@ const SeguimientoTalleres = () => {
       const data = await getTallerActividad({
         startDate,
         endDate,
+        especie: selectedEspecie,
       });
       setActividad(data);
     } catch (err) {
@@ -273,7 +338,7 @@ const SeguimientoTalleres = () => {
     } finally {
       setLoading(false);
     }
-  }, [endDate, startDate]);
+  }, [endDate, selectedEspecie, startDate]);
 
   const resetToCurrentWeek = () => {
     const start = startOfWeek();
@@ -362,9 +427,14 @@ const SeguimientoTalleres = () => {
       const data = await getTallerActividadDetalle({
         userId: usuario.user_id,
         fecha,
+        especie: selectedEspecie ?? undefined,
       });
       const usuarioSede = normalizeSede(usuario.sede);
-      const talleresFiltrados = data.filter((taller) => normalizeSede(taller.sede) === usuarioSede);
+      const talleresFiltrados = data.filter(
+        (taller) =>
+          normalizeSede(taller.sede) === usuarioSede &&
+          (!selectedEspecie || (taller.especie ?? "").trim().toLowerCase() === selectedEspecie)
+      );
       setDetalleDia((prev) => ({ ...prev, talleres: talleresFiltrados }));
     } catch (err) {
       console.error(err);
@@ -435,6 +505,7 @@ const SeguimientoTalleres = () => {
                   const actividadDia =
                     usuario.dias.find((dia) => dia.fecha === fecha) ??
                     ({ fecha, cantidad: 0 } as const);
+                  const heatmap = getHeatmapCellStyle(actividadDia.cantidad);
                   const hasRegistro = actividadDia.cantidad > 0;
                   return (
                     <TableCell key={fecha} align="center">
@@ -452,17 +523,15 @@ const SeguimientoTalleres = () => {
                           }
                         }}
                         sx={(theme) => ({
-                          bgcolor: hasRegistro ? "success.light" : "grey.100",
-                          color: hasRegistro ? "success.contrastText" : "text.secondary",
+                          bgcolor: heatmap.bgColor,
+                          color: heatmap.textColor,
                           borderRadius: 1,
                           px: { xs: 0.75, sm: 1 },
                           py: { xs: 0.75, sm: 1 },
-                          border: `1px solid ${
-                            hasRegistro ? theme.palette.success.main : theme.palette.grey[200]
-                          }`,
+                          border: `1px solid ${heatmap.borderColor}`,
                           cursor: "pointer",
                           transition: "transform 150ms ease, box-shadow 150ms ease",
-                          boxShadow: hasRegistro ? "0 1px 6px rgba(0,0,0,0.12)" : undefined,
+                          boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
                           "&:hover": {
                             transform: "translateY(-1px)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
@@ -475,10 +544,10 @@ const SeguimientoTalleres = () => {
                         })}
                       >
                         <Typography variant="subtitle2" display="block">
-                          {hasRegistro ? "Con taller" : "Sin registro"}
+                          {heatmap.label}
                         </Typography>
                         <Typography variant="caption" display="block">
-                          {hasRegistro ? `${actividadDia.cantidad} en el día` : "—"}
+                          {heatmap.helper}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -589,18 +658,18 @@ const SeguimientoTalleres = () => {
       displayedDates.forEach((fecha, columnIndex) => {
         const actividadDia =
           usuario.dias.find((dia) => dia.fecha === fecha) ?? ({ fecha, cantidad: 0 } as const);
-        const hasRegistro = actividadDia.cantidad > 0;
+        const heatmap = getHeatmapCellStyle(actividadDia.cantidad);
         const x = leftColumnWidth + columnIndex * cellWidth;
 
-        ctx.fillStyle = hasRegistro ? "#e8f5e9" : "#f5f5f5";
+        ctx.fillStyle = heatmap.bgColor;
         ctx.fillRect(x, y, cellWidth, rowHeight);
         ctx.strokeRect(x, y, cellWidth, rowHeight);
 
-        ctx.fillStyle = hasRegistro ? "#2e7d32" : "#616161";
+        ctx.fillStyle = heatmap.textColor;
         ctx.font = "13px Inter, Arial, sans-serif";
-        ctx.fillText(hasRegistro ? "Con taller" : "Sin registro", x + 12, y + 26);
+        ctx.fillText(heatmap.label, x + 12, y + 26);
         ctx.font = "11px Inter, Arial, sans-serif";
-        ctx.fillText(hasRegistro ? `${actividadDia.cantidad} en el día` : "—", x + 12, y + 44);
+        ctx.fillText(heatmap.helper, x + 12, y + 44);
       });
     });
 
@@ -619,7 +688,8 @@ const SeguimientoTalleres = () => {
     }
 
     const link = document.createElement("a");
-    link.download = `seguimiento-talleres-${startDate}_a_${endDate}.png`;
+    const especieSuffix = selectedEspecie ? `-${selectedEspecie}` : "";
+    link.download = `seguimiento-talleres${especieSuffix}-${startDate}_a_${endDate}.png`;
     link.href = dataUrl;
     link.click();
   };
@@ -627,7 +697,7 @@ const SeguimientoTalleres = () => {
   return (
     <Stack spacing={3} className="animate-fade-up">
       <PageHeader
-        title="Seguimiento de talleres"
+        title={`Seguimiento de talleres · ${especieSeleccionadaLabel}`}
         description="Visualiza qué sedes registran talleres cada día y detecta rápidamente las que no tienen actividad."
       />
 
@@ -676,7 +746,37 @@ const SeguimientoTalleres = () => {
               inputProps={{ "aria-label": "Fecha final del rango de seguimiento" }}
               sx={{ minWidth: 200 }}
             />
-            <Button variant="contained" type="submit" disabled={loading || !displayedDates.length}>
+            <Box sx={{ minWidth: 220 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.75 }}>
+                Especie
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                value={selectedEspecie}
+                size="small"
+                aria-label="Seleccionar especie para seguimiento"
+                onChange={(_, value: EspecieSeguimiento | null) => {
+                  if (!value) {
+                    return;
+                  }
+                  setSelectedEspecie(value);
+                  setIsModalOpen(false);
+                  closeDetalleDia();
+                }}
+              >
+                <ToggleButton value="res" aria-label="Seguimiento de res">
+                  Res
+                </ToggleButton>
+                <ToggleButton value="cerdo" aria-label="Seguimiento de cerdo">
+                  Cerdo
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={loading || !displayedDates.length}
+            >
               {loading ? "Cargando..." : "Aplicar filtro"}
             </Button>
           </Stack>
@@ -749,6 +849,20 @@ const SeguimientoTalleres = () => {
               <MenuItem value="sin">Sin talleres</MenuItem>
             </TextField>
           </Stack>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mb: 2 }}
+            alignItems={{ sm: "center" }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              Mapa de calor:
+            </Typography>
+            <Chip size="small" label="0: Rojo" sx={{ bgcolor: "#ffebee", color: "#b71c1c" }} />
+            <Chip size="small" label="1-2: Naranja" sx={{ bgcolor: "#fff3e0", color: "#e65100" }} />
+            <Chip size="small" label="3-4: Amarillo" sx={{ bgcolor: "#fffde7", color: "#f57f17" }} />
+            <Chip size="small" label="5+: Verde" sx={{ bgcolor: "#e8f5e9", color: "#1b5e20" }} />
+          </Stack>
           {renderTable()}
           {downloadError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -767,7 +881,7 @@ const SeguimientoTalleres = () => {
                 : ""}
             </Typography>
             <Typography variant="h6">
-              Talleres del {formatFriendlyDate(detalleDia.fecha)}
+              Talleres de {especieSeleccionadaLabel} del {formatFriendlyDate(detalleDia.fecha)}
             </Typography>
           </Box>
           <Button
@@ -885,7 +999,9 @@ const SeguimientoTalleres = () => {
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                           Taller completo:{" "}
-                                          {formatTallerId(taller.taller_grupo_id ?? taller.id)}
+                                          {`TL-${formatTallerId(taller.taller_grupo_id ?? taller.id)} · ${formatEspecieLabel(
+                                            taller.especie
+                                          )}`}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                           Creado el {formatDateTime(taller.creado_en)}

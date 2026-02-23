@@ -65,7 +65,7 @@ def _resolve_sede_registro(
 def _format_taller_nombre(sede: Optional[str], especie: str, consecutivo: int) -> str:
     sede_label = (sede or "Sin sede").strip() or "Sin sede"
     especie_label = "Res" if especie.strip().lower() == "res" else "Cerdo"
-    return f"Taller {sede_label} {especie_label} {consecutivo:02d}"
+    return f"{consecutivo:03d} - Taller {especie_label} {sede_label}"
 
 def _count_talleres_por_sede_especie(
     db: Session, sede: Optional[str], especie: str
@@ -734,20 +734,33 @@ def obtener_detalle_actividad(
     *,
     userId: int,
     fecha: date,
+    especie: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
     start_dt = datetime.combine(fecha, datetime.min.time())
     end_dt = datetime.combine(fecha + timedelta(days=1), datetime.min.time())
 
-    talleres = (
+    especie_normalizada: Optional[str] = None
+    if especie:
+        especie_normalizada = especie.strip().lower()
+        if especie_normalizada not in {"res", "cerdo"}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La especie debe ser res o cerdo",
+            )
+
+    query = (
         db.query(models.Taller)
         .filter(models.Taller.creado_por_id == userId)
         .filter(models.Taller.creado_en >= start_dt)
         .filter(models.Taller.creado_en < end_dt)
-        .order_by(models.Taller.creado_en.asc())
-        .all()
     )
+
+    if especie_normalizada:
+        query = query.filter(func.lower(models.Taller.especie) == especie_normalizada)
+
+    talleres = query.order_by(models.Taller.creado_en.asc()).all()
 
     return [_serialize_taller(taller) for taller in talleres]
 
@@ -757,6 +770,7 @@ def obtener_actividad_talleres(
     *,
     startDate: date,
     endDate: date,
+    especie: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
@@ -765,6 +779,15 @@ def obtener_actividad_talleres(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El rango de fechas es invalido",
         )
+
+    especie_normalizada: Optional[str] = None
+    if especie:
+        especie_normalizada = especie.strip().lower()
+        if especie_normalizada not in {"res", "cerdo"}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La especie debe ser res o cerdo",
+            )
         
     def _normalizar_sede(value: Optional[str]) -> Optional[str]:
         if value is None:
@@ -804,7 +827,7 @@ def obtener_actividad_talleres(
     taller_completo_id = func.coalesce(models.Taller.taller_grupo_id, models.Taller.id)
 
         
-    rows = (
+    rows_query = (
         db.query(
             models.User.id.label("user_id"),
             sede_resuelta.label("sede"),
@@ -816,7 +839,15 @@ def obtener_actividad_talleres(
         .filter(models.Taller.creado_en < end_dt)
         .filter(models.User.is_active.is_(True))
         .filter(sede_resuelta.isnot(None))
-        .group_by(
+    )
+
+    if especie_normalizada:
+        rows_query = rows_query.filter(
+            func.lower(models.Taller.especie) == especie_normalizada
+        )
+
+    rows = (
+        rows_query.group_by(
             models.User.id,
             sede_resuelta,
             func.date(models.Taller.creado_en),

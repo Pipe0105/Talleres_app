@@ -591,13 +591,18 @@ export const adminDeleteTallerGrupo = async (tallerGrupoId: string | number): Pr
 export interface GetTallerActividadParams {
   startDate: string;
   endDate: string;
+  especie?: string;
 }
 
 export const getTallerActividad = async (
   params: GetTallerActividadParams
 ): Promise<TallerActividadUsuario[]> => {
   const { data } = await api.get<unknown[]>("/talleres/actividad", {
-    params,
+    params: {
+      startDate: params.startDate,
+      endDate: params.endDate,
+      especie: params.especie || undefined,
+    },
   });
 
   return (Array.isArray(data) ? data : []).map(mapTallerActividadUsuario);
@@ -606,9 +611,14 @@ export const getTallerActividad = async (
 export const getTallerActividadDetalle = async (params: {
   userId: number;
   fecha: string;
+  especie?: string;
 }): Promise<TallerResponse[]> => {
   const { data } = await api.get<unknown[]>("/talleres/actividad/detalle", {
-    params,
+    params: {
+      userId: params.userId,
+      fecha: params.fecha,
+      especie: params.especie || undefined,
+    },
   });
 
   return (Array.isArray(data) ? data : []).map(mapTaller);
