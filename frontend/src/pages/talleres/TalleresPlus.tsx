@@ -684,7 +684,7 @@ const TalleresPlus = () => {
 
                           <Box>
                             <Typography variant="subtitle1" fontWeight={700} color="error">
-                              Pérdida: {formatKg(perdida)} kg ({formatPercent(porcentajePerdida)}%)
+                              Pérdida: {formatKg(-Math.abs(perdida))} kg ({formatPercent(-Math.abs(porcentajePerdida))}%)
                             </Typography>
                             <Typography color="text.secondary">
                               Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}
@@ -785,8 +785,8 @@ const TalleresPlus = () => {
                               </Stack>
                               <Typography variant="body2" color="text.secondary">
                                 {material.subcortes.length} subcorte(s) · Pérdida:{" "}
-                                {formatKg(material.perdida)} kg (
-                                {formatPercent(material.porcentajePerdida)}%)
+                                {formatKg(-Math.abs(material.perdida))} kg (
+                                {formatPercent(-Math.abs(material.porcentajePerdida))}%)
                               </Typography>
                               <Stack direction="row" spacing={1} flexWrap="wrap">
                                 <Chip

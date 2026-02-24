@@ -612,7 +612,7 @@ const CreateTaller = () => {
 
                       <Box>
                         <Typography variant="subtitle1" fontWeight={700} color="error">
-                          Pérdida: {formatKg(perdida)} kg ({formatPercent(porcentajePerdida)}%)
+                          Pérdida: {formatKg(-Math.abs(perdida))} kg ({formatPercent(-Math.abs(porcentajePerdida))}%)
                         </Typography>
                         <Typography color="text.secondary">
                           Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}

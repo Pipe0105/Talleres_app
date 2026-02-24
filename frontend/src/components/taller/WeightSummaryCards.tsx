@@ -19,6 +19,8 @@ const WeightSummaryCards = ({
 }: WeightSummaryCardsProps) => {
   const porcentajeActual =
     hasPesoInicial && pesoInicial > 0 ? (totalProcesado / pesoInicial) * 100 : 0;
+  const perdidaMostrada = -Math.abs(perdida);
+  const porcentajePerdidaMostrado = -Math.abs(porcentajePerdida);
 
   return (
     <Grid container spacing={2}>
@@ -94,10 +96,10 @@ const WeightSummaryCards = ({
                 </Typography>
               </Stack>
               <Typography variant="h5" fontWeight={800} color="error">
-                {formatKg(perdida)} kg
+                {formatKg(perdidaMostrada)} kg
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {formatPercent(porcentajePerdida)}% del peso inicial.
+                {formatPercent(porcentajePerdidaMostrado)}% del peso inicial.
               </Typography>
             </Stack>
           </CardContent>
