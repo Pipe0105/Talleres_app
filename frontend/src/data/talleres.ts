@@ -786,10 +786,46 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
 
 const SUBCORTES_INACTIVOS = new Set(["5815"]);
 
-export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.map((material) => ({
-  ...material,
-  subcortes: material.subcortes.filter((subcorte) => !SUBCORTES_INACTIVOS.has(subcorte.codigo)),
-}));
+const MATERIAL_PREFIX_REGEX = /^C\/(RES|CERDO)\s+/i;
+
+const toTitleCase = (value: string) =>
+  value
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const buildNormalSubcorteName = (materialNombre: string) => {
+  const corteBase = materialNombre.replace(MATERIAL_PREFIX_REGEX, "").trim();
+  if (!corteBase) return "Corte Normal";
+  if (/normal/i.test(corteBase)) return toTitleCase(corteBase);
+  return `${toTitleCase(corteBase)} Normal`;
+};
+
+const getCorteBaseSinPP = (nombre: string) => nombre.replace(/\s+PP$/i, "").trim();
+
+export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.map((material) => {
+  let subcortes = material.subcortes;
+
+  if (/\s+PP$/i.test(material.nombre)) {
+    const nombreBase = getCorteBaseSinPP(material.nombre);
+    const materialBase = BASE_TALLER_MATERIALES.find(
+      (item) => item.especie === material.especie && item.nombre.toLowerCase() === nombreBase.toLowerCase()
+    );
+
+    if (materialBase) {
+      subcortes = withUniqueSubcortes(subcortes, [
+        { codigo: materialBase.codigo, nombre: buildNormalSubcorteName(materialBase.nombre) },
+      ]);
+    }
+  }
+
+  return {
+    ...material,
+    subcortes: subcortes.filter((subcorte) => !SUBCORTES_INACTIVOS.has(subcorte.codigo)),
+  };
+});
 
 export const getMaterialesPorEspecie = (especie: Especie) =>
   TALLER_MATERIALES.filter((material) => material.especie === especie);
