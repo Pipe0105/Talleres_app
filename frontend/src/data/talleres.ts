@@ -353,7 +353,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "7758", nombre: "Costilla Especial" },
         { codigo: "31682", nombre: "Merma" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "10251", nombre: "Costilla Especials" },
       ]
     ),
   },
@@ -369,7 +369,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "31783", nombre: "Picada" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "5810", nombre: "Lomo" },
       ]
     ),
   },
@@ -387,7 +387,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "37183", nombre: "Picada" },
         { codigo: "30029", nombre: "Tocino" },
         { codigo: "7860", nombre: "Garra" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "35164", nombre: "Pernil de cerdo" },
       ]
     ),
   },
@@ -404,7 +404,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "5828", nombre: "Molida" },
         { codigo: "10358", nombre: "Pernil" },
       ]
     ),
@@ -726,7 +726,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "7758", nombre: "Costilla Especial" },
         { codigo: "31682", nombre: "Merma" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "10251", nombre: "Costilla Especials" },
       ]
     ),
   },
@@ -742,7 +742,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "31783", nombre: "Picada" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "5810", nombre: "Lomo" },
       ]
     ),
   },
@@ -760,7 +760,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "37183", nombre: "Picada" },
         { codigo: "30029", nombre: "Tocino" },
         { codigo: "7860", nombre: "Garra" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "35164", nombre: "Pernil de cerdo" },
       ]
     ),
   },
@@ -777,25 +777,19 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
-        { codigo: "5815", nombre: "Molida" },
+        { codigo: "5828", nombre: "Molida" },
         { codigo: "10358", nombre: "Pernil" },
       ]
     ),
   },
 ];
 
-const SUBCORTES_INACTIVOS_RES = new Set(["5815"]);
+const SUBCORTES_INACTIVOS = new Set(["5815"]);
 
-export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.map((material) => {
-  if (material.especie !== "res") {
-    return material;
-  }
-
-  return {
-    ...material,
-    subcortes: material.subcortes.filter((subcorte) => !SUBCORTES_INACTIVOS_RES.has(subcorte.codigo)),
-  };
-});
+export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.map((material) => ({
+  ...material,
+  subcortes: material.subcortes.filter((subcorte) => !SUBCORTES_INACTIVOS.has(subcorte.codigo)),
+}));
 
 export const getMaterialesPorEspecie = (especie: Especie) =>
   TALLER_MATERIALES.filter((material) => material.especie === especie);
