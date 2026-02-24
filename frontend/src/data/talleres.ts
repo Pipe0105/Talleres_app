@@ -22,7 +22,7 @@ export interface MaterialDefinition {
   subcortes: SubcorteDefinition[];
 }
 
-export const TALLER_MATERIALES: MaterialDefinition[] = [
+const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
   {
     especie: "res",
     codigo: "73617",
@@ -90,6 +90,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
         { codigo: "70165", nombre: "Costichi" },
+        { codigo: "6415", nombre: "Costilla Normal" },
       ],
       [{ codigo: "5815", nombre: "Molida Normal" }]
     ),
@@ -102,6 +103,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
+        { codigo: "5834", nombre: "Espaldilla Normal" },
         { codigo: "33643", nombre: "Espaldilla Especial" },
       ],
       [
@@ -169,6 +171,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
+        { codigo: "20182", nombre: "Muchacho Normal" },
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
@@ -472,6 +475,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
         { codigo: "70165", nombre: "Costichi" },
+        { codigo: "6415", nombre: "Costilla Normal" },
       ],
       [{ codigo: "5815", nombre: "Molida Normal" }]
     ),
@@ -484,6 +488,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
+        { codigo: "5834", nombre: "Espaldilla Normal" },
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
@@ -499,6 +504,7 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
+        { codigo: "20182", nombre: "Muchacho Normal" },
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
@@ -777,6 +783,19 @@ export const TALLER_MATERIALES: MaterialDefinition[] = [
     ),
   },
 ];
+
+const SUBCORTES_INACTIVOS_RES = new Set(["5815"]);
+
+export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.map((material) => {
+  if (material.especie !== "res") {
+    return material;
+  }
+
+  return {
+    ...material,
+    subcortes: material.subcortes.filter((subcorte) => !SUBCORTES_INACTIVOS_RES.has(subcorte.codigo)),
+  };
+});
 
 export const getMaterialesPorEspecie = (especie: Especie) =>
   TALLER_MATERIALES.filter((material) => material.especie === especie);
