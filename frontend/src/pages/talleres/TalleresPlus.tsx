@@ -171,6 +171,9 @@ const TalleresPlus = () => {
   const totalSubcortes = subcortesActivos.reduce((acc, sc) => {
     return acc + parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
   }, 0);
+  const allSubcortesWithPositiveWeight =
+    subcortesActivos.length > 0 &&
+    subcortesActivos.every((sc) => parseWeightInput(subcortesPesos[sc.codigo] ?? "0") > 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
   const perdida = pesoInicialNumero > 0 ? normalizeZero(pesoInicialNumero - totalProcesado) : 0;
   const porcentajePerdida =
@@ -180,7 +183,11 @@ const TalleresPlus = () => {
     pesoInicialGuardado && Boolean(materialSeleccionado) && pesoInicialNumero > 0;
 
   const readyToQueueMaterial =
-    readyForSubcortes && seleccionSubcortesGuardada && subcortesActivos.length > 0;
+    readyForSubcortes &&
+    seleccionSubcortesGuardada &&
+    subcortesActivos.length > 0 &&
+    allSubcortesWithPositiveWeight;
+  const pesoInicialBloqueadoOperador = !isManager && pesoInicialGuardado;
 
   const resetFormularioMaterial = () => {
     setCodigoMaterial("");
@@ -246,7 +253,7 @@ const TalleresPlus = () => {
     if (!readyToQueueMaterial) {
       setMensaje({
         tipo: "error",
-        texto: "Selecciona y guarda al menos un subcorte para añadir el material.",
+        texto: "Selecciona subcortes y registra peso mayor a cero en cada uno para añadir el material.",
       });
       return;
     }
@@ -536,7 +543,9 @@ const TalleresPlus = () => {
                         variant="contained"
                         fullWidth
                         color="primary"
-                        disabled={!materialSeleccionado || pesoInicialNumero <= 0}
+                        disabled={
+                          !materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueadoOperador
+                        }
                         onClick={handleGuardarPesoInicial}
                       >
                         Guardar peso inicial

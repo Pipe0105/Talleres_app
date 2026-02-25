@@ -92,6 +92,9 @@ const CreateTaller = () => {
     const peso = parseWeightInput(subcortesPesos[sc.codigo] ?? "0");
     return acc + peso;
   }, 0);
+  const allSubcortesWithPositiveWeight =
+    subcortesActivos.length > 0 &&
+    subcortesActivos.every((sc) => parseWeightInput(subcortesPesos[sc.codigo] ?? "0") > 0);
   const totalProcesado = pesoFinalNumero + totalSubcortes;
   const perdida = pesoInicialNumero > 0 ? pesoInicialNumero - totalProcesado : 0;
   const porcentajePerdida = pesoInicialNumero > 0 ? (perdida / pesoInicialNumero) * 100 : 0;
@@ -100,7 +103,11 @@ const CreateTaller = () => {
     pesoInicialGuardado && Boolean(materialSeleccionado) && pesoInicialNumero > 0;
 
   const readyToSubmit =
-    readyForSubcortes && seleccionSubcortesGuardada && subcortesActivos.length > 0;
+    readyForSubcortes &&
+    seleccionSubcortesGuardada &&
+    subcortesActivos.length > 0 &&
+    allSubcortesWithPositiveWeight;
+  const pesoInicialBloqueadoOperador = !isManager && pesoInicialGuardado;
 
   const handleGuardarPesoInicial = () => {
     if (!materialSeleccionado || pesoInicialNumero <= 0) {
@@ -184,10 +191,10 @@ const CreateTaller = () => {
 
     for (const sc of subcortesActivos) {
       const pesoRaw = Number((subcortesPesos[sc.codigo] ?? "").replace(/,/g, "."));
-      if (!Number.isFinite(pesoRaw)) {
+      if (!Number.isFinite(pesoRaw) || pesoRaw <= 0) {
         setMensaje({
           tipo: "error",
-          texto: `Revisa el peso ingresado para ${sc.nombre} (${sc.codigo}).`,
+          texto: `El subcorte ${sc.nombre} (${sc.codigo}) debe tener un peso mayor a cero.`,
         });
         return;
       }
@@ -457,7 +464,7 @@ const CreateTaller = () => {
                     variant="contained"
                     fullWidth
                     color="primary"
-                    disabled={!materialSeleccionado || pesoInicialNumero <= 0}
+                    disabled={!materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueadoOperador}
                     onClick={handleGuardarPesoInicial}
                   >
                     Guardar peso inicial
