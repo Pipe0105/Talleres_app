@@ -353,6 +353,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "7758", nombre: "Costilla Especial" },
         { codigo: "31682", nombre: "Merma" },
+        { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Costilla Especials" },
       ]
     ),
@@ -726,6 +727,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "7758", nombre: "Costilla Especial" },
         { codigo: "31682", nombre: "Merma" },
+        { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Costilla Especials" },
       ]
     ),
