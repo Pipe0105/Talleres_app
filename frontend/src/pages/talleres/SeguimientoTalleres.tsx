@@ -116,8 +116,16 @@ const formatFriendlyDate = (value: string | null): string => {
   });
 };
 
+const toSafeUtcDate = (value: string): Date => {
+  const normalized = value.trim().replace(" ", "T");
+  const withTimezone = /(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)
+    ? normalized
+    : `${normalized}Z`;
+  return new Date(withTimezone);
+};
+
 const formatDateTime = (value: string): string =>
-  new Date(value).toLocaleString("es-ES", {
+  toSafeUtcDate(value).toLocaleString("es-ES", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

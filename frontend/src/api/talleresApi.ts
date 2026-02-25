@@ -110,6 +110,20 @@ const toStringOr = (value: unknown, fallback: string): string => {
   return String(value);
 };
 
+const normalizeDateTimeString = (value: unknown, fallback: string): string => {
+  const text = toStringOr(value, fallback).trim();
+  if (!text) {
+    return fallback;
+  }
+
+  // Treat naive datetimes as UTC to avoid local-time drift.
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(text)) {
+    return `${text}Z`;
+  }
+
+  return text;
+};
+
 let inMemoryToken: string | null = safeStorage.getItem(TOKEN_STORAGE_KEY);
 let refreshPromise: Promise<AuthToken> | null = null;
 
@@ -210,8 +224,8 @@ const mapUser = (raw: any): UserProfile => ({
   is_coordinator: toBoolean(raw?.is_coordinator, false),
   is_branch_admin: toBoolean(raw?.is_branch_admin, false),
   sede: raw?.sede ?? null,
-  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
-  actualizado_en: toStringOr(raw?.actualizado_en, new Date().toISOString()),
+  creado_en: normalizeDateTimeString(raw?.creado_en, new Date().toISOString()),
+  actualizado_en: normalizeDateTimeString(raw?.actualizado_en, new Date().toISOString()),
 });
 
 const mapTaller = (raw: any): TallerResponse => ({
@@ -227,7 +241,7 @@ const mapTaller = (raw: any): TallerResponse => ({
   codigo_principal: toStringOr(raw?.codigo_principal, ""),
   nombre_principal: raw?.nombre_principal ?? raw?.nombrePrincipal ?? null,
   taller_grupo_id: raw?.taller_grupo_id ?? raw?.taller_grupo ?? null,
-  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  creado_en: normalizeDateTimeString(raw?.creado_en, new Date().toISOString()),
   subcortes: Array.isArray(raw?.subcortes)
     ? raw.subcortes.map((det: any) => ({
         id: toNumber(det?.id, 0),
@@ -275,7 +289,7 @@ const mapTallerListItem = (raw: any): TallerListItem => {
     especie: toStringOr(raw?.especie, ""),
     codigo_principal: raw?.codigo_principal ?? null,
     taller_grupo_id: raw?.taller_grupo_id ?? raw?.taller_grupo ?? null,
-    creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+    creado_en: normalizeDateTimeString(raw?.creado_en, new Date().toISOString()),
   };
 };
 
@@ -285,7 +299,7 @@ const mapTallerGrupo = (raw: any): TallerGrupoResponse => ({
   descripcion: raw?.descripcion ?? null,
   sede: raw?.sede ?? null,
   especie: raw?.especie ?? null,
-  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  creado_en: normalizeDateTimeString(raw?.creado_en, new Date().toISOString()),
   materiales: Array.isArray(raw?.materiales) ? raw.materiales.map(mapTaller) : [],
 });
 
@@ -300,7 +314,7 @@ const mapTallerGrupoListItem = (raw: any): TallerGrupoListItem => ({
   descripcion: raw?.descripcion ?? null,
   sede: raw?.sede ?? null,
   especie: raw?.especie ?? null,
-  creado_en: toStringOr(raw?.creado_en, new Date().toISOString()),
+  creado_en: normalizeDateTimeString(raw?.creado_en, new Date().toISOString()),
   total_materiales: toNumber(raw?.total_materiales, 0),
 });
 

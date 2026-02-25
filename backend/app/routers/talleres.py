@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import re
 from typing import Optional
@@ -22,6 +22,14 @@ _WHITESPACE_RE = re.compile(r"\s+")
 _USE_PAYLOAD = object()
 _ZERO_TOLERANCE = Decimal("0.0001")
 _ALERTA_SUBCORTE_UMBRAL = Decimal("50")
+
+
+def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 def _normalize_loss(value: Decimal) -> Decimal:
     return Decimal("0") if abs(value) < _ZERO_TOLERANCE else value
@@ -169,7 +177,7 @@ def _serialize_taller_data(taller: models.Taller) -> dict:
             taller.item_principal.nombre if taller.item_principal else None
         ),
         "taller_grupo_id": taller.taller_grupo_id,
-        "creado_en": taller.creado_en,
+        "creado_en": _ensure_utc(taller.creado_en),
         "subcortes": [
             schemas.TallerDetalleOut.model_validate(det)
             for det in taller.detalles
@@ -199,7 +207,7 @@ def _serialize_taller_grupo_with_creator(
         descripcion=grupo.descripcion,
         sede=grupo.sede,
         especie=grupo.especie,
-        creado_en=grupo.creado_en,
+        creado_en=_ensure_utc(grupo.creado_en),
         materiales=[_serialize_taller(taller) for taller in grupo.materiales],
         creado_por=creador,
     )
@@ -263,7 +271,7 @@ def crear_taller(
         codigo_principal=taller.codigo_principal,
         item_principal_id=taller.item_principal_id,
         taller_grupo_id=taller.taller_grupo_id,
-        creado_en=taller.creado_en,
+        creado_en=_ensure_utc(taller.creado_en),
         subcortes=[
             schemas.TallerDetalleOut.model_validate(det)
             for det in taller.detalles
@@ -353,7 +361,7 @@ def crear_taller_completo(
         descripcion=grupo.descripcion,
         sede=grupo.sede,
         especie=grupo.especie,
-        creado_en=grupo.creado_en,
+        creado_en=_ensure_utc(grupo.creado_en),
         materiales=[_serialize_taller(taller) for taller in grupo.materiales],
     )
 
@@ -401,7 +409,7 @@ def listar_talleres_completos(
             descripcion=grupo.descripcion,
             sede=grupo.sede,
             especie=grupo.especie,
-            creado_en=grupo.creado_en,
+            creado_en=_ensure_utc(grupo.creado_en),
             total_materiales=len(grupo.materiales),
         )
         for grupo in grupos
@@ -433,7 +441,7 @@ def obtener_taller_completo(
         descripcion=grupo.descripcion,
         sede=grupo.sede,
         especie=grupo.especie,
-        creado_en=grupo.creado_en,
+        creado_en=_ensure_utc(grupo.creado_en),
         materiales=[_serialize_taller(taller) for taller in grupo.materiales],
     )
 
@@ -571,7 +579,7 @@ def listar_talleres(
                 especie=taller.especie,
                 codigo_principal=taller.codigo_principal,
                 taller_grupo_id=taller.taller_grupo_id,
-                creado_en=taller.creado_en,
+                creado_en=_ensure_utc(taller.creado_en),
             )
         )
 
