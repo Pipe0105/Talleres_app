@@ -599,31 +599,13 @@ const CreateTaller = () => {
                         ))}
                       </Grid>
 
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            fullWidth
-                            type="number"
-                            inputProps={{ min: 0, step: "0.01" }}
-                            label="Peso final del corte (kg)"
-                            value={pesoFinal}
-                            onChange={(e) => {
-                              if (isNegativeInputValue(e.target.value)) {
-                                return;
-                              }
-                              setPesoFinal(e.target.value);
-                            }}
-                          />
-                        </Grid>
-                      </Grid>
 
                       <Box>
                         <Typography variant="subtitle1" fontWeight={700} color="error">
                           Pérdida: {formatKg(-Math.abs(perdida))} kg ({formatPercent(-Math.abs(porcentajePerdida))}%)
                         </Typography>
                         <Typography color="text.secondary">
-                          Total subcortes: {formatKg(totalSubcortes)} kg · Peso final:{" "}
-                          {formatKg(pesoFinalNumero)} kg
+                          Total subcortes: {formatKg(totalSubcortes)} kg
                         </Typography>
                       </Box>
                     </Stack>
