@@ -323,16 +323,10 @@ const SeguimientoTalleres = () => {
       (acc, taller) => acc + (taller.peso_inicial ?? 0),
       0
     );
-    const totalPesoFinal = detalleDia.talleres.reduce(
-      (acc, taller) => acc + (taller.peso_final ?? 0),
-      0
-    );
-
     return {
       totalTalleres,
       totalSubcortes,
       totalPesoInicial,
-      totalPesoFinal,
     };
   }, [detalleAgrupado.length, detalleDia.talleres]);
 
@@ -959,14 +953,6 @@ const SeguimientoTalleres = () => {
                         {pesoFormatter.format(resumenDetalle.totalPesoInicial)} kg
                       </Typography>
                     </Stack>
-                    <Stack spacing={0.5}>
-                      <Typography variant="overline" color="text.secondary">
-                        Peso final
-                      </Typography>
-                      <Typography variant="h6">
-                        {pesoFormatter.format(resumenDetalle.totalPesoFinal)} kg
-                      </Typography>
-                    </Stack>
                   </Stack>
                 </Paper>
 
@@ -1038,10 +1024,6 @@ const SeguimientoTalleres = () => {
                                       <Typography variant="body2">
                                         <strong>Peso inicial:</strong>{" "}
                                         {pesoFormatter.format(taller.peso_inicial)} kg
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        <strong>Peso final:</strong>{" "}
-                                        {pesoFormatter.format(taller.peso_final)} kg
                                       </Typography>
                                       <Typography variant="body2">
                                         <strong>Pérdida:</strong>{" "}
@@ -1158,3 +1140,4 @@ const SeguimientoTalleres = () => {
 };
 
 export default SeguimientoTalleres;
+
