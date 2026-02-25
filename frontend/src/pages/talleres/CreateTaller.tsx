@@ -107,7 +107,7 @@ const CreateTaller = () => {
     seleccionSubcortesGuardada &&
     subcortesActivos.length > 0 &&
     allSubcortesWithPositiveWeight;
-  const pesoInicialBloqueadoOperador = !isManager && pesoInicialGuardado;
+  const pesoInicialBloqueado = pesoInicialGuardado;
 
   const handleGuardarPesoInicial = () => {
     if (!materialSeleccionado || pesoInicialNumero <= 0) {
@@ -464,7 +464,7 @@ const CreateTaller = () => {
                     variant="contained"
                     fullWidth
                     color="primary"
-                    disabled={!materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueadoOperador}
+                    disabled={!materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueado}
                     onClick={handleGuardarPesoInicial}
                   >
                     Guardar peso inicial

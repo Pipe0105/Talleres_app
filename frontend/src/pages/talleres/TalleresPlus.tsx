@@ -187,7 +187,7 @@ const TalleresPlus = () => {
     seleccionSubcortesGuardada &&
     subcortesActivos.length > 0 &&
     allSubcortesWithPositiveWeight;
-  const pesoInicialBloqueadoOperador = !isManager && pesoInicialGuardado;
+  const pesoInicialBloqueado = pesoInicialGuardado;
 
   const resetFormularioMaterial = () => {
     setCodigoMaterial("");
@@ -544,7 +544,7 @@ const TalleresPlus = () => {
                         fullWidth
                         color="primary"
                         disabled={
-                          !materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueadoOperador
+                          !materialSeleccionado || pesoInicialNumero <= 0 || pesoInicialBloqueado
                         }
                         onClick={handleGuardarPesoInicial}
                       >
