@@ -182,7 +182,10 @@ interface HeatmapCellStyle {
   borderColor: string;
 }
 
-const getHeatmapCellStyle = (cantidad: number): HeatmapCellStyle => {
+const getHeatmapCellStyle = (
+  cantidad: number,
+  especie: EspecieSeguimiento
+): HeatmapCellStyle => {
   if (cantidad <= 0) {
     return {
       label: "Sin registro",
@@ -193,7 +196,10 @@ const getHeatmapCellStyle = (cantidad: number): HeatmapCellStyle => {
     };
   }
 
-  if (cantidad <= 2) {
+  const limiteNaranja = especie === "res" ? 4 : 2;
+  const limiteAmarillo = especie === "res" ? 8 : 4;
+
+  if (cantidad <= limiteNaranja) {
     return {
       label: "Bajo",
       helper: `${cantidad} en el dia`,
@@ -203,7 +209,7 @@ const getHeatmapCellStyle = (cantidad: number): HeatmapCellStyle => {
     };
   }
 
-  if (cantidad <= 4) {
+  if (cantidad <= limiteAmarillo) {
     return {
       label: "Medio",
       helper: `${cantidad} en el dia`,
@@ -513,7 +519,7 @@ const SeguimientoTalleres = () => {
                   const actividadDia =
                     usuario.dias.find((dia) => dia.fecha === fecha) ??
                     ({ fecha, cantidad: 0 } as const);
-                  const heatmap = getHeatmapCellStyle(actividadDia.cantidad);
+                  const heatmap = getHeatmapCellStyle(actividadDia.cantidad, selectedEspecie);
                   const hasRegistro = actividadDia.cantidad > 0;
                   return (
                     <TableCell key={fecha} align="center">
@@ -666,7 +672,7 @@ const SeguimientoTalleres = () => {
       displayedDates.forEach((fecha, columnIndex) => {
         const actividadDia =
           usuario.dias.find((dia) => dia.fecha === fecha) ?? ({ fecha, cantidad: 0 } as const);
-        const heatmap = getHeatmapCellStyle(actividadDia.cantidad);
+        const heatmap = getHeatmapCellStyle(actividadDia.cantidad, selectedEspecie);
         const x = leftColumnWidth + columnIndex * cellWidth;
 
         ctx.fillStyle = heatmap.bgColor;
@@ -867,9 +873,21 @@ const SeguimientoTalleres = () => {
               Mapa de calor:
             </Typography>
             <Chip size="small" label="0: Rojo" sx={{ bgcolor: "#ffebee", color: "#b71c1c" }} />
-            <Chip size="small" label="1-2: Naranja" sx={{ bgcolor: "#fff3e0", color: "#e65100" }} />
-            <Chip size="small" label="3-4: Amarillo" sx={{ bgcolor: "#fffde7", color: "#f57f17" }} />
-            <Chip size="small" label="5+: Verde" sx={{ bgcolor: "#e8f5e9", color: "#1b5e20" }} />
+            <Chip
+              size="small"
+              label={selectedEspecie === "res" ? "1-4: Naranja" : "1-2: Naranja"}
+              sx={{ bgcolor: "#fff3e0", color: "#e65100" }}
+            />
+            <Chip
+              size="small"
+              label={selectedEspecie === "res" ? "5-8: Amarillo" : "3-4: Amarillo"}
+              sx={{ bgcolor: "#fffde7", color: "#f57f17" }}
+            />
+            <Chip
+              size="small"
+              label={selectedEspecie === "res" ? "9+: Verde" : "5+: Verde"}
+              sx={{ bgcolor: "#e8f5e9", color: "#1b5e20" }}
+            />
           </Stack>
           {renderTable()}
           {downloadError && (
