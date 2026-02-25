@@ -148,7 +148,9 @@ const TalleresPlus = () => {
 
   const materiales = useMemo(() => {
     if (!especie) return [];
-    return getMaterialesPorEspecie(especie as Especie);
+    return getMaterialesPorEspecie(especie as Especie).filter((material) =>
+      /\sPP$/i.test(material.nombre)
+    );
   }, [especie]);
 
   const materialSeleccionado = useMemo<MaterialDefinition | undefined>(
