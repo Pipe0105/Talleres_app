@@ -832,15 +832,12 @@ def obtener_actividad_talleres(
         func.nullif(func.trim(models.Taller.sede), ""),
         func.nullif(func.trim(models.User.sede), ""),
     )
-    taller_completo_id = func.coalesce(models.Taller.taller_grupo_id, models.Taller.id)
-
-        
     rows_query = (
         db.query(
             models.User.id.label("user_id"),
             sede_resuelta.label("sede"),
             func.date(models.Taller.creado_en).label("fecha"),
-            func.count(func.distinct(taller_completo_id)).label("cantidad"),
+            func.count(models.Taller.id).label("cantidad"),
         )
         .join(models.Taller, models.Taller.creado_por_id == models.User.id)
         .filter(models.Taller.creado_en >= start_dt)
