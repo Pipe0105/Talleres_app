@@ -86,7 +86,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
-        { codigo: "70165", nombre: "Costichi" },
         { codigo: "6415", nombre: "Costilla Normal" },
       ],
       [{ codigo: "5815", nombre: "Molida Normal" }]
