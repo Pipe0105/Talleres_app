@@ -36,7 +36,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -382,8 +381,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "22835", nombre: "Cebo" },
       ],
       [
-        { codigo: "37183", nombre: "Picada" },
-        { codigo: "30029", nombre: "Tocino" },
+        { codigo: "31783", nombre: "Picada" },
         { codigo: "7860", nombre: "Garra" },
         { codigo: "35164", nombre: "Pernil de cerdo" },
       ]
@@ -401,8 +399,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "31783", nombre: "Picada" },
-        { codigo: "10251", nombre: "Garra" },
-        { codigo: "5828", nombre: "Molida" },
+        { codigo: "10251", nombre: "Cerdo Costilla Normal*Kilo" },
       ]
     ),
   },
@@ -784,6 +781,11 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
 
 const SUBCORTES_INACTIVOS = new Set(["5815"]);
 const PP_NORMAL_SUBCORTE_OVERRIDES: Record<string, SubcorteDefinition | null> = {
+  "73612": null,
+  "73613": null,
+  "73614": null,
+  "73615": null,
+  "73616": null,
   "73617": null,
   "73618": { codigo: "5858", nombre: "Bola Negra Espec" },
   "73620": { codigo: "10251", nombre: "Cerdo Costilla Normal" },
