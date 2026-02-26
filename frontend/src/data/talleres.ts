@@ -54,7 +54,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "7790", nombre: "Bola negra normal" },
         { codigo: "33643", nombre: "Espaldilla Especial" },
         { codigo: "5839", nombre: "Molida Esp" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -106,7 +105,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -122,7 +120,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -788,7 +785,7 @@ const PP_NORMAL_SUBCORTE_OVERRIDES: Record<string, SubcorteDefinition | null> = 
   "73616": null,
   "73617": null,
   "73618": { codigo: "5858", nombre: "Bola Negra Espec" },
-  "73620": { codigo: "10251", nombre: "Cerdo Costilla Normal" },
+  "73620": null,
   "73622": { codigo: "7782", nombre: "Lomo Caracha/Chatas Espec" },
   "73623": { codigo: "26507", nombre: "Res Lomo Redondo Espec" },
   "73625": null,
