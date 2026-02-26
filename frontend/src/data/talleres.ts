@@ -53,7 +53,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "7790", nombre: "Bola negra normal" },
-        { codigo: "33643", nombre: "Espaldilla" },
+        { codigo: "33643", nombre: "Espaldilla Especial" },
         { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "31682", nombre: "Desperdicio" },
       ]
@@ -73,7 +73,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "11018", nombre: "Pulpa Normal" },
-        { codigo: "35508", nombre: "Hueso Promo" },
       ]
     ),
   },
@@ -171,7 +170,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5849", nombre: "Gordana*Kilo" },
-        { codigo: "20182", nombre: "Muchacho Normal" },
+        { codigo: "5854", nombre: "Muchacho Normal" },
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
@@ -194,7 +193,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "5839", nombre: "Molida Esp" },
         { codigo: "7833", nombre: "Caderita" },
-        { codigo: "35508", nombre: "Hueso promo" },
       ]
     ),
   },
@@ -265,7 +263,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "35139", nombre: "SobreBarriga Especial" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -283,7 +280,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33643", nombre: "Espaldilla especial" },
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -299,7 +295,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "11018", nombre: "Pulpa" },
         { codigo: "5806", nombre: "Pepino*Kilo" },
       ],
-      [{ codigo: "31682", nombre: "Desperdicio" }]
+      []
     ),
   },
   {
@@ -327,7 +323,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
     subcortes: withUniqueSubcortes(
       [
         { codigo: "33647", nombre: "Recorte" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
         { codigo: "5800", nombre: "Empella" },
         { codigo: "7860", nombre: "Garra" },
       ],
@@ -335,7 +331,8 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "45978", nombre: "Bondiola" },
         { codigo: "31783", nombre: "Picada" },
         { codigo: "5815", nombre: "Molida" },
-        { codigo: "10358", nombre: "Pernil" },
+        { codigo: "9324", nombre: "Brazo Normal" },
+        { codigo: "35164", nombre: "Pernil de cerdo" },
       ]
     ),
   },
@@ -347,14 +344,14 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "70165", nombre: "Costichi" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
         { codigo: "7860", nombre: "Garra" },
       ],
       [
         { codigo: "7758", nombre: "Costilla Especial" },
-        { codigo: "31682", nombre: "Merma" },
+        { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "31783", nombre: "Picada" },
-        { codigo: "10251", nombre: "Costilla Especials" },
+        { codigo: "10251", nombre: "Cerdo Costilla Normal" },
       ]
     ),
   },
@@ -366,7 +363,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
       ],
       [
         { codigo: "31783", nombre: "Picada" },
@@ -382,7 +379,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
       ],
       [
         { codigo: "37183", nombre: "Picada" },
@@ -406,7 +403,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
         { codigo: "5828", nombre: "Molida" },
-        { codigo: "10358", nombre: "Pernil" },
       ]
     ),
   },
@@ -701,7 +697,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
     subcortes: withUniqueSubcortes(
       [
         { codigo: "33647", nombre: "Recorte" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
         { codigo: "5800", nombre: "Empella" },
         { codigo: "7860", nombre: "Garra" },
       ],
@@ -709,7 +705,8 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "45978", nombre: "Bondiola" },
         { codigo: "31783", nombre: "Picada" },
         { codigo: "5815", nombre: "Molida" },
-        { codigo: "10358", nombre: "Pernil" },
+        { codigo: "9324", nombre: "Brazo Normal" },
+        { codigo: "35164", nombre: "Pernil de cerdo" },
       ]
     ),
   },
@@ -721,14 +718,14 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "70165", nombre: "Costichi" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
         { codigo: "7860", nombre: "Garra" },
       ],
       [
         { codigo: "7758", nombre: "Costilla Especial" },
-        { codigo: "31682", nombre: "Merma" },
+        { codigo: "31682", nombre: "Desperdicio" },
         { codigo: "31783", nombre: "Picada" },
-        { codigo: "10251", nombre: "Costilla Especials" },
+        { codigo: "10251", nombre: "Cerdo Costilla Normal" },
       ]
     ),
   },
@@ -740,7 +737,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
       ],
       [
         { codigo: "31783", nombre: "Picada" },
@@ -756,7 +753,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
       ],
       [
         { codigo: "37183", nombre: "Picada" },
@@ -774,19 +771,31 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "33647", nombre: "Recorte" },
         { codigo: "5800", nombre: "Empella" },
-        { codigo: "22835", nombre: "Gordana" },
+        { codigo: "22835", nombre: "Cebo" },
       ],
       [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Garra" },
         { codigo: "5828", nombre: "Molida" },
-        { codigo: "10358", nombre: "Pernil" },
       ]
     ),
   },
 ];
 
 const SUBCORTES_INACTIVOS = new Set(["5815"]);
+const PP_NORMAL_SUBCORTE_OVERRIDES: Record<string, SubcorteDefinition | null> = {
+  "73617": null,
+  "73618": { codigo: "5858", nombre: "Bola Negra Espec" },
+  "73620": { codigo: "10251", nombre: "Cerdo Costilla Normal" },
+  "73622": { codigo: "7782", nombre: "Lomo Caracha/Chatas Espec" },
+  "73623": { codigo: "26507", nombre: "Res Lomo Redondo Espec" },
+  "73625": null,
+  "73626": null,
+  "73627": null,
+  "73629": { codigo: "30358", nombre: "Punta Anca Especial" },
+  "73630": null,
+  "73633": { codigo: "5846", nombre: "Res Lomo Viche Normal" },
+};
 
 const MATERIAL_PREFIX_REGEX = /^C\/(RES|CERDO)\s+/i;
 
@@ -811,15 +820,22 @@ export const TALLER_MATERIALES: MaterialDefinition[] = BASE_TALLER_MATERIALES.ma
   let subcortes = material.subcortes;
 
   if (/\s+PP$/i.test(material.nombre)) {
-    const nombreBase = getCorteBaseSinPP(material.nombre);
-    const materialBase = BASE_TALLER_MATERIALES.find(
-      (item) => item.especie === material.especie && item.nombre.toLowerCase() === nombreBase.toLowerCase()
-    );
-
-    if (materialBase) {
+    const override = PP_NORMAL_SUBCORTE_OVERRIDES[material.codigo];
+    if (override) {
       subcortes = withUniqueSubcortes(subcortes, [
-        { codigo: materialBase.codigo, nombre: buildNormalSubcorteName(materialBase.nombre) },
+        override,
       ]);
+    } else if (override === undefined) {
+      const nombreBase = getCorteBaseSinPP(material.nombre);
+      const materialBase = BASE_TALLER_MATERIALES.find(
+        (item) => item.especie === material.especie && item.nombre.toLowerCase() === nombreBase.toLowerCase()
+      );
+
+      if (materialBase) {
+        subcortes = withUniqueSubcortes(subcortes, [
+          { codigo: materialBase.codigo, nombre: buildNormalSubcorteName(materialBase.nombre) },
+        ]);
+      }
     }
   }
 
