@@ -135,8 +135,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "5839", nombre: "Molida Esp" },
-        { codigo: "11018", nombre: "Pulpa" },
       ]
     ),
   },
@@ -153,7 +151,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "5815", nombre: "Molida Normal" },
         { codigo: "5839", nombre: "Molida Esp" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -169,7 +166,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -221,8 +217,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
-        { codigo: "5834", nombre: "Espaldilla" },
       ]
     ),
   },
@@ -790,7 +784,7 @@ const PP_NORMAL_SUBCORTE_OVERRIDES: Record<string, SubcorteDefinition | null> = 
   "73625": null,
   "73626": null,
   "73627": null,
-  "73629": { codigo: "30358", nombre: "Punta Anca Especial" },
+  "73629": null,
   "73630": null,
   "73633": { codigo: "5846", nombre: "Res Lomo Viche Normal" },
 };
