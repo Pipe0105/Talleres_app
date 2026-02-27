@@ -2,9 +2,10 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import re
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas
@@ -22,6 +23,7 @@ _WHITESPACE_RE = re.compile(r"\s+")
 _USE_PAYLOAD = object()
 _ZERO_TOLERANCE = Decimal("0.0001")
 _ALERTA_SUBCORTE_UMBRAL = Decimal("50")
+_APP_TIMEZONE = ZoneInfo("America/Bogota")
 
 
 def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
@@ -30,6 +32,14 @@ def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
+
+
+def _local_day_range_to_utc_naive(target_date: date) -> tuple[datetime, datetime]:
+    local_start = datetime.combine(target_date, datetime.min.time(), tzinfo=_APP_TIMEZONE)
+    local_end = local_start + timedelta(days=1)
+    utc_start = local_start.astimezone(timezone.utc).replace(tzinfo=None)
+    utc_end = local_end.astimezone(timezone.utc).replace(tzinfo=None)
+    return utc_start, utc_end
 
 def _normalize_loss(value: Decimal) -> Decimal:
     return Decimal("0") if abs(value) < _ZERO_TOLERANCE else value
@@ -746,8 +756,7 @@ def obtener_detalle_actividad(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
-    start_dt = datetime.combine(fecha, datetime.min.time())
-    end_dt = datetime.combine(fecha + timedelta(days=1), datetime.min.time())
+    start_dt, end_dt = _local_day_range_to_utc_naive(fecha)
 
     especie_normalizada: Optional[str] = None
     if especie:
@@ -804,8 +813,8 @@ def obtener_actividad_talleres(
         normalized = value.strip()
         return normalized or None
         
-    start_dt = datetime.combine(startDate, datetime.min.time())
-    end_dt = datetime.combine(endDate + timedelta(days=1), datetime.min.time())
+    start_dt, _ = _local_day_range_to_utc_naive(startDate)
+    _, end_dt = _local_day_range_to_utc_naive(endDate)
     
     usuarios_activos = (
         db.query(models.User)
@@ -832,11 +841,14 @@ def obtener_actividad_talleres(
         func.nullif(func.trim(models.Taller.sede), ""),
         func.nullif(func.trim(models.User.sede), ""),
     )
+    # creado_en is stored as UTC-naive; shift to local UTC-5 for calendar-day tracking in seguimiento.
+    created_local_expr = models.Taller.creado_en - text("INTERVAL '5 hours'")
+
     rows_query = (
         db.query(
             models.User.id.label("user_id"),
             sede_resuelta.label("sede"),
-            func.date(models.Taller.creado_en).label("fecha"),
+            func.date(created_local_expr).label("fecha"),
             func.count(models.Taller.id).label("cantidad"),
         )
         .join(models.Taller, models.Taller.creado_por_id == models.User.id)
@@ -855,12 +867,12 @@ def obtener_actividad_talleres(
         rows_query.group_by(
             models.User.id,
             sede_resuelta,
-            func.date(models.Taller.creado_en),
+            func.date(created_local_expr),
         )
         .order_by(
             sede_resuelta,
             models.User.username,
-            func.date(models.Taller.creado_en),
+            func.date(created_local_expr),
         )
         .all()
     )

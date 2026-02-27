@@ -232,10 +232,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
-        { codigo: "35139", nombre: "Sobrebarriga especial" },
-        { codigo: "5837", nombre: "Sobrebarriga" },
-        { codigo: "31682", nombre: "Desperdicio" },
       ]
     ),
   },
@@ -267,7 +263,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
         { codigo: "5844", nombre: "Pecho*Kilo" },
       ],
       [
-        { codigo: "33643", nombre: "Espaldilla especial" },
         { codigo: "5815", nombre: "Molida Normal" },
       ]
     ),
@@ -299,9 +294,6 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       ],
       [
         { codigo: "5815", nombre: "Molida Normal" },
-        { codigo: "31682", nombre: "Desperdicio" },
-        { codigo: "11018", nombre: "Pulpa" },
-        { codigo: "5839", nombre: "Molida Esp" },
       ]
     ),
   },
@@ -390,6 +382,7 @@ const BASE_TALLER_MATERIALES: MaterialDefinition[] = [
       [
         { codigo: "31783", nombre: "Picada" },
         { codigo: "10251", nombre: "Cerdo Costilla Normal*Kilo" },
+        { codigo: "5828", nombre: "Cerdo Tocineta/Barriga*Kilo Normal" },
       ]
     ),
   },
