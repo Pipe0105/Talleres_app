@@ -314,10 +314,11 @@ const Home = () => {
     });
 
     const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const daysSinceYearStart = Math.max(
       1,
-      Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      Math.floor((todayStart.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1
     );
 
     const sedesSet = new Set<string>([...latestBySede.keys(), ...userSedes]);
@@ -332,7 +333,12 @@ const Home = () => {
             lastDate,
           };
         }
-        const diffMs = now.getTime() - lastDate.getTime();
+        const lastDateStart = new Date(
+          lastDate.getFullYear(),
+          lastDate.getMonth(),
+          lastDate.getDate()
+        );
+        const diffMs = todayStart.getTime() - lastDateStart.getTime();
         const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
         return {
           sede,
