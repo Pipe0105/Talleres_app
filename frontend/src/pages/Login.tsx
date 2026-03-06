@@ -185,6 +185,27 @@ const Login = () => {
               {mode === "login" ? "Crear cuenta" : "Iniciar sesión"}
             </Link>
           </Stack>
+          <Box
+            sx={(theme) => ({
+              mt: { xs: 1, sm: 1.5 },
+              pt: { xs: 1.5, sm: 2 },
+              borderTop: `1px solid ${theme.palette.divider}`,
+            })}
+          >
+            <Typography
+              variant="caption"
+              align="center"
+              sx={{
+                display: "block",
+                color: "text.secondary",
+                opacity: 0.9,
+                fontSize: { xs: "0.68rem", sm: "0.72rem" },
+                lineHeight: 1.5,
+              }}
+            >
+              Created by Juan Felipe Gomez and Juan Manuel Velasquez
+            </Typography>
+          </Box>
         </Stack>
       </Paper>
     </Box>
