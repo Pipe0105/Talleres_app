@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session, selectinload
 
 from .. import models, schemas
 from ..constants import BRANCH_LOCATIONS
-from ..dependencies import get_current_active_user, get_current_admin_user
+from ..dependencies import (
+    get_current_active_user,
+    get_current_admin_user,
+    get_current_coordinator_user,
+)
 from ..database import get_db
 
 
@@ -929,9 +933,9 @@ def actualizar_taller(
     taller_id: int,
     payload: schemas.TallerUpdate,
     db: Session = Depends(get_db),
-    current_admin: models.User = Depends(get_current_admin_user),
+    current_coordinator: models.User = Depends(get_current_coordinator_user),
 ):
-    del current_admin  # solo se usa para validar permisos
+    del current_coordinator  # solo se usa para validar permisos
 
     taller = db.get(models.Taller, taller_id)
     if taller is None:
@@ -964,6 +968,10 @@ def actualizar_taller(
     taller.especie = payload.especie.lower()
     taller.item_principal_id = item_principal_id
     taller.codigo_principal = payload.codigo_principal
+    if taller.grupo is not None:
+        taller.grupo.especie = payload.especie.lower()
+        if payload.sede:
+            taller.grupo.sede = payload.sede
 
     nuevos_detalles: list[models.TallerDetalle] = []
     for det in payload.subcortes:
@@ -984,6 +992,8 @@ def actualizar_taller(
 
     try:
         taller.detalles = nuevos_detalles
+        if taller.grupo is not None:
+            db.add(taller.grupo)
         db.add(taller)
         db.commit()
         db.refresh(taller)

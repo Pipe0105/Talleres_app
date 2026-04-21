@@ -74,3 +74,14 @@ def get_current_manager_user(
             detail="Se requieren permisos de coordinador, gerente o super administrador",
         )
     return current_user
+
+
+def get_current_coordinator_user(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if not (current_user.is_coordinator or current_user.is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo coordinadores o super administradores pueden realizar esta accion",
+        )
+    return current_user

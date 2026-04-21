@@ -34,11 +34,17 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
 
 import PageHeader from "../../components/PageHeader";
 import { BRANCH_LOCATIONS } from "../../data/branchLocations";
-import { adminDeleteTallerGrupo, adminGetTallerHistorial } from "../../api/talleresApi";
-import { TallerGrupoAdminResponse } from "../../types";
+import {
+  adminDeleteTallerGrupo,
+  adminGetTallerHistorial,
+  adminUpdateTaller,
+} from "../../api/talleresApi";
+import { TallerGrupoAdminResponse, TallerResponse } from "../../types";
+import { useAuth } from "../../context/AuthContext";
 
 interface FiltersState {
   search: string;
@@ -92,7 +98,32 @@ const getMaterialCodes = (taller: TallerGrupoAdminResponse): string[] =>
 const getTotalSubcortes = (taller: TallerGrupoAdminResponse): number =>
   taller.materiales.reduce((total, material) => total + material.subcortes.length, 0);
 
+interface EditableSubcorte {
+  id: string;
+  codigo_producto: string;
+  nombre_subcorte: string;
+  peso: string;
+}
+
+interface EditableMaterialForm {
+  nombre_taller: string;
+  descripcion: string;
+  sede: string;
+  especie: string;
+  codigo_principal: string;
+  peso_inicial: string;
+  peso_final: string;
+  subcortes: EditableSubcorte[];
+}
+
+const buildTempId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 const HistorialTalleres = () => {
+  const { user } = useAuth();
+  const canEditMaterials = Boolean(user?.is_coordinator || user?.is_admin);
   const [filters, setFilters] = useState<FiltersState>(() => ({
     search: "",
     sede: "",
@@ -110,6 +141,18 @@ const HistorialTalleres = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [editingMaterial, setEditingMaterial] = useState<TallerResponse | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditableMaterialForm>({
+    nombre_taller: "",
+    descripcion: "",
+    sede: "",
+    especie: "res",
+    codigo_principal: "",
+    peso_inicial: "",
+    peso_final: "",
+    subcortes: [],
+  });
 
   const loadHistorial = async () => {
     setLoading(true);
@@ -185,7 +228,109 @@ const HistorialTalleres = () => {
     }
   };
 
+  const handleStartEditMaterial = (material: TallerResponse) => {
+    if (!canEditMaterials) return;
+    setEditingMaterial(material);
+    setEditError(null);
+    setEditForm({
+      nombre_taller: material.nombre_taller || "",
+      descripcion: material.descripcion || "",
+      sede: material.sede || "",
+      especie: material.especie || "res",
+      codigo_principal: material.codigo_principal || "",
+      peso_inicial: String(material.peso_inicial ?? ""),
+      peso_final: String(material.peso_final ?? ""),
+      subcortes: material.subcortes.map((subcorte) => ({
+        id: buildTempId(),
+        codigo_producto: subcorte.codigo_producto || "",
+        nombre_subcorte: subcorte.nombre_subcorte || "",
+        peso: String(subcorte.peso ?? ""),
+      })),
+    });
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditingMaterial(null);
+    setEditError(null);
+  };
+
+  const handleSaveMaterialEdit = async () => {
+    if (!editingMaterial) return;
+    if (!canEditMaterials) {
+      setEditError("Solo los coordinadores pueden editar materiales.");
+      return;
+    }
+
+    const nombreTaller = editForm.nombre_taller.trim();
+    const especie = editForm.especie.trim().toLowerCase();
+    const codigoPrincipal = editForm.codigo_principal.trim();
+    const pesoInicial = Number(editForm.peso_inicial);
+    const pesoFinal = Number(editForm.peso_final);
+
+    if (!nombreTaller || !codigoPrincipal || !especie) {
+      setEditError("Completa nombre, especie y codigo principal.");
+      return;
+    }
+    if (!Number.isFinite(pesoInicial) || pesoInicial <= 0) {
+      setEditError("El peso inicial debe ser mayor a cero.");
+      return;
+    }
+    if (!Number.isFinite(pesoFinal) || pesoFinal < 0) {
+      setEditError("El peso final no puede ser negativo.");
+      return;
+    }
+    if (!editForm.subcortes.length) {
+      setEditError("Debes registrar al menos un subcorte.");
+      return;
+    }
+
+    const subcortesPayload = editForm.subcortes.map((subcorte) => ({
+      codigo_producto: subcorte.codigo_producto.trim(),
+      nombre_subcorte: subcorte.nombre_subcorte.trim(),
+      peso: Number(subcorte.peso),
+    }));
+
+    const invalidSubcorte = subcortesPayload.some(
+      (subcorte) =>
+        !subcorte.codigo_producto ||
+        !subcorte.nombre_subcorte ||
+        !Number.isFinite(subcorte.peso) ||
+        subcorte.peso <= 0
+    );
+    if (invalidSubcorte) {
+      setEditError("Cada subcorte debe tener codigo, nombre y peso mayor a cero.");
+      return;
+    }
+
+    setSaving(true);
+    setEditError(null);
+    try {
+      await adminUpdateTaller(editingMaterial.id, {
+        nombre_taller: nombreTaller,
+        descripcion: editForm.descripcion.trim() || undefined,
+        sede: editForm.sede || undefined,
+        peso_inicial: pesoInicial,
+        peso_final: pesoFinal,
+        especie,
+        item_principal_id: editingMaterial.item_principal_id ?? undefined,
+        codigo_principal: codigoPrincipal,
+        subcortes: subcortesPayload,
+      });
+      setSuccessMessage("Material actualizado correctamente.");
+      handleCloseEditDialog();
+      await loadHistorial();
+    } catch (err) {
+      console.error(err);
+      setEditError("No se pudo actualizar el material. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const totalTalleres = useMemo(() => talleres.length, [talleres]);
+  const selectedEspecieDisplay = selected
+    ? selected.especie || selected.materiales.find((material) => material.especie)?.especie || null
+    : null;
 
   return (
     <Stack spacing={3} className="animate-fade-up">
@@ -512,7 +657,7 @@ const HistorialTalleres = () => {
               <Stack spacing={2}>
                 <Typography color="text.secondary">
                   Creado el {formatDateTime(selected.creado_en)} ·{" "}
-                  {selected.especie || "Especie no indicada"} ·{" "}
+                  {selectedEspecieDisplay || "Especie no indicada"} ·{" "}
                   {selected.sede || "Sede no indicada"}
                 </Typography>
                 <Typography color="text.secondary">
@@ -558,6 +703,27 @@ const HistorialTalleres = () => {
                             subheader={`Código: ${material.codigo_principal} · Peso inicial: ${formatKg(
                               material.peso_inicial
                             )} · Peso final: ${formatKg(material.peso_final)}`}
+                            action={
+                              <Tooltip
+                                title={
+                                  canEditMaterials
+                                    ? "Editar material"
+                                    : "Solo coordinadores o super administradores pueden editar"
+                                }
+                              >
+                                <span>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => handleStartEditMaterial(material)}
+                                    disabled={!canEditMaterials}
+                                  >
+                                    Editar
+                                  </Button>
+                                </span>
+                              </Tooltip>
+                            }
                           />
                           <Divider />
                           <CardContent>
@@ -656,6 +822,218 @@ const HistorialTalleres = () => {
           <Button onClick={() => setDeleteQueue([])}>Cancelar</Button>
           <Button color="error" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={saving}>
             {saving ? "Eliminando..." : "Eliminar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(editingMaterial)}
+        onClose={() => setEditingMaterial(null)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Editar material</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              label="Nombre"
+              value={editForm.nombre_taller}
+              onChange={(event) =>
+                setEditForm((prev) => ({ ...prev, nombre_taller: event.target.value }))
+              }
+              fullWidth
+              required
+            />
+            <TextField
+              label="Descripcion"
+              value={editForm.descripcion}
+              onChange={(event) =>
+                setEditForm((prev) => ({ ...prev, descripcion: event.target.value }))
+              }
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Sede"
+                  fullWidth
+                  value={editForm.sede}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, sede: event.target.value }))
+                  }
+                  SelectProps={{ native: true }}
+                >
+                  <option value="">Sin sede</option>
+                  {BRANCH_LOCATIONS.map((branch) => (
+                    <option key={branch} value={branch}>
+                      {branch}
+                    </option>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Especie"
+                  fullWidth
+                  value={editForm.especie}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, especie: event.target.value }))
+                  }
+                  SelectProps={{ native: true }}
+                >
+                  <option value="res">Res</option>
+                  <option value="cerdo">Cerdo</option>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Codigo principal"
+                  fullWidth
+                  value={editForm.codigo_principal}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, codigo_principal: event.target.value }))
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  label="Peso inicial"
+                  type="number"
+                  fullWidth
+                  inputProps={{ min: 0, step: "0.01" }}
+                  value={editForm.peso_inicial}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, peso_inicial: event.target.value }))
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <TextField
+                  label="Peso final"
+                  type="number"
+                  fullWidth
+                  inputProps={{ min: 0, step: "0.01" }}
+                  value={editForm.peso_final}
+                  onChange={(event) =>
+                    setEditForm((prev) => ({ ...prev, peso_final: event.target.value }))
+                  }
+                />
+              </Grid>
+            </Grid>
+            <Divider />
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle2" fontWeight={700}>
+                Subcortes
+              </Typography>
+              <Button
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    subcortes: [
+                      ...prev.subcortes,
+                      {
+                        id: buildTempId(),
+                        codigo_producto: "",
+                        nombre_subcorte: "",
+                        peso: "",
+                      },
+                    ],
+                  }))
+                }
+              >
+                Agregar subcorte
+              </Button>
+            </Stack>
+            <Stack spacing={1.5}>
+              {editForm.subcortes.map((subcorte, index) => (
+                <Grid container spacing={1} key={subcorte.id}>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      label="Codigo"
+                      fullWidth
+                      value={subcorte.codigo_producto}
+                      onChange={(event) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          subcortes: prev.subcortes.map((item) =>
+                            item.id === subcorte.id
+                              ? { ...item, codigo_producto: event.target.value }
+                              : item
+                          ),
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={5}>
+                    <TextField
+                      label="Nombre"
+                      fullWidth
+                      value={subcorte.nombre_subcorte}
+                      onChange={(event) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          subcortes: prev.subcortes.map((item) =>
+                            item.id === subcorte.id
+                              ? { ...item, nombre_subcorte: event.target.value }
+                              : item
+                          ),
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={9} sm={3}>
+                    <TextField
+                      label="Peso"
+                      type="number"
+                      fullWidth
+                      inputProps={{ min: 0, step: "0.01" }}
+                      value={subcorte.peso}
+                      onChange={(event) =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          subcortes: prev.subcortes.map((item) =>
+                            item.id === subcorte.id ? { ...item, peso: event.target.value } : item
+                          ),
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={3} sm={1} sx={{ display: "flex", alignItems: "center" }}>
+                    <Tooltip title="Eliminar subcorte">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            subcortes: prev.subcortes.filter((item) => item.id !== subcorte.id),
+                          }))
+                        }
+                        aria-label={`Eliminar subcorte ${index + 1}`}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                </Grid>
+              ))}
+            </Stack>
+            {editError && <Alert severity="error">{editError}</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog}>Cancelar</Button>
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={() => void handleSaveMaterialEdit()}
+            disabled={saving || !editForm.nombre_taller.trim()}
+          >
+            {saving ? "Guardando..." : "Guardar cambios"}
           </Button>
         </DialogActions>
       </Dialog>
